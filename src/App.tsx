@@ -16,12 +16,22 @@ export default function App() {
         <Route path="/catches/:id" element={<Placeholder title="Detalye ng Huli" />} />
         <Route path="/weather" element={<Placeholder title="Panahon" />} />
         <Route path="/buyers" element={<Placeholder title="Mamimili" />} />
+<<<<<<< HEAD
         <Route path="/value-added" element={<Placeholder title="Pagpapalaki ng Halaga" />} />
         <Route path="/notifications" element={<Placeholder title="Mga Abiso" />} />
         <Route path="/profile" element={<Placeholder title="Aking Profile" />} />
         <Route path="/settings" element={<Placeholder title="Mga Setting" />} />
+=======
+        <Route path="/value" element={<Placeholder title="Pagpapalaki ng Halaga" />} />
+        <Route path="/notifications" element={<Placeholder title="Mga Abiso" />} />
+        <Route path="/profile" element={<Placeholder title="Aking Profile" />} />
+>>>>>>> origin/main
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

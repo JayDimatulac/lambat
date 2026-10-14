@@ -1,13 +1,23 @@
 import { Link } from 'react-router-dom'
+<<<<<<< HEAD
 import { Waves, CloudSun, Sparkles, Settings, Store } from 'lucide-react'
+=======
+import { Waves } from 'lucide-react'
+>>>>>>> origin/main
 import CatchCard from '../components/CatchCard'
 import { catches } from '../data/mock'
 
 const quick = [
+<<<<<<< HEAD
   { to: '/weather', title: 'Panahon', sub: 'Check conditions', icon: CloudSun, cls: 'bg-seafoam text-teal border-line' },
   { to: '/buyers', title: 'Mamimili', sub: 'Find buyers', icon: Store, cls: 'bg-ice text-teal border-line' },
   { to: '/value-added', title: 'Pagpapalaki ng Halaga', sub: 'Potential pathways', icon: Sparkles, cls: 'bg-mint text-teal border-line' },
   { to: '/settings', title: 'Mga Setting', sub: 'Account & app', icon: Settings, cls: 'bg-white text-navy border-line' },
+=======
+  { to: '/catches/new', title: 'Itala ang Huli', sub: 'Register new catch', cls: 'bg-risk-high-bg text-coral border-peach/60' },
+  { to: '/weather', title: 'Panahon', sub: 'Check conditions', cls: 'bg-seafoam text-teal border-line' },
+  { to: '/buyers', title: 'Mamimili', sub: 'Find buyers', cls: 'bg-ice text-teal border-line' },
+>>>>>>> origin/main
 ]
 
 export default function Dashboard() {
@@ -38,15 +48,27 @@ export default function Dashboard() {
         </div>
       </section>
 
+<<<<<<< HEAD
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {quick.map(({ to, title, sub, icon: Icon, cls }) => (
           <Link key={to} to={to} className={`rounded-md border p-3 ${cls}`}>
             <Icon size={22} strokeWidth={1.8} aria-hidden />
             <p className="mt-2 text-sm font-semibold leading-tight">{title}</p>
             <p className="text-xs text-ink-soft">{sub}</p>
+=======
+      <section className="grid grid-cols-3 gap-3">
+        {quick.map((q) => (
+          <Link key={q.to} to={q.to} className={`rounded-md border p-3 ${q.cls}`}>
+            <p className="text-sm font-semibold">{q.title}</p>
+            <p className="text-xs text-ink-soft">{q.sub}</p>
+>>>>>>> origin/main
           </Link>
         ))}
       </section>
     </div>
   )
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> origin/main

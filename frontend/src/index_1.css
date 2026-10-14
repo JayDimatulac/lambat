@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* LAMBAT design tokens (from the UI Design System PDF) */
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --color-navy: #0a2f3c;
+  --color-teal: #0f6e7a;
+  --color-coral: #e8735a;
+  --color-coral-dark: #c95a43;
+  --color-seafoam: #dcefea;
+  --color-mint: #eef6f4;
+  --color-ice: #e6f4f9;
+  --color-peach: #f2b893;
+  --color-cream: #fbd9b8;
+  --color-line: #d5e6e2;
+  --color-ink-soft: #4d6670;
+
+  /* Risk scale: always icon + word + color */
+  --color-risk-low: #1e8e4e;
+  --color-risk-low-bg: #e6f5ec;
+  --color-risk-low-line: #3db86b;
+  --color-risk-moderate: #a87403;
+  --color-risk-moderate-bg: #fff6da;
+  --color-risk-moderate-line: #f2c230;
+  --color-risk-high: #d9650f;
+  --color-risk-high-bg: #fff0e6;
+  --color-risk-high-line: #f08a3c;
+  --color-risk-critical: #d13b3b;
+  --color-risk-critical-bg: #fdecec;
+  --color-risk-critical-line: #e5484d;
+
+  /* Radius: small 12 / medium 20 / large 28 */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+
+  /* Elevation */
+  --shadow-rest: 0 2px 12px rgba(10, 47, 60, 0.07);
+  --shadow-raised: 0 8px 32px rgba(10, 47, 60, 0.14);
+  --shadow-pressed: inset 0 2px 6px rgba(10, 47, 60, 0.12);
+}
+
+@layer base {
+  html { font-size: 16px; }
+  body {
+    @apply bg-mint font-sans text-navy antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 600; }
+  :focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+}
+
+@layer utilities {
+  .bg-dawn {
+    background: linear-gradient(180deg, #123f52 0%, #2e8391 45%, #f2b893 85%, #fbd9b8 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

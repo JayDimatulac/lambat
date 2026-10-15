@@ -5,29 +5,33 @@
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
 
-  --color-navy: #0a2f3c;
+  --color-navy: #0a2f3c;      /* main text (remapped in night mode) */
+  --color-deep: #0a2f3c;      /* always-dark ink, never remapped */
   --color-teal: #0f6e7a;
   --color-coral: #e8735a;
   --color-coral-dark: #c95a43;
   --color-seafoam: #dcefea;
-  --color-mint: #eef6f4;
+  --color-mint: #eef6f4;      /* page background */
   --color-ice: #e6f4f9;
   --color-peach: #f2b893;
   --color-cream: #fbd9b8;
   --color-line: #d5e6e2;
   --color-ink-soft: #4d6670;
+  --color-card: #ffffff;      /* card surface */
+  --color-on-accent: #ffffff; /* text on top of bg-teal */
 
-  /* Risk scale: always icon + word + color */
-  --color-risk-low: #1e8e4e;
+  /* Risk scale: always icon + word + color.
+     text = AA-safe darker shade, line = original palette color (borders, buoys) */
+  --color-risk-low: #1a7a43;
   --color-risk-low-bg: #e6f5ec;
   --color-risk-low-line: #3db86b;
-  --color-risk-moderate: #a87403;
+  --color-risk-moderate: #946603;
   --color-risk-moderate-bg: #fff6da;
   --color-risk-moderate-line: #f2c230;
-  --color-risk-high: #d9650f;
+  --color-risk-high: #ae510c;
   --color-risk-high-bg: #fff0e6;
   --color-risk-high-line: #f08a3c;
-  --color-risk-critical: #d13b3b;
+  --color-risk-critical: #c43737;
   --color-risk-critical-bg: #fdecec;
   --color-risk-critical-line: #e5484d;
 
@@ -42,20 +46,94 @@
   --shadow-pressed: inset 0 2px 6px rgba(10, 47, 60, 0.12);
 }
 
+/* Scene colors for the Freshness Tide (day) */
+:root {
+  --net: rgba(15, 110, 122, 0.12);
+  --tide-sky-0: #123f52;
+  --tide-sky-1: #2e8391;
+  --tide-sky-2: #f2b893;
+  --tide-sea-0: #2e8391;
+  --tide-sea-1: #0f6e7a;
+  --tide-sea-2: #0a2f3c;
+  --tide-front: rgba(46, 131, 145, 0.18);
+  --tide-seabed: #0a2f3c;
+  --tide-sun: #fbd9b8;
+  --tide-sun-glow: rgba(251, 217, 184, 0.55);
+}
+
+/* Night at sea: every color is a mix of the locked palette */
+:root[data-theme='night'] {
+  color-scheme: dark;
+  --color-mint: #0a2f3c;
+  --color-card: #0b3e4b;
+  --color-navy: #eef6f4;
+  --color-ink-soft: #a5bdbd;
+  --color-line: #0d525e;
+  --color-teal: #94c1c9;
+  --color-seafoam: #0c4956;
+  --color-ice: #0c424f;
+  --color-on-accent: #0a2f3c;
+
+  --color-risk-low: #3db86b;
+  --color-risk-moderate: #f2c230;
+  --color-risk-high: #f08a3c;
+  --color-risk-critical: #ee8689;
+  --color-risk-low-bg: #0a2f3c;
+  --color-risk-moderate-bg: #0a2f3c;
+  --color-risk-high-bg: #0a2f3c;
+  --color-risk-critical-bg: #0a2f3c;
+
+  --net: rgba(148, 193, 201, 0.10);
+  --tide-sky-0: #05171e;
+  --tide-sky-1: #0a2f3c;
+  --tide-sky-2: #0d525e;
+  --tide-sea-0: #0d525e;
+  --tide-sea-1: #0a2f3c;
+  --tide-sea-2: #05171e;
+  --tide-front: rgba(10, 47, 60, 0.3);
+  --tide-seabed: #05171e;
+  --tide-sun: #e6f4f9;
+  --tide-sun-glow: rgba(230, 244, 249, 0.35);
+}
+
 @layer base {
   html { font-size: 16px; }
   body {
     @apply bg-mint font-sans text-navy antialiased;
   }
   h1, h2, h3 { font-family: var(--font-display); font-weight: 600; }
-  :focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+  :focus-visible { outline: 3px solid var(--color-teal); outline-offset: 2px; }
 }
 
 @layer utilities {
   .bg-dawn {
     background: linear-gradient(180deg, #123f52 0%, #2e8391 45%, #f2b893 85%, #fbd9b8 100%);
   }
+  /* Fishing-net mesh: two crossing diagonal line sets */
+  .net-mesh {
+    background-image:
+      repeating-linear-gradient(45deg, var(--net) 0 1px, transparent 1px 14px),
+      repeating-linear-gradient(-45deg, var(--net) 0 1px, transparent 1px 14px);
+  }
+  .anim-drift { animation: drift 7s linear infinite; }
+  .anim-drift-rev { animation: drift 11s linear infinite reverse; }
+  .anim-bob { animation: bob 3.4s ease-in-out infinite; }
+  .anim-ripple { animation: ripple 2.2s ease-out infinite; }
 }
+
+@keyframes drift { to { transform: translateX(-60px); } }
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(calc(var(--bob, 3px) * -1)); }
+}
+@keyframes ripple {
+  0% { transform: scale(0.6); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Easy mode (Madaling gamit): bigger text, bigger targets, less clutter */
+html[data-simple='true'] { font-size: 18px; }
+html[data-simple='true'] .simple-hide { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }

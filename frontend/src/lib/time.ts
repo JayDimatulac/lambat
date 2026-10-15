@@ -1,20 +1,28 @@
-// "3–5 oras ang natitira"
-export function formatRemaining(hoursMin: number, hoursMax: number) {
-  const range = hoursMin === hoursMax ? `${hoursMin}` : `${hoursMin}–${hoursMax}`
-  return `${range} oras ang natitira`
+import type { Lang } from './settings'
+import type { TFn } from './i18n'
+
+// "3–5" or "8"
+export function rangeText(hoursMin: number, hoursMax: number) {
+  return hoursMin === hoursMax ? `${hoursMin}` : `${hoursMin}–${hoursMax}`
 }
 
-// Clock time to sell by, based on the SHORTEST estimate, rounded DOWN to the half hour.
-export function sellBy(hoursMin: number) {
+// "3h ago" / "2d ago"
+export function agoText(hoursAgo: number, t: TFn) {
+  return hoursAgo < 24 ? t('ago.h', { n: hoursAgo }) : t('ago.d', { n: Math.round(hoursAgo / 24) })
+}
+
+// Clock time to sell by: SHORTEST estimate, rounded DOWN to the half hour.
+export function sellByText(hoursMin: number, lang: Lang | null, t: TFn) {
   const HALF_HOUR = 30 * 60 * 1000
-  const t = new Date(Math.floor((Date.now() + hoursMin * 60 * 60 * 1000) / HALF_HOUR) * HALF_HOUR)
-  const time = t.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const when = new Date(Math.floor((Date.now() + hoursMin * 60 * 60 * 1000) / HALF_HOUR) * HALF_HOUR)
+  const time = when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 
   const today = new Date()
   const tomorrow = new Date(today)
   tomorrow.setDate(today.getDate() + 1)
 
-  if (t.toDateString() === today.toDateString()) return time
-  if (t.toDateString() === tomorrow.toDateString()) return `${time} bukas`
-  return `${time}, ${t.toLocaleDateString('fil-PH', { month: 'short', day: 'numeric' })}`
+  if (when.toDateString() === today.toDateString()) return t('sellby.today', { time })
+  if (when.toDateString() === tomorrow.toDateString()) return t('sellby.tomorrow', { time })
+  const date = when.toLocaleDateString(lang === 'fil' ? 'fil-PH' : 'en-US', { month: 'short', day: 'numeric' })
+  return t('sellby.later', { time, date })
 }

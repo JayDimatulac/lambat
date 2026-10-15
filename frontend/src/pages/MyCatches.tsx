@@ -1,43 +1,88 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import CatchCard from '../components/CatchCard'
+import { BuoyIcon, RowsIcon, TrayIcon } from '../components/icons'
+import TideScene from '../components/tide/TideScene'
+import { ListView, TrayView } from '../components/catch/views'
 import Chip from '../components/ui/Chip'
-import Button from '../components/ui/Button'
-import { catches } from '../data/mock'
+import Segmented from '../components/ui/Segmented'
+import { byUrgency, catches, isActive } from '../data/mock'
+import { useT } from '../lib/i18n'
 
-const filters = ['Lahat', 'Aktibo', 'Naibenta', 'Nakuha'] as const
+type View = 'tide' | 'tray' | 'list'
+type Filter = 'all' | 'active' | 'sold' | 'shared'
+
+const readView = (): View => {
+  try {
+    const v = localStorage.getItem('lambat.view')
+    return v === 'tray' || v === 'list' ? v : 'tide'
+  } catch {
+    return 'tide'
+  }
+}
 
 export default function MyCatches() {
-  const [filter, setFilter] = useState<(typeof filters)[number]>('Lahat')
-  const shown = catches.filter((c) =>
-    filter === 'Lahat' ? true : filter === 'Aktibo' ? !c.sold : filter === 'Naibenta' ? c.sold : false,
+  const t = useT()
+  const [view, setViewState] = useState<View>(readView)
+  const [filter, setFilter] = useState<Filter>('all')
+
+  const setView = (v: View) => {
+    setViewState(v)
+    try { localStorage.setItem('lambat.view', v) } catch { /* storage can be blocked */ }
+  }
+
+  const sorted = [...catches].sort((a, b) => Number(!isActive(a)) - Number(!isActive(b)) || byUrgency(a, b))
+  const shown = sorted.filter((c) =>
+    filter === 'all' ? true : filter === 'active' ? isActive(c) : c.outcome === filter,
   )
-  const active = catches.filter((c) => !c.sold)
-  const stats = [
-    { n: active.length, l: 'Aktibo' },
-    { n: `${active.reduce((s, c) => s + c.kg, 0)} kg`, l: 'Kabuuan' },
-    { n: active.filter((c) => c.risk === 'high' || c.risk === 'critical').length, l: 'Nanganganib' },
+  const active = catches.filter(isActive)
+  const atRisk = active.filter((c) => c.risk === 'high' || c.risk === 'critical').length
+  const kg = active.reduce((s, c) => s + c.kg, 0)
+  const tideItems = shown.filter(isActive)
+
+  const filters: { value: Filter; label: string }[] = [
+    { value: 'all', label: t('filter.all') },
+    { value: 'active', label: t('filter.active') },
+    { value: 'sold', label: t('filter.sold') },
+    { value: 'shared', label: t('filter.shared') },
   ]
+
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h2 className="text-[28px]">Mga Huli Ko</h2>
-        <Link to="/catches/new" className="hidden lg:block"><Button>+ Itala ang Huli</Button></Link>
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <h2 className="text-[28px]">{t('catches.title')}</h2>
+        <p className="simple-hide text-sm text-ink-soft">
+          {t('catches.summary', { n: active.length, kg, risk: atRisk })}
+        </p>
       </div>
-      <div className="grid max-w-md grid-cols-3 gap-3">
-        {stats.map((s) => (
-          <div key={s.l} className="rounded-md border border-line bg-white p-3 text-center shadow-rest">
-            <p className="font-display text-2xl font-bold">{s.n}</p>
-            <p className="text-xs text-ink-soft">{s.l}</p>
-          </div>
+
+      <Segmented<View>
+        label={t('catches.title')}
+        value={view}
+        onChange={setView}
+        className="w-full [&>button]:flex-1"
+        options={[
+          { value: 'tide', label: <><BuoyIcon size={20} />{t('view.tide')}</> },
+          { value: 'tray', label: <><TrayIcon size={20} />{t('view.tray')}</> },
+          { value: 'list', label: <><RowsIcon size={20} />{t('view.list')}</> },
+        ]}
+      />
+
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        {filters.map((f) => (
+          <Chip key={f.value} active={f.value === filter} onClick={() => setFilter(f.value)} className="shrink-0">
+            {f.label}
+          </Chip>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2">
-        {filters.map((f) => <Chip key={f} active={f === filter} onClick={() => setFilter(f)}>{f}</Chip>)}
-      </div>
-      <div className="grid gap-3 md:grid-cols-2">
-        {shown.map((c) => <CatchCard key={c.id} c={c} />)}
-      </div>
+
+      {shown.length === 0 ? (
+        <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('catches.empty')}</p>
+      ) : view === 'tide' ? (
+        tideItems.length > 0 ? <TideScene catches={tideItems} /> : <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('catches.tideonly')}</p>
+      ) : view === 'tray' ? (
+        <TrayView items={shown} />
+      ) : (
+        <ListView items={shown} />
+      )}
     </div>
   )
 }

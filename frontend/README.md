@@ -1,4 +1,15 @@
-<<<<<<< HEAD
+# LAMBAT Frontend
+
+React + TypeScript + Vite + Tailwind CSS.
+
+## Run locally
+
+    npm install
+    npm run dev
+
+## Build
+
+    npm run build<<<<<<< HEAD
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.

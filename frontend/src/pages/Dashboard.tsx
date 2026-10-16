@@ -5,7 +5,8 @@ import Tally from '../components/Tally'
 import Disclaimer from '../components/ui/Disclaimer'
 import { RISK_ICON } from '../components/ui/RiskBadge'
 import { KnotPlusIcon } from '../components/icons'
-import { byUrgency, catches, isActive, user, weekOutcomes } from '../data/mock'
+import { byUrgency, isActive, user, weekBase, type Outcome } from '../data/mock'
+import { useCatches } from '../data/store'
 import { RISK } from '../lib/risk'
 import { sellByText } from '../lib/time'
 import { useT } from '../lib/i18n'
@@ -14,6 +15,7 @@ import { useSettings } from '../lib/settings'
 export default function Dashboard() {
   const t = useT()
   const { lang } = useSettings()
+  const { catches } = useCatches()
   const now = new Date()
   const hour = now.getHours()
   const greet = hour < 12 ? t('greet.morning') : hour < 18 ? t('greet.afternoon') : t('greet.evening')
@@ -22,7 +24,13 @@ export default function Dashboard() {
   const active = catches.filter(isActive).sort(byUrgency)
   const urgent = active.filter((c) => c.risk === 'high' || c.risk === 'critical').slice(0, 2)
 
-  const { sold, shared, lost } = weekOutcomes
+    const sum = (o: Outcome) => {
+    const closed = catches.filter((c) => c.outcome === o)
+    return { n: weekBase[o].n + closed.length, kg: weekBase[o].kg + closed.reduce((total, c) => total + c.kg, 0) }
+  }
+  const sold = sum('sold')
+  const shared = sum('shared')
+  const lost = sum('lost')
   const pct = Math.round(((sold.kg + shared.kg) / (sold.kg + shared.kg + lost.kg)) * 100)
   const tally = [
     { key: 'sold', n: sold.n, color: 'text-teal' },

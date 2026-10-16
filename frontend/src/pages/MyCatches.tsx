@@ -4,7 +4,8 @@ import TideScene from '../components/tide/TideScene'
 import { ListView, TrayView } from '../components/catch/views'
 import Chip from '../components/ui/Chip'
 import Segmented from '../components/ui/Segmented'
-import { byUrgency, catches, isActive } from '../data/mock'
+import { byUrgency, isActive } from '../data/mock'
+import { useCatches } from '../data/store'
 import { useT } from '../lib/i18n'
 
 type View = 'tide' | 'tray' | 'list'
@@ -21,6 +22,7 @@ const readView = (): View => {
 
 export default function MyCatches() {
   const t = useT()
+  const { catches } = useCatches()
   const [view, setViewState] = useState<View>(readView)
   const [filter, setFilter] = useState<Filter>('all')
 

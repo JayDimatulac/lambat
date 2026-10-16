@@ -1,9 +1,10 @@
 import { useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Accessibility, Moon, Settings, Sparkles, UserRound, X } from 'lucide-react'
+import { Accessibility, Moon, RotateCcw, Settings, Sparkles, UserRound, X } from 'lucide-react'
 import { useSettings, type Connection } from '../../lib/settings'
 import { useT } from '../../lib/i18n'
 import { user } from '../../data/mock'
+import { useCatches } from '../../data/store'
 import Segmented from '../ui/Segmented'
 import LangToggle from './LangToggle'
 
@@ -31,6 +32,7 @@ function SwitchRow({ icon, label, hint, checked, onChange }: { icon: ReactNode; 
 export default function MenuSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const t = useT()
   const { simple, setSimple, theme, setTheme, connection, setConnection } = useSettings()
+  const { resetDemo } = useCatches()
 
   useEffect(() => {
     if (!open) return
@@ -90,6 +92,10 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
 
         <div>
           <p className="mb-2 text-sm font-semibold text-ink-soft">{t('menu.more')}</p>
+                  <button type="button" onClick={() => { resetDemo(); onClose() }} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-dashed border-line px-4 text-sm font-semibold text-ink-soft hover:bg-seafoam/50">
+          <RotateCcw size={18} strokeWidth={1.8} aria-hidden />
+          {t('menu.reset')}
+        </button>
           <ul className="divide-y divide-line overflow-hidden rounded-md border border-line">
             {links.map((l) => (
               <li key={l.to}>

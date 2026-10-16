@@ -81,3 +81,21 @@ export const KnotPlusIcon = (p: IconProps) => (
     <path d="M5.2 12C8.8 11.7 15.2 12.3 18.8 12" />
   </Svg>
 )
+
+export const IceSackIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M9.4 3.4H14.6" />
+    <path d="M9.4 3.4L8.4 7M14.6 3.4L15.6 7" />
+    <path d="M8 7.2Q12 8.8 16 7.2" />
+    <path d="M8 7.2C4.8 10 4.4 16 6.2 19.2C7.4 21 16.6 21 17.8 19.2C19.6 16 19.2 10 16 7.2" />
+    <path d="M9.4 13H9.5M13.6 12H13.7M12 16.6H12.1M15.2 16H15.3" strokeWidth={2.4} />
+  </Svg>
+)
+
+export const IceBlockIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3.5L19.5 7.5V16.5L12 20.5L4.5 16.5V7.5Z" />
+    <path d="M4.5 7.5L12 11.5L19.5 7.5" />
+    <path d="M12 11.5V20.5" />
+  </Svg>
+)

@@ -3,7 +3,11 @@ import AppShell from './components/layout/AppShell'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MyCatches from './pages/MyCatches'
+import LogCatch from './pages/LogCatch'
+import CatchDetail from './pages/CatchDetail'
+import ValueAdded from './pages/ValueAdded'
 import Placeholder from './pages/Placeholder'
+import { CatchesProvider } from './data/store'
 import { useT, type Key } from './lib/i18n'
 import { useSettings } from './lib/settings'
 
@@ -33,21 +37,24 @@ export default function App() {
   const { lang } = useSettings()
   if (lang === null) return <LanguageGate />
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route element={<AppShell />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/catches" element={<MyCatches />} />
-        <Route path="/catches/new" element={<Ph k="page.log" />} />
-        <Route path="/catches/:id" element={<Ph k="page.detail" />} />
-        <Route path="/weather" element={<Ph k="nav.weather" />} />
-        <Route path="/buyers" element={<Ph k="nav.buyers" />} />
-        <Route path="/value-added" element={<Ph k="nav.value" />} />
-        <Route path="/notifications" element={<Ph k="nav.alerts" />} />
-        <Route path="/profile" element={<Ph k="nav.profile" />} />
-        <Route path="/settings" element={<Ph k="nav.settings" />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <CatchesProvider>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/catches/new" element={<LogCatch />} />
+        <Route element={<AppShell />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/catches" element={<MyCatches />} />
+          <Route path="/catches/:id" element={<CatchDetail />} />
+          <Route path="/value-added" element={<ValueAdded />} />
+          <Route path="/weather" element={<Ph k="nav.weather" />} />
+          <Route path="/buyers" element={<Ph k="nav.buyers" />} />
+          <Route path="/value-added" element={<Ph k="nav.value" />} />
+          <Route path="/notifications" element={<Ph k="nav.alerts" />} />
+          <Route path="/profile" element={<Ph k="nav.profile" />} />
+          <Route path="/settings" element={<Ph k="nav.settings" />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </CatchesProvider>
   )
 }

@@ -138,3 +138,20 @@ html[data-simple='true'] .simple-hide { display: none; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* Each wizard step rises into place */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@layer utilities {
+  .anim-rise { animation: rise 0.35s ease-out both; }
+}
+
+/* A current running down a strand, and a little pop when a number changes */
+@keyframes flow { to { stroke-dashoffset: -36; } }
+@keyframes pop { 0% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@layer utilities {
+  .anim-flow { animation: flow 1.6s linear infinite; }
+  .anim-pop { animation: pop 0.5s ease-out; }
+}

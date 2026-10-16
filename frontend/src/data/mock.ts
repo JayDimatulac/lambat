@@ -1,4 +1,5 @@
 import type { RiskLevel } from '../lib/risk'
+import type { Model } from '../lib/estimator'
 
 export type Shape = 'tuna' | 'scad' | 'sardine' | 'mackerel' | 'moon'
 export type Outcome = 'sold' | 'shared' | 'lost'
@@ -6,39 +7,33 @@ export type Outcome = 'sold' | 'shared' | 'lost'
 export type Catch = {
   id: string
   species: string
+  speciesId?: string
   shape: Shape
   kg: number
   place: string
+  caughtAt: number
   hoursAgo: number
   risk: RiskLevel
   hoursMin: number
   hoursMax: number
+  minsMin: number // minutes left, cautious end (the countdown)
+  minsMax: number
+  model?: Model // what the estimator needs to re-work the time when ice is added
   outcome?: Outcome // undefined = still active
+  closedAt?: number
 }
 
 // The tide measures time left on one shared scale: at 24h or more a buoy floats, at 0h it reaches the seabed.
 export const HORIZON_H = 24
 
-export const user = { name: 'Mang Ramon', initials: 'MR', place: 'Batangas City' }
-
-// Placeholder data until the backend exists. Estimates only.
-export const catches: Catch[] = [
-  { id: '1', species: 'Tamban',         shape: 'sardine',  kg: 15, place: 'Batangas City', hoursAgo: 3,  risk: 'high',     hoursMin: 3,  hoursMax: 5 },
-  { id: '2', species: 'Galunggong',     shape: 'scad',     kg: 12, place: 'Lemery',        hoursAgo: 18, risk: 'moderate', hoursMin: 8,  hoursMax: 12 },
-  { id: '3', species: 'Tulingang bilog', shape: 'tuna',    kg: 9,  place: 'Balayan',       hoursAgo: 11, risk: 'moderate', hoursMin: 9,  hoursMax: 13 },
-  { id: '4', species: 'Alumahan',       shape: 'mackerel', kg: 25, place: 'Calatagan',     hoursAgo: 26, risk: 'low',      hoursMin: 18, hoursMax: 24 },
-  { id: '5', species: 'Gulyasan',       shape: 'tuna',     kg: 40, place: 'Balayan',       hoursAgo: 6,  risk: 'low',      hoursMin: 20, hoursMax: 30 },
-  { id: '6', species: 'Tambakol',       shape: 'tuna',     kg: 8,  place: 'Balayan',       hoursAgo: 72, risk: 'low',      hoursMin: 0,  hoursMax: 0, outcome: 'sold' },
-  { id: '7', species: 'Hiwas',          shape: 'moon',     kg: 6,  place: 'Lemery',        hoursAgo: 30, risk: 'moderate', hoursMin: 0,  hoursMax: 0, outcome: 'shared' },
-  { id: '8', species: 'Matambaka',      shape: 'scad',     kg: 4,  place: 'Calatagan',     hoursAgo: 50, risk: 'high',     hoursMin: 0,  hoursMax: 0, outcome: 'lost' },
-]
+export const user = { name: 'Mang Ramon', initials: 'MR', place: 'Balayan' }
 
 export const isActive = (c: Catch) => !c.outcome
 export const byUrgency = (a: Catch, b: Catch) => a.hoursMin - b.hoursMin
 
-// Placeholder tally for the week
-export const weekOutcomes = {
-  sold: { n: 7, kg: 96 },
-  shared: { n: 2, kg: 18 },
-  lost: { n: 1, kg: 6 },
+// Earlier this week (not in the list above). Catches you close in the app are added on top of this.
+export const weekBase: Record<Outcome, { n: number; kg: number }> = {
+  sold: { n: 6, kg: 88 },
+  shared: { n: 1, kg: 12 },
+  lost: { n: 0, kg: 0 },
 }

@@ -59,7 +59,7 @@ function Rail() {
         <FloatButton size="sm" />
         <span className="text-[13px] font-semibold">{t('nav.log')}</span>
       </div>
-      <nav className="flex flex-col items-center" aria-label="Main">
+      <nav className="flex flex-col items-center" aria-label={t('nav.main')}>
         {railItems.map((item, i) => {
           const active = i === activeIdx
           return (

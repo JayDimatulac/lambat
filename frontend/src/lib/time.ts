@@ -1,6 +1,9 @@
 import type { Lang } from './settings'
 import type { TFn } from './i18n'
 
+// One place that decides the date and time format from the chosen language
+export const localeOf = (lang: Lang | null) => (lang === 'fil' ? 'fil-PH' : 'en-US')
+
 // "3–5" or "8"
 export function rangeText(hoursMin: number, hoursMax: number) {
   return hoursMin === hoursMax ? `${hoursMin}` : `${hoursMin}–${hoursMax}`
@@ -23,14 +26,14 @@ export function sellByText(hoursMin: number, lang: Lang | null, t: TFn) {
 
   if (when.toDateString() === today.toDateString()) return t('sellby.today', { time })
   if (when.toDateString() === tomorrow.toDateString()) return t('sellby.tomorrow', { time })
-  const date = when.toLocaleDateString(lang === 'fil' ? 'fil-PH' : 'en-US', { month: 'short', day: 'numeric' })
+  const date = when.toLocaleDateString(localeOf(lang), { month: 'short', day: 'numeric' })
   return t('sellby.later', { time, date })
 }
 
 // "5:30 AM", "5:30 AM yesterday" or "5:30 AM, Oct 13": the clock time N hours ago
 export function catchTimeText(hoursAgo: number, lang: Lang | null, t: TFn) {
   const when = new Date(Date.now() - hoursAgo * 60 * 60 * 1000)
-  const time = when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  const time = when.toLocaleTimeString(localeOf(lang), { hour: 'numeric', minute: '2-digit' })
   const today = new Date()
   const yesterday = new Date(today)
   yesterday.setDate(today.getDate() - 1)

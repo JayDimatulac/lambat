@@ -10,6 +10,8 @@ import Placeholder from './pages/Placeholder'
 import { CatchesProvider } from './data/store'
 import { useT, type Key } from './lib/i18n'
 import { useSettings } from './lib/settings'
+import Weather from './pages/Weather'
+import Buyers from './pages/Buyers'
 
 // Placeholder screens get their title from the dictionary so the language toggle works on them too
 function Ph({ k }: { k: Key }) {
@@ -46,8 +48,8 @@ export default function App() {
           <Route path="/catches" element={<MyCatches />} />
           <Route path="/catches/:id" element={<CatchDetail />} />
           <Route path="/value-added" element={<ValueAdded />} />
-          <Route path="/weather" element={<Ph k="nav.weather" />} />
-          <Route path="/buyers" element={<Ph k="nav.buyers" />} />
+          <Route path="/weather" element={<Weather />} />
+          <Route path="/buyers" element={<Buyers />} />
           <Route path="/value-added" element={<Ph k="nav.value" />} />
           <Route path="/notifications" element={<Ph k="nav.alerts" />} />
           <Route path="/profile" element={<Ph k="nav.profile" />} />

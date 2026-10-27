@@ -1,15 +1,23 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import AppShell from './components/layout/AppShell'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import MyCatches from './pages/MyCatches'
-import LogCatch from './pages/LogCatch'
+import Admin from './pages/Admin'
+import BuyerHome from './pages/BuyerHome'
+import Buyers from './pages/Buyers'
 import CatchDetail from './pages/CatchDetail'
-import ValueAdded from './pages/ValueAdded'
+import Dashboard from './pages/Dashboard'
+import Landing from './pages/Landing'
+import LogCatch from './pages/LogCatch'
+import MyCatches from './pages/MyCatches'
 import Placeholder from './pages/Placeholder'
+import Register from './pages/Register'
+import Soon from './pages/Soon'
+import ValueAdded from './pages/ValueAdded'
+import Weather from './pages/Weather'
 import { CatchesProvider } from './data/store'
+import { useAuth } from './lib/auth'
+import { ROLE_HOME, type Role } from './lib/accounts'
 import { useT, type Key } from './lib/i18n'
-import { useSettings } from './lib/settings'
 
 // Placeholder screens get their title from the dictionary so the language toggle works on them too
 function Ph({ k }: { k: Key }) {
@@ -17,44 +25,55 @@ function Ph({ k }: { k: Key }) {
   return <Placeholder title={t(k)} />
 }
 
-// First launch: pick a language before anything else
-function LanguageGate() {
-  const { setLang } = useSettings()
-  const btn = 'min-h-16 w-full rounded-md bg-card px-6 font-display text-xl font-semibold text-navy shadow-raised transition active:scale-[0.98]'
+// Only the right role gets in. Anyone else is sent to the login or to their own home.
+// This is for the screen only. The real rule is enforced by the server.
+function Guard({ role, children }: { role: Role; children?: ReactNode }) {
+  const { user } = useAuth()
+  if (!user) return <Navigate to="/" replace />
+  if (user.role !== role) return <Navigate to={ROLE_HOME[user.role]} replace />
+  return <>{children ?? <Outlet />}</>
+}
+
+// Everything the fisherfolk see. Each fisherfolk account keeps its own catches.
+function FisherApp() {
+  const { user } = useAuth()
+  if (!user) return null
   return (
-    <div className="bg-dawn grid min-h-dvh place-items-center p-6">
-      <div className="w-full max-w-sm space-y-4 text-center text-white">
-        <p className="font-display text-3xl font-bold tracking-wider">LAMBAT</p>
-        <p className="pb-4 text-lg font-semibold">Choose your language · Piliin ang wika</p>
-        <button type="button" className={btn} onClick={() => setLang('en')}>English</button>
-        <button type="button" className={btn} onClick={() => setLang('fil')}>Filipino</button>
-      </div>
-    </div>
+    <CatchesProvider key={user.id} userId={user.id} demo={!!user.demo}>
+      <Outlet />
+    </CatchesProvider>
   )
 }
 
 export default function App() {
-  const { lang } = useSettings()
-  if (lang === null) return <LanguageGate />
   return (
-    <CatchesProvider>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/catches/new" element={<LogCatch />} />
-        <Route element={<AppShell />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/catches" element={<MyCatches />} />
-          <Route path="/catches/:id" element={<CatchDetail />} />
-          <Route path="/value-added" element={<ValueAdded />} />
-          <Route path="/weather" element={<Ph k="nav.weather" />} />
-          <Route path="/buyers" element={<Ph k="nav.buyers" />} />
-          <Route path="/value-added" element={<Ph k="nav.value" />} />
-          <Route path="/notifications" element={<Ph k="nav.alerts" />} />
-          <Route path="/profile" element={<Ph k="nav.profile" />} />
-          <Route path="/settings" element={<Ph k="nav.settings" />} />
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/register" element={<Register />} />
+
+      <Route path="/buyer" element={<Guard role="buyer"><BuyerHome /></Guard>} />
+      <Route path="/org" element={<Guard role="organization"><Soon /></Guard>} />
+      <Route path="/admin" element={<Guard role="admin"><Admin /></Guard>} />
+
+      <Route element={<Guard role="fisherfolk" />}>
+        <Route element={<FisherApp />}>
+          <Route path="/catches/new" element={<LogCatch />} />
+          <Route element={<AppShell />}>
+            <Route path="/home" element={<Dashboard />} />
+            <Route path="/catches" element={<MyCatches />} />
+            <Route path="/catches/:id" element={<CatchDetail />} />
+            <Route path="/weather" element={<Weather />} />
+            <Route path="/buyers" element={<Buyers />} />
+            <Route path="/value-added" element={<ValueAdded />} />
+            <Route path="/notifications" element={<Ph k="nav.alerts" />} />
+            <Route path="/profile" element={<Ph k="nav.profile" />} />
+            <Route path="/settings" element={<Ph k="nav.settings" />} />
+          </Route>
         </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </CatchesProvider>
+      </Route>
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

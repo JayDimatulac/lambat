@@ -161,3 +161,29 @@ html[data-simple='true'] .simple-hide { display: none; }
   .anim-flow { animation: flow 1.6s linear infinite; }
   .anim-pop { animation: pop 0.5s ease-out; }
 }
+
+/* The parola: its beam sweeps, its lamp breathes, the stars twinkle */
+@keyframes sweep { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(4deg); } }
+@keyframes glow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+@layer utilities {
+  .anim-sweep { animation: sweep 7s ease-in-out infinite; }
+  .anim-glow { animation: glow 2.4s ease-in-out infinite; }
+  .anim-twinkle { animation: twinkle 3s ease-in-out infinite; }
+}
+
+/* Weather: clouds drift, flags flutter, the bangka rocks with the waves */
+@keyframes cloud-drift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(14px); } }
+@keyframes flutter { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.86); } }
+@keyframes rock { 0%, 100% { transform: rotate(calc(var(--rock, 4deg) * -1)); } 50% { transform: rotate(var(--rock, 4deg)); } }
+@layer utilities {
+  .anim-cloud { animation: cloud-drift 7s ease-in-out infinite; }
+  .anim-flutter { animation: flutter 1.3s ease-in-out infinite; }
+  .anim-rock { animation: rock 3.4s ease-in-out infinite; }
+}
+
+/* Buyers: the radar beam sweeps all the way round */
+@keyframes radar { to { transform: rotate(360deg); } }
+@layer utilities {
+  .anim-radar { animation: radar 6s linear infinite; }
+}

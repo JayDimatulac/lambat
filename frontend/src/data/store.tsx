@@ -64,11 +64,11 @@ const base = { id: s.id, species: s.species, speciesId: s.speciesId, shape: s.sh
   }
 }
 
-const KEY = 'lambat.catches.v3'
-function load(): Stored[] | null {
+const keyFor = (userId: string) => `lambat.catches.v3.${userId}` // each account keeps its own catches on this phone
+function load(key: string): Stored[] | null {
   try {
-    const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null')
-    return Array.isArray(raw) ? raw.filter((c) => c && typeof c.id === 'string' && typeof c.caughtAt === 'number') : null
+    const raw = JSON.parse(localStorage.getItem(key) ?? 'null')
+    return Array.isArray(raw) ? raw : null
   } catch {
     return null
   }
@@ -83,8 +83,10 @@ type Ctx = {
 }
 const CatchesCtx = createContext<Ctx | null>(null)
 
-export function CatchesProvider({ children }: { children: ReactNode }) {
-  const [list, setList] = useState<Stored[]>(() => load() ?? seeds(Date.now()))
+// demo = the demo fisher starts with sample catches. Everyone else starts with an empty list.
+export function CatchesProvider({ children, userId, demo }: { children: ReactNode; userId: string; demo: boolean }) {
+  const key = keyFor(userId)
+  const [list, setList] = useState<Stored[]>(() => load(key) ?? (demo ? seeds(Date.now()) : []))
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -94,8 +96,8 @@ export function CatchesProvider({ children }: { children: ReactNode }) {
 
   // everything is kept in this browser until the backend exists
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(list)) } catch { /* storage can be blocked */ }
-  }, [list])
+       try { localStorage.setItem(key, JSON.stringify(list)) } catch { /* storage can be blocked */ }
+  }, [list, key])
 
   const catches = useMemo(() => list.map((s) => derive(s, now)), [list, now])
 
@@ -131,9 +133,9 @@ export function CatchesProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const resetDemo = useCallback(() => {
-    setList(seeds(Date.now()))
+        setList(demo ? seeds(Date.now()) : [])
     setNow(Date.now())
-  }, [])
+  }, [demo])
 
   const value = useMemo(() => ({ catches, addCatch, addIce, setOutcome, resetDemo }), [catches, addCatch, addIce, setOutcome, resetDemo])
   return <CatchesCtx.Provider value={value}>{children}</CatchesCtx.Provider>

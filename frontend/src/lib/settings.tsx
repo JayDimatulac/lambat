@@ -27,7 +27,7 @@ const write = (key: string, value: string) => {
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang | null>(() => {
     const v = read('lambat.lang')
-    return v === 'en' || v === 'fil' ? v : null
+        return v === 'en' || v === 'fil' ? v : 'fil' // Filipino unless the person chooses otherwise
   })
   const [simple, setSimpleState] = useState(() => read('lambat.simple') === 'true')
   const [theme, setThemeState] = useState<Theme>(() => (read('lambat.theme') === 'night' ? 'night' : 'day'))

@@ -4,15 +4,16 @@ import { Bell, Check, CloudSun, Send, Sparkles, Wifi, WifiLow, WifiOff } from 'l
 import { BuoyIcon, FishIcon, KnotPlusIcon, PierIcon, TideIcon } from '../icons'
 import { useT, type Key } from '../../lib/i18n'
 import { useSettings } from '../../lib/settings'
-import { user } from '../../data/mock'
+import { useUser } from '../../lib/auth'
 import LangToggle from './LangToggle'
 import MenuSheet from './MenuSheet'
+
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
 type Item = { to: string; label: Key; icon: Icon; end?: boolean }
 
 const tabs: Item[] = [
-  { to: '/', label: 'nav.home', icon: TideIcon, end: true },
+  { to: '/home', label: 'nav.home', icon: TideIcon, end: true },
   { to: '/catches', label: 'nav.catches', icon: FishIcon },
   { to: '/weather', label: 'nav.weather', icon: CloudSun },
   { to: '/buyers', label: 'nav.buyers', icon: PierIcon },
@@ -51,7 +52,7 @@ function Rail() {
   const activeIdx = railItems.findIndex((i) => isActive(i, pathname))
   return (
     <aside className="net-mesh sticky top-0 hidden h-dvh w-24 shrink-0 flex-col items-center overflow-y-auto border-r border-line bg-card py-4 lg:flex">
-      <Link to="/" className="mb-4 flex flex-col items-center gap-1 text-navy">
+      <Link to="/home" className="mb-4 flex flex-col items-center gap-1 text-navy">
         <BuoyIcon size={30} className="text-teal" />
         <span className="font-display text-sm font-bold tracking-wider">LAMBAT</span>
       </Link>
@@ -156,13 +157,14 @@ function ConnectionBar() {
 
 export default function AppShell() {
   const t = useT()
+    const user = useUser()
   const [menuOpen, setMenuOpen] = useState(false)
   return (
     <div className="min-h-dvh lg:flex">
       <Rail />
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-2 border-b border-line bg-card/90 px-4 backdrop-blur lg:px-8">
-          <Link to="/" className="flex items-center gap-2 lg:invisible">
+          <Link to="/home" className="flex items-center gap-2 lg:invisible">
             <BuoyIcon size={26} className="text-teal" />
             <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
           </Link>

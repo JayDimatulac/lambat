@@ -7,7 +7,7 @@ import RiskBadge from '../components/ui/RiskBadge'
 import Button from '../components/ui/Button'
 import { IceStep, KilosStep, SpeciesStep, WhenStep, iceKgOf, type Draft } from '../components/log/steps'
 import { useCatches } from '../data/store'
-import { user } from '../data/mock'
+import { useUser } from '../lib/auth'
 import { hoursAtAmbient, iceLevel, type IceLevel } from '../lib/estimator'
 import { SPECIES, TILES } from '../lib/species'
 import { agoText, rangeText, sellByText } from '../lib/time'
@@ -77,7 +77,7 @@ function Reveal({ draft, level, savedId, onAgain }: { draft: Draft; level: IceLe
             <ul className="list-disc space-y-1 pl-5">
               <li>{draft.hoursAgo === 0 ? t('why.time.now') : t('why.time', { when: agoText(draft.hoursAgo, t) })}</li>
               <li>{t('why.ice', { level: t(`ice.${level}`).toLowerCase() })}</li>
-                            <li>{t(hoursAtAmbient(sp.l0Min) <= 10 ? 'why.species.fast' : 'why.species.mid', { species: saved.species })}</li>
+              <li>{t(hoursAtAmbient(sp.l0Min) <= 10 ? 'why.species.fast' : 'why.species.mid', { species: saved.species })}</li>
               {sp.histamine && <li>{t('why.histamine')}</li>}
             </ul>
           </div>
@@ -103,6 +103,7 @@ function Reveal({ draft, level, savedId, onAgain }: { draft: Draft; level: IceLe
 export default function LogCatch() {
   const t = useT()
   const { addCatch } = useCatches()
+  const user = useUser()
   const [step, setStep] = useState(0) // 0..3 are questions, 4 is the reveal
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [saved, setSaved] = useState<{ id: string; level: IceLevel } | null>(null)
@@ -111,7 +112,7 @@ export default function LogCatch() {
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }))
   const reveal = step === STEPS
 
-    const save = () => {
+  const save = () => {
     const sp = SPECIES[draft.variant ?? draft.speciesId ?? 'other']
     const tile = TILES.find((x) => x.id === draft.tileId)
     const caughtAt = Date.now() - draft.hoursAgo * 3_600_000
@@ -121,7 +122,7 @@ export default function LogCatch() {
       speciesId: draft.tileId === 'other' ? undefined : (draft.variant ?? draft.speciesId ?? undefined),
       shape: tile?.shape ?? 'scad',
       kg: draft.kg,
-      place: user.place,
+      place: user.fisher?.landing ?? user.barangay,
       caughtAt,
       model: { l0Min: sp.l0Min, l0Max: sp.l0Max, histamine: !!sp.histamine, kg: draft.kg, events: [{ at: caughtAt, iceKg }] },
     })
@@ -141,7 +142,7 @@ export default function LogCatch() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col px-4 pb-32 pt-4">
       <header className="flex items-center gap-3">
-        <Link to="/" aria-label={t('menu.close')} className="grid size-12 shrink-0 place-items-center rounded-full hover:bg-seafoam">
+        <Link to="/home" aria-label={t('menu.close')} className="grid size-12 shrink-0 place-items-center rounded-full hover:bg-seafoam">
           <X size={24} strokeWidth={1.8} aria-hidden />
         </Link>
         <Knots step={step} />

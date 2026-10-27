@@ -3,19 +3,19 @@ import TideScene from '../components/tide/TideScene'
 import NetTally from '../components/home/NetTally'
 import ParolaPanel from '../components/home/ParolaPanel'
 import { BangkaIcon, BuoyIcon, PennantIcon, WaveArrow } from '../components/home/HomeIcons'
-import { byUrgency, isActive, user, weekBase, type Outcome } from '../data/mock'
+import { byUrgency, isActive, weekBase, type Outcome } from '../data/mock'
 import { useCatches } from '../data/store'
+import { useUser } from '../lib/auth'
 import { localeOf } from '../lib/time'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
-
-// Change this to your port, barangay or city
-const PLACE = 'Balayan, Batangas'
 
 export default function Dashboard() {
   const t = useT()
   const { lang } = useSettings()
   const { catches } = useCatches()
+  const user = useUser()
+  const place = user.fisher?.landing ?? user.barangay
   const now = new Date()
   const hour = now.getHours()
   const greet = hour < 12 ? t('greet.morning') : hour < 18 ? t('greet.afternoon') : t('greet.evening')
@@ -27,7 +27,8 @@ export default function Dashboard() {
 
   const sum = (o: Outcome) => {
     const closed = catches.filter((c) => c.outcome === o)
-    return { n: weekBase[o].n + closed.length, kg: weekBase[o].kg + closed.reduce((total, c) => total + c.kg, 0) }
+    const base = user.demo ? weekBase[o] : { n: 0, kg: 0 } // only the demo fisher starts with earlier weeks
+    return { n: base.n + closed.length, kg: base.kg + closed.reduce((total, c) => total + c.kg, 0) }
   }
 
   const header = (
@@ -37,7 +38,7 @@ export default function Dashboard() {
           <p className="text-sm font-medium text-white">{date}</p>
           <p className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-white">
             <BuoyIcon size={16} />
-            {PLACE}
+            {place}
           </p>
         </div>
         <Link to="/weather" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-deep/40 px-3.5 text-sm font-semibold text-white">
@@ -46,7 +47,7 @@ export default function Dashboard() {
         </Link>
       </div>
       <p className="mt-1 font-numeral text-[24px] font-bold leading-tight text-white">
-        {greet}, {user.name}
+        {greet}, {user.shortName}
       </p>
     </>
   )

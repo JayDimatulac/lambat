@@ -1,9 +1,10 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Accessibility, Moon, RotateCcw, Settings, Sparkles, UserRound, X } from 'lucide-react'
+import { Accessibility, LogOut, Moon, RotateCcw, Settings, Sparkles, UserRound, X } from 'lucide-react'
 import { useSettings, type Connection } from '../../lib/settings'
 import { useT } from '../../lib/i18n'
-import { user } from '../../data/mock'
+import { useUser } from '../../lib/auth'
+import LogoutSheet from '../auth/LogoutSheet'
 import { useCatches } from '../../data/store'
 import Segmented from '../ui/Segmented'
 import LangToggle from './LangToggle'
@@ -33,6 +34,8 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
   const t = useT()
   const { simple, setSimple, theme, setTheme, connection, setConnection } = useSettings()
   const { resetDemo } = useCatches()
+  const user = useUser()
+  const [askLogout, setAskLogout] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -58,7 +61,7 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
             <span className="grid size-12 place-items-center rounded-full bg-teal font-bold text-on-accent">{user.initials}</span>
             <div>
               <p className="font-semibold">{user.name}</p>
-              <p className="text-sm text-ink-soft">{user.place}</p>
+              <p className="text-sm text-ink-soft">{user.fisher?.landing ?? user.barangay}</p>
             </div>
           </div>
           <button type="button" onClick={onClose} aria-label={t('menu.close')} className="grid size-12 place-items-center rounded-full hover:bg-seafoam">
@@ -92,10 +95,10 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
 
         <div>
           <p className="mb-2 text-sm font-semibold text-ink-soft">{t('menu.more')}</p>
-                  <button type="button" onClick={() => { resetDemo(); onClose() }} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-dashed border-line px-4 text-sm font-semibold text-ink-soft hover:bg-seafoam/50">
-          <RotateCcw size={18} strokeWidth={1.8} aria-hidden />
-          {t('menu.reset')}
-        </button>
+          <button type="button" onClick={() => { resetDemo(); onClose() }} className="mb-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-dashed border-line px-4 text-sm font-semibold text-ink-soft hover:bg-seafoam/50">
+            <RotateCcw size={18} strokeWidth={1.8} aria-hidden />
+            {t('menu.reset')}
+          </button>
           <ul className="divide-y divide-line overflow-hidden rounded-md border border-line">
             {links.map((l) => (
               <li key={l.to}>
@@ -107,7 +110,14 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
             ))}
           </ul>
         </div>
+
+        <button type="button" onClick={() => setAskLogout(true)} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-full border-2 border-teal text-base font-semibold text-teal">
+          <LogOut size={22} strokeWidth={1.8} aria-hidden />
+          {t('auth.logout')}
+        </button>
       </div>
+
+      <LogoutSheet open={askLogout} onClose={() => { setAskLogout(false); onClose() }} />
     </div>
   )
 }

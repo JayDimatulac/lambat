@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import AppShell from './components/layout/AppShell'
-import Admin from './pages/Admin'
 import BuyerHome from './pages/BuyerHome'
 import Buyers from './pages/Buyers'
 import CatchDetail from './pages/CatchDetail'
@@ -18,6 +17,12 @@ import { CatchesProvider } from './data/store'
 import { useAuth } from './lib/auth'
 import { ROLE_HOME, type Role } from './lib/accounts'
 import { useT, type Key } from './lib/i18n'
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminDashboard from './pages/admin/Dashboard'
+import Verifications from './pages/admin/Verifications'
+import Listings from './pages/admin/Listings'
+import Advisories from './pages/admin/Advisories'
+import Reference from './pages/admin/Reference'
 
 // Placeholder screens get their title from the dictionary so the language toggle works on them too
 function Ph({ k }: { k: Key }) {
@@ -54,7 +59,14 @@ export default function App() {
 
       <Route path="/buyer" element={<Guard role="buyer"><BuyerHome /></Guard>} />
       <Route path="/org" element={<Guard role="organization"><Soon /></Guard>} />
-      <Route path="/admin" element={<Guard role="admin"><Admin /></Guard>} />
+
+      <Route path="/admin" element={<Guard role="admin"><AdminLayout /></Guard>}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="verifications" element={<Verifications />} />
+        <Route path="listings" element={<Listings />} />
+        <Route path="advisories" element={<Advisories />} />
+        <Route path="reference" element={<Reference />} />
+      </Route>
 
       <Route element={<Guard role="fisherfolk" />}>
         <Route element={<FisherApp />}>

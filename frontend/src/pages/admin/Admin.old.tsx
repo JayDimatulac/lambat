@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Check, LogOut, ShieldCheck, Undo2, X } from 'lucide-react'
-import LogoutSheet from '../components/auth/LogoutSheet'
-import { useAuth, useUser } from '../lib/auth'
-import { useSettings } from '../lib/settings'
-import { useT, type Key } from '../lib/i18n'
-import { localeOf } from '../lib/time'
-import type { Account } from '../lib/accounts'
+import LogoutSheet from '../../components/auth/LogoutSheet'
+import { useAuth, useUser } from '../../lib/auth'
+import { useSettings } from '../../lib/settings'
+import { useT, type Key } from '../../lib/i18n'
+import { localeOf } from '../../lib/time'
+import type { Account } from '../../lib/accounts'
 
 // Admins decide which buyers may contact fisherfolk. Admin and organization accounts are only ever made by an admin.
 function BuyerCard({ a, children }: { a: Account; children: React.ReactNode }) {

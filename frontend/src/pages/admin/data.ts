@@ -1,55 +1,74 @@
 export type Risk = 'low' | 'mod' | 'high' | 'crit'
-export type Status = 'pend' | 'ok' | 'no'
-export type Account = { name: string; type: string; town: string; needs: string; status: Status }
-export type Ctx = { accounts: Account[]; setStatus: (i: number, s: Status) => void; toast: (t: string) => void }
+export type ListingType = 'Find buyer' | 'Quick sale' | 'Redistribute'
+export type AdvisoryType = 'Weather / sea condition' | 'Spoilage alert' | 'Market update'
+export type Place = 'Batangas Bay' | 'Calatagan coast' | 'Taal Lake' | 'All Batangas'
+export type Sev = 'calm' | 'watch' | 'warning'
+export type Draft = { text: string; type: AdvisoryType; place: Place; sev: Sev }
+export type Ctx = { toast: (msg: string) => void }
 
-export const KPIS: [string, string, string, '' | 'good' | 'loss'][] = [
-  ['1,284', 'Rehistradong huli', '+112 ngayong linggo', ''],
-  ['18.6 t', 'Kabuuang timbang', 'Registered quantity', ''],
-  ['11.2 t', 'Naibenta', '60% ng kabuuan', 'good'],
-  ['2.4 t', 'Na-redistribute', 'Sa 18 organisasyon', 'good'],
-  ['1.9 t', 'Nasayang', '10% loss rate · bumaba ng 3 pts', 'loss'],
-  ['₱412k', 'Halagang nabawi', 'Estimate', 'good'],
+export const RISK_ORDER: Record<Risk, number> = { crit: 0, high: 1, mod: 2, low: 3 }
+
+export type Kpi = { value: string; label: string; sub: string; tone: '' | 'good' | 'loss'; icon: 'fish' | 'scale' | 'sold' | 'shared' | 'lost' | 'coin' }
+export const KPIS: Kpi[] = [
+  { value: '1,284', label: 'Catches logged', sub: '+112 this week', tone: '', icon: 'fish' },
+  { value: '18.6 t', label: 'Total weight', sub: 'Registered quantity', tone: '', icon: 'scale' },
+  { value: '11.2 t', label: 'Sold', sub: '60% of the total', tone: 'good', icon: 'sold' },
+  { value: '2.4 t', label: 'Redistributed', sub: 'To 18 organizations', tone: 'good', icon: 'shared' },
+  { value: '1.9 t', label: 'Lost', sub: '10% loss rate, down 3 pts', tone: 'loss', icon: 'lost' },
+  { value: '₱412k', label: 'Value recovered', sub: 'Estimate', tone: 'good', icon: 'coin' },
 ]
-export const OUTCOME_NAMES = ['Naibenta', 'Na-redistribute', 'Na-process', 'Nasayang']
-export const OUTCOME_COLORS = ['var(--color-teal)', '#2E8391', 'var(--color-peach)', 'var(--color-coral)']
+
+export const OUTCOMES = [
+  { name: 'Sold', color: 'var(--color-teal)' },
+  { name: 'Redistributed', color: '#2E8391' },
+  { name: 'Processed', color: 'var(--color-peach)' },
+  { name: 'Lost', color: 'var(--color-coral)' },
+]
 export const WEEKS: { label: string; kg: number[] }[] = [
-  ['Ago 10', [1100, 260, 120, 320]], ['Ago 17', [1180, 280, 140, 300]], ['Ago 24', [1240, 300, 130, 290]],
-  ['Ago 31', [1320, 310, 160, 270]], ['Set 7', [1380, 330, 170, 250]], ['Set 14', [1450, 340, 180, 240]],
-  ['Set 21', [1520, 360, 190, 230]], ['Set 28', [1610, 380, 210, 210]],
-].map(([label, kg]) => ({ label: label as string, kg: kg as number[] }))
-export const RISK: [Risk, number, string][] = [['low', 62, 'var(--color-risk-low-line)'], ['mod', 24, 'var(--color-risk-moderate-line)'], ['high', 11, 'var(--color-risk-high-line)'], ['crit', 3, 'var(--color-risk-critical-line)']]
+  { label: 'Aug 10', kg: [1100, 260, 120, 320] }, { label: 'Aug 17', kg: [1180, 280, 140, 300] },
+  { label: 'Aug 24', kg: [1240, 300, 130, 290] }, { label: 'Aug 31', kg: [1320, 310, 160, 270] },
+  { label: 'Sep 7', kg: [1380, 330, 170, 250] }, { label: 'Sep 14', kg: [1450, 340, 180, 240] },
+  { label: 'Sep 21', kg: [1520, 360, 190, 230] }, { label: 'Sep 28', kg: [1610, 380, 210, 210] },
+]
+export const RISK_MIX: [Risk, number, string][] = [
+  ['low', 62, 'var(--color-risk-low-line)'], ['mod', 24, 'var(--color-risk-moderate-line)'],
+  ['high', 11, 'var(--color-risk-high-line)'], ['crit', 3, 'var(--color-risk-critical-line)'],
+]
 export const SPECIES: [string, number][] = [['Tamban', 420], ['Galunggong', 350], ['Alumahan', 270], ['Bangus', 190], ['Pusit', 120]]
 export const TOWNS: [string, number][] = [['Batangas City', 16], ['Lemery', 13], ['Calatagan', 9], ['Nasugbu', 7], ['Taal Lake', 4]]
 
-export const ACCOUNTS: Account[] = [
-  ['Ate Liza Santos', 'Buyer', 'Lemery', 'Bangus, galunggong · 50 kg/araw', 'pend'],
-  ['Kuya Ben Dizon', 'Cooperative', 'Batangas City', 'Lahat ng uri · 300 kg/araw', 'pend'],
-  ['Batangas Fish Port', 'Fish port', 'Batangas City', 'Market rate · walang limit', 'pend'],
-  ['Bagsakan ng Nasugbu', 'Fish port', 'Nasugbu', 'Tamban, tuna · 500 kg/araw', 'pend'],
-  ['Samahang Bukid-Dagat', 'Organization', 'Calatagan', 'Relief packs · 80 pamilya', 'pend'],
-  ['Mang Tonyo Reyes', 'Buyer', 'Taal', 'Tilapia, maliputo · 40 kg/araw', 'pend'],
-  ['Dried Fish Co-op ng Lian', 'Cooperative', 'Lian', 'Tuyo, bagoong · 120 kg/araw', 'pend'],
-  ['Ate Mila Cruz', 'Buyer', 'Lemery', 'Pusit · 20 kg/araw', 'ok'],
-  ['Barangay Wawa Kitchen', 'Organization', 'Batangas City', 'Community feeding · 60 pamilya', 'no'],
-].map(([name, type, town, needs, status]) => ({ name, type, town, needs, status: status as Status }))
-
-export const LISTINGS: { fish: string; qty: string; fisher: string; left: string; risk: Risk; type: string; status: string }[] = [
-  ['Tamban', '15 kg', 'Mang Ramon · Batangas City', '3–5 hrs', 'high', 'Quick sale', 'Walang tugon'],
-  ['Galunggong', '12 kg', 'Mang Ramon · Lemery', '8–12 hrs', 'mod', 'Find buyer', 'May 2 alok'],
-  ['Alumahan', '30 kg', 'Ka Dado · Nasugbu', '< 1 hr', 'crit', 'Redistribute', 'Naghihintay ng org'],
-  ['Bangus', '25 kg', 'Mang Ramon · Calatagan', '18–24 hrs', 'low', 'Find buyer', 'May 1 alok'],
-  ['Tamban', '60 kg', 'Aling Nena · Lian', '2–4 hrs', 'high', 'Redistribute', 'Tinanggap ng org'],
-  ['Pusit', '8 kg', 'Mang Ramon · Taal Lake', '—', 'low', 'Find buyer', 'Naibenta'],
-].map(([fish, qty, fisher, left, risk, type, status]) => ({ fish, qty, fisher, left, risk: risk as Risk, type, status }))
-
-export const SHELF_LIFE: string[][] = [
-  ['Tamban', '4 h', '2 h', '1 h', 'Bagoong, tuyo'], ['Galunggong', '14 h', '8 h', '4 h', 'Tuyo, daing'],
-  ['Bangus', '24 h', '14 h', '6 h', 'Tinapa, daing'], ['Pusit', '18 h', '10 h', '5 h', 'Pinatuyong pusit'],
-  ['Tuna', '30 h', '16 h', '7 h', 'Tuna flakes'], ['Alumahan', '10 h', '6 h', '3 h', 'Tuyo, bagoong'],
+export type Listing = { id: number; fish: string; kg: number; fisher: string; town: string; left: string; risk: Risk; type: ListingType; status: string }
+export const LISTINGS: Listing[] = [
+  { id: 1, fish: 'Tamban', kg: 15, fisher: 'Mang Ramon', town: 'Batangas City', left: '3–5 hrs', risk: 'high', type: 'Quick sale', status: 'No response' },
+  { id: 2, fish: 'Galunggong', kg: 12, fisher: 'Mang Ramon', town: 'Lemery', left: '8–12 hrs', risk: 'mod', type: 'Find buyer', status: '2 offers' },
+  { id: 3, fish: 'Alumahan', kg: 30, fisher: 'Ka Dado', town: 'Nasugbu', left: '< 1 hr', risk: 'crit', type: 'Redistribute', status: 'Waiting for an organization' },
+  { id: 4, fish: 'Bangus', kg: 25, fisher: 'Mang Ramon', town: 'Calatagan', left: '18–24 hrs', risk: 'low', type: 'Find buyer', status: '1 offer' },
+  { id: 5, fish: 'Tamban', kg: 60, fisher: 'Aling Nena', town: 'Lian', left: '2–4 hrs', risk: 'high', type: 'Redistribute', status: 'Accepted by an organization' },
+  { id: 6, fish: 'Pusit', kg: 8, fisher: 'Mang Ramon', town: 'Taal Lake', left: '—', risk: 'low', type: 'Find buyer', status: 'Sold' },
 ]
-export const SENT: [string, string, string, string][] = [
-  ['Strong wind warning · Batangas Bay', 'Weather / sea condition', '214 SMS · 1,032 app', 'Ngayong 6:00 AM'],
-  ['Mataas na alon · Calatagan coast', 'Weather / sea condition', '96 SMS · 410 app', 'Kahapon'],
-  ['Presyo ng tamban bumaba ng ₱3/kg', 'Market update', '0 SMS · 880 app', '2 araw na ang nakaraan'],
+export const LISTING_TYPES: ListingType[] = ['Find buyer', 'Quick sale', 'Redistribute']
+
+export const SHELF_LIFE: { fish: string; full: number; light: number; none: number; value: string }[] = [
+  { fish: 'Tamban', full: 4, light: 2, none: 1, value: 'Bagoong, tuyo' },
+  { fish: 'Galunggong', full: 14, light: 8, none: 4, value: 'Tuyo, daing' },
+  { fish: 'Bangus', full: 24, light: 14, none: 6, value: 'Tinapa, daing' },
+  { fish: 'Pusit', full: 18, light: 10, none: 5, value: 'Dried squid' },
+  { fish: 'Tuna', full: 30, light: 16, none: 7, value: 'Tuna flakes' },
+  { fish: 'Alumahan', full: 10, light: 6, none: 3, value: 'Tuyo, bagoong' },
+]
+
+export const ADVISORY_TYPES: AdvisoryType[] = ['Weather / sea condition', 'Spoilage alert', 'Market update']
+export const PLACES: Place[] = ['Batangas Bay', 'Calatagan coast', 'Taal Lake', 'All Batangas']
+export const REACH: Record<Place, number> = { 'Batangas Bay': 1246, 'Calatagan coast': 506, 'Taal Lake': 388, 'All Batangas': 2140 }
+export const TEMPLATES: Record<AdvisoryType, string[]> = {
+  'Weather / sea condition': ['Strong wind until 6:00 PM. Stay near shore. For planning only.', 'High waves expected this afternoon. Check the sea before you leave.'],
+  'Spoilage alert': ['Hot day ahead. Add ice early to keep your catch fresh.', 'Catch is spoiling fast. Sell or hand over within the hour.'],
+  'Market update': ['Tamban price dropped by ₱3/kg at the pier today.', 'Buyers at the pier are asking for galunggong this morning.'],
+}
+
+export type Sent = { title: string; meta: string; reach: string; when: string; sev: Sev }
+export const SENT: Sent[] = [
+  { title: 'Strong wind warning for Batangas Bay', meta: 'Weather / sea condition · Batangas Bay', reach: '214 SMS · 1,032 app', when: 'Today, 6:00 AM', sev: 'warning' },
+  { title: 'High waves along the Calatagan coast', meta: 'Weather / sea condition · Calatagan coast', reach: '96 SMS · 410 app', when: 'Yesterday', sev: 'watch' },
+  { title: 'Tamban price dropped by ₱3/kg', meta: 'Market update · All Batangas', reach: '0 SMS · 880 app', when: '2 days ago', sev: 'calm' },
 ]

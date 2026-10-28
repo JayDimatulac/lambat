@@ -29,6 +29,7 @@ export type Account = {
   demo?: boolean
   fisher?: FisherProfile
   buyer?: BuyerProfile
+  note?: string // why an application was not approved (buyers only)
 }
 
 export type SessionUser = Omit<Account, 'salt' | 'hash'> & { initials: string; shortName: string }
@@ -99,7 +100,7 @@ export const sessionStore: Store = {
   remove: (k) => { try { sessionStorage.removeItem(k) } catch { /* storage can be blocked */ } },
 }
 
-export const ACCOUNTS_KEY = 'lambat.accounts.v1'
+export const ACCOUNTS_KEY = 'lambat.accounts.v2'
 export const SESSION_KEY = 'lambat.session.v1'
 
 export function loadAccounts(store: Store): Account[] {
@@ -143,7 +144,7 @@ export async function checkLogin(list: Account[], identifier: string, password: 
   const account = list.find((a) => (mobile && a.mobile === mobile) || (!!a.username && a.username === username))
   // the same answer for "no such account" and "wrong password", so nobody can probe for numbers
   if (!account || (await hashPassword(password, account.salt)) !== account.hash) return { ok: false, error: 'creds' }
-  if (account.status === 'REJECTED') return { ok: false, error: 'rejected' }
+   if (account.status === 'REJECTED' && account.role !== 'buyer') return { ok: false, error: 'rejected' }
   if (account.status === 'SUSPENDED') return { ok: false, error: 'suspended' }
   return { ok: true, account }
 }
@@ -152,6 +153,8 @@ export async function checkLogin(list: Account[], identifier: string, password: 
 export const DEMO_LOGINS = [
   { key: 'fisher', id: '09171234567', password: 'isda1234' },
   { key: 'buyer', id: '09181234567', password: 'bili1234' },
+  { key: 'buyerok', id: '09201234567', password: 'bili1234' },
+  { key: 'buyerno', id: '09211234567', password: 'bili1234' },
   { key: 'admin', id: 'admin', password: 'admin1234' },
 ] as const
 
@@ -164,6 +167,10 @@ export async function seedAccounts(): Promise<Account[]> {
       buyer: { businessName: 'Berto’s Fish Stall', buyerType: 'market', address: 'Balayan Public Market' } }),
     makeAccount({ ...base, role: 'buyer', status: 'PENDING', name: 'Liza Mendoza', mobile: '09191234567', barangay: 'Calatagan', password: 'bili1234',
       buyer: { businessName: 'Liza’s Dried Fish', buyerType: 'trader', address: 'Calatagan Pier' } }),
-    makeAccount({ ...base, role: 'admin', status: 'ACTIVE', name: 'LAMBAT Admin', mobile: '', username: 'admin', barangay: '—', password: 'admin1234' }),
+        makeAccount({ ...base, role: 'buyer', status: 'ACTIVE', name: 'Tonyo Reyes', mobile: '09201234567', barangay: 'Poblacion', password: 'bili1234',
+      buyer: { businessName: 'Mang Tonyo’s Fish Stall', buyerType: 'market', address: 'Balayan Public Market' } }),
+    makeAccount({ ...base, role: 'buyer', status: 'REJECTED', name: 'Noel Santos', mobile: '09211234567', barangay: 'Lemery', password: 'bili1234',
+      note: 'Hindi malinaw ang address ng negosyo. Isulat ang pangalan ng pwesto o palengke.',
+      buyer: { businessName: 'Noel Fish', buyerType: 'trader', address: 'Lemery' } }),
   ])
 }

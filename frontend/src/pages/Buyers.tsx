@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
-import Radar from '../components/buyers/Radar'
-import PartyCard from '../components/buyers/PartyCard'
+import Radar from '../components/buyer/Radar'
+import PartyCard from '../components/buyer/PartyCard'
 import Chip from '../components/ui/Chip'
 import Disclaimer from '../components/ui/Disclaimer'
 import Segmented from '../components/ui/Segmented'
@@ -10,6 +10,8 @@ import { BangkaIcon } from '../components/home/HomeIcons'
 import { PierIcon, RowsIcon } from '../components/icons'
 import { byUrgency, isActive } from '../data/mock'
 import { useCatches } from '../data/store'
+import { useUser } from '../lib/auth'
+import { useMarket } from '../lib/market'
 import { matchesFor, type Kind } from '../lib/buyers'
 import { countdownText, sellByText } from '../lib/time'
 import { useT } from '../lib/i18n'
@@ -21,6 +23,8 @@ export default function Buyers() {
   const t = useT()
   const { lang } = useSettings()
   const { catches } = useCatches()
+  const user = useUser()
+  const { postListing } = useMarket()
   const [params, setParams] = useSearchParams()
   const [kind, setKind] = useState<Kind>('buyer')
   const [view, setView] = useState<View>('radar')
@@ -44,7 +48,10 @@ export default function Buyers() {
   const selected = matches.find((m) => m.party.id === selectedId)
   const reachable = matches.filter((m) => m.reachable).length
   const accent = kind === 'buyer' ? '#0f6e7a' : '#e8735a'
-  const offer = (id: string) => setOffered((s) => new Set(s).add(`${c.id}:${id}`))
+  const offer = (id: string) => {
+    setOffered((s) => new Set(s).add(`${c.id}:${id}`))
+    if (kind === 'buyer') postListing(c, user.shortName, user.id) // approved buyers can now see this lot in their Mga Alok
+  }
   const isOffered = (id: string) => offered.has(`${c.id}:${id}`)
 
   const radar = (

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
-  SESSION_KEY, browserStore as store, sessionStore, checkLogin, loadAccounts, registerAccount, saveAccounts, seedAccounts, toSession,
-  type Account, type NewAccount, type SessionUser, type Status,
+  ACCOUNTS_KEY, SESSION_KEY, browserStore as store, sessionStore, checkLogin, loadAccounts, registerAccount, saveAccounts, seedAccounts, toSession,
+  type Account, type BuyerProfile, type NewAccount, type SessionUser, type Status,
 } from './accounts'
 
 // Who is signed in. Today this reads and writes the browser (see accounts.ts).
@@ -15,7 +15,8 @@ type Ctx = {
   login: (identifier: string, password: string) => Promise<LoginOutcome>
   register: (input: Omit<NewAccount, 'status'>) => Promise<RegisterOutcome>
   logout: () => void
-  setStatus: (id: string, status: Status) => void
+  setStatus: (id: string, status: Status, note?: string) => void
+  resubmit: (profile: BuyerProfile) => void // a buyer who was not approved applies again
 }
 
 const AuthCtx = createContext<Ctx | null>(null)
@@ -43,9 +44,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // someone who is rejected or suspended while signed in is signed out on the spot
+  // another tab (for example the admin approving a buyer) changed the accounts: pick it up live
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => { if (e.key === ACCOUNTS_KEY) setAccounts(loadAccounts(store)) }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
+  // someone who is suspended (or a non-buyer who is rejected) while signed in is signed out on the spot.
+  // A buyer who was not approved stays in, to read why and to apply again.
   const user = useMemo(() => {
     const a = accounts.find((x) => x.id === sessionId)
-    return a && (a.status === 'ACTIVE' || a.status === 'PENDING') ? toSession(a) : null
+    const ok = a && (a.status === 'ACTIVE' || a.status === 'PENDING' || (a.status === 'REJECTED' && a.role === 'buyer'))
+    return a && ok ? toSession(a) : null
   }, [accounts, sessionId])
 
   const signIn = useCallback((id: string) => {
@@ -77,16 +88,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // only an admin may change who is approved (the real rule is enforced on the server)
-  const setStatus = useCallback((id: string, status: Status) => {
+  const setStatus = useCallback((id: string, status: Status, note?: string) => {
     if (user?.role !== 'admin') return
     setAccounts((prev) => {
-      const next = prev.map((a) => (a.id === id && a.role !== 'admin' ? { ...a, status } : a))
+      const next = prev.map((a) => (a.id === id && a.role !== 'admin' ? { ...a, status, note: status === 'REJECTED' ? note : undefined } : a))
       saveAccounts(store, next)
       return next
     })
   }, [user])
 
-  const value = useMemo(() => ({ user, accounts, login, register, logout, setStatus }), [user, accounts, login, register, logout, setStatus])
+  // a rejected buyer fixes the details and goes back to the waiting line
+  const resubmit = useCallback((profile: BuyerProfile) => {
+    if (user?.role !== 'buyer' || user.status !== 'REJECTED') return
+    setAccounts((prev) => {
+      const next = prev.map((a) => (a.id === user.id ? { ...a, status: 'PENDING' as const, note: undefined, buyer: profile } : a))
+      saveAccounts(store, next)
+      return next
+    })
+  }, [user])
+
+  const value = useMemo(() => ({ user, accounts, login, register, logout, setStatus, resubmit }), [user, accounts, login, register, logout, setStatus, resubmit])
 
   if (!ready) return <div className="bg-dawn min-h-dvh" aria-busy="true" />
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>

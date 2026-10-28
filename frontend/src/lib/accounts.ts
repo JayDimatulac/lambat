@@ -90,6 +90,15 @@ export const browserStore: Store = {
   set: (k, v) => { try { localStorage.setItem(k, v) } catch { /* storage can be blocked */ } },
   remove: (k) => { try { localStorage.removeItem(k) } catch { /* storage can be blocked */ } },
 }
+
+// The signed-in session lives per tab (cleared when the tab closes), so a fresh visit starts at the login.
+// The accounts list stays in localStorage so registered users are kept.
+export const sessionStore: Store = {
+  get: (k) => { try { return sessionStorage.getItem(k) } catch { return null } },
+  set: (k, v) => { try { sessionStorage.setItem(k, v) } catch { /* storage can be blocked */ } },
+  remove: (k) => { try { sessionStorage.removeItem(k) } catch { /* storage can be blocked */ } },
+}
+
 export const ACCOUNTS_KEY = 'lambat.accounts.v1'
 export const SESSION_KEY = 'lambat.session.v1'
 

@@ -19,11 +19,13 @@ export const KPIS: Kpi[] = [
 ]
 
 export const OUTCOMES = [
-  { name: 'Sold', color: 'var(--color-teal)' },
-  { name: 'Redistributed', color: '#2E8391' },
-  { name: 'Processed', color: 'var(--color-peach)' },
-  { name: 'Lost', color: 'var(--color-coral)' },
+  { name: 'Sold', color: '#2e8391', tons: 11.2, note: 'Sold to buyers at the pier and the market.' },
+  { name: 'Redistributed', color: '#94c1c9', tons: 2.4, note: 'Handed to 18 organizations.' },
+  { name: 'Processed', color: '#f2b893', tons: 3.1, note: 'Turned into tuyo, daing and tinapa.' },
+  { name: 'Lost', color: '#e8735a', tons: 1.9, note: '10% loss rate, down 3 points.' },
 ]
+export const SEASON = { catches: '1,284', thisWeek: '+112 this week', value: '₱412k' }
+
 export const WEEKS: { label: string; kg: number[] }[] = [
   { label: 'Aug 10', kg: [1100, 260, 120, 320] }, { label: 'Aug 17', kg: [1180, 280, 140, 300] },
   { label: 'Aug 24', kg: [1240, 300, 130, 290] }, { label: 'Aug 31', kg: [1320, 310, 160, 270] },

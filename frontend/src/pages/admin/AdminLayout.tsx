@@ -53,6 +53,7 @@ export default function AdminLayout() {
   const [askLogout, setAskLogout] = useState(false)
   const [msg, setMsg] = useState('')
 
+  // real accounts waiting for approval (buyers sign up on their own; organizations are made by an admin)
   const pending = accounts.filter((a) => a.role !== 'admin' && a.status === 'PENDING').length
   const night = theme === 'night'
   const activeIdx = NAV.findIndex((i) => isActive(i, pathname))

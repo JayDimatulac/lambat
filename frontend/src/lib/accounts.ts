@@ -101,7 +101,7 @@ export const sessionStore: Store = {
 }
 
 // Change the version number whenever the demo accounts change, so every browser re-creates them
-export const ACCOUNTS_KEY = 'lambat.accounts.v3'
+export const ACCOUNTS_KEY = 'lambat.accounts.v4'
 export const SESSION_KEY = 'lambat.session.v1'
 
 export function loadAccounts(store: Store): Account[] {

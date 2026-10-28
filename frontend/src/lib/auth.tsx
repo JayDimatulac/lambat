@@ -32,8 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     started.current = true
     ;(async () => {
       let list = loadAccounts(store)
-      if (list.length === 0) {
-        list = await seedAccounts()
+      // add any demo account that is missing, so an old saved list can never lock out the admin
+      const seeds = await seedAccounts()
+      const missing = seeds.filter((s) => !list.some((a) => (s.mobile && a.mobile === s.mobile) || (s.username && a.username === s.username)))
+      if (missing.length) {
+        list = [...list, ...missing]
         saveAccounts(store, list)
       }
       setAccounts(list)

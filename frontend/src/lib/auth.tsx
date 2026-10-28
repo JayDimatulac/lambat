@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import {
-  SESSION_KEY, browserStore as store, checkLogin, loadAccounts, registerAccount, saveAccounts, seedAccounts, toSession,
+  SESSION_KEY, browserStore as store, sessionStore, checkLogin, loadAccounts, registerAccount, saveAccounts, seedAccounts, toSession,
   type Account, type NewAccount, type SessionUser, type Status,
 } from './accounts'
 
@@ -36,7 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         saveAccounts(store, list)
       }
       setAccounts(list)
-      setSessionId(store.get(SESSION_KEY))
+      store.remove(SESSION_KEY) // clears the old long-lived session saved by earlier versions
+      setSessionId(sessionStore.get(SESSION_KEY))
       setReady(true)
     })()
   }, [])
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [accounts, sessionId])
 
   const signIn = useCallback((id: string) => {
-    store.set(SESSION_KEY, id)
+    sessionStore.set(SESSION_KEY, id)
     setSessionId(id)
   }, [])
 
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [accounts, signIn])
 
   const logout = useCallback(() => {
-    store.remove(SESSION_KEY)
+    sessionStore.remove(SESSION_KEY)
     setSessionId(null)
   }, [])
 

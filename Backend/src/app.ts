@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import { prisma } from "./db";
 import { authRouter } from "./routes/auth";
+import { catchesRouter } from "./routes/catches";
 
 export const app = express();
 
@@ -23,7 +24,7 @@ app.get("/api/species", async (_req, res) => {
 });
 
 app.use("/api/auth", authRouter);
-
+app.use("/api/catches", catchesRouter);
 // Keep this last, after all routes
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err);

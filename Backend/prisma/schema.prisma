@@ -29,6 +29,20 @@ enum CatchStatus {
   DISCARDED
 }
 
+enum AdvisorySeverity {
+  INFO
+  WARNING
+  DANGER
+}
+
+enum NotificationType {
+  ADVISORY
+  HIGH_RISK
+  OFFER
+  ORDER
+  SYSTEM
+}
+
 model User {
   id           String        @id @default(cuid())
   mobile       String        @unique
@@ -47,9 +61,11 @@ model User {
   businessName String?
   buyerType    String?
 
-  catches      CatchBatch[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  catches       CatchBatch[]
+  advisories    Advisory[]
+  notifications Notification[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 model Species {
@@ -76,4 +92,37 @@ model CatchBatch {
 
   @@index([userId])
   @@index([speciesId])
+}
+
+model Advisory {
+  id          String           @id @default(cuid())
+  title       String
+  body        String
+  severity    AdvisorySeverity @default(INFO)
+  audience    Role?
+  active      Boolean          @default(true)
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime         @default(now())
+
+  createdBy     User           @relation(fields: [createdById], references: [id])
+  notifications Notification[]
+
+  @@index([active, createdAt])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  title      String
+  body       String
+  advisoryId String?
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  advisory Advisory? @relation(fields: [advisoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt, createdAt])
 }

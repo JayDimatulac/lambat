@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { CatchStatus } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { assess } from "../lib/engine";
 
 export const catchesRouter = Router();
 
@@ -15,6 +16,21 @@ const speciesSelect = {
   localNames: true,
   shelfLifeHoursAt0C: true,
 };
+
+function withAssessment<
+  T extends {
+    status: CatchStatus;
+    caughtAt: Date;
+    kilos: number;
+    iceSacks: number | null;
+    species: { shelfLifeHoursAt0C: number | null };
+  }
+>(c: T) {
+  return {
+    ...c,
+    assessment: c.status === "ACTIVE" ? assess(c, c.species.shelfLifeHoursAt0C) : null,
+  };
+}
 
 // Log a new catch (fisherfolk only)
 catchesRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
@@ -71,7 +87,7 @@ catchesRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res)
     include: { species: { select: speciesSelect } },
   });
 
-  res.status(201).json(created);
+  res.status(201).json(withAssessment(created));
 });
 
 // List my catches (optional ?status=ACTIVE)
@@ -90,7 +106,7 @@ catchesRouter.get("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) 
     include: { species: { select: speciesSelect } },
   });
 
-  res.json(catches);
+  res.json(catches.map(withAssessment));
 });
 
 // One catch (the owner, or an admin)
@@ -107,7 +123,7 @@ catchesRouter.get("/:id", requireAuth, async (req, res) => {
     return;
   }
 
-  res.json(found);
+  res.json(withAssessment(found));
 });
 
 // Mark what happened to a catch: SOLD, REDISTRIBUTED, PROCESSED or DISCARDED
@@ -136,5 +152,5 @@ catchesRouter.patch("/:id/outcome", requireAuth, requireRole("FISHERFOLK"), asyn
     include: { species: { select: speciesSelect } },
   });
 
-  res.json(updated);
+  res.json(withAssessment(updated));
 });

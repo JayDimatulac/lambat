@@ -124,3 +124,25 @@ adminRouter.get("/stats", async (_req, res) => {
     catches: catches.map((c) => ({ status: c.status, count: c._count })),
   });
 });
+// Set a species' shelf life at 0 C, in hours (send null to clear it)
+adminRouter.patch("/species/:id", async (req, res) => {
+  const { shelfLifeHoursAt0C } = req.body ?? {};
+  const id = String(req.params.id);
+
+  const valid =
+    shelfLifeHoursAt0C === null ||
+    (Number.isInteger(shelfLifeHoursAt0C) && shelfLifeHoursAt0C > 0 && shelfLifeHoursAt0C <= 2000);
+  if (!valid) {
+    res.status(400).json({ error: "Hours must be a whole number from 1 to 2000, or null" });
+    return;
+  }
+
+  const found = await prisma.species.findUnique({ where: { id } });
+  if (!found) {
+    res.status(404).json({ error: "Species not found" });
+    return;
+  }
+
+  const updated = await prisma.species.update({ where: { id }, data: { shelfLifeHoursAt0C } });
+  res.json(updated);
+});

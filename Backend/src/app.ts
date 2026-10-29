@@ -8,6 +8,9 @@ import { adminRouter } from "./routes/admin";
 import { weatherRouter } from "./routes/weather";
 import { advisoriesRouter } from "./routes/advisories";
 import { notificationsRouter } from "./routes/notifications";
+import { needsRouter } from "./routes/needs";
+import { offersRouter } from "./routes/offers";
+import { ordersRouter } from "./routes/orders";
 
 export const app = express();
 
@@ -33,6 +36,9 @@ app.use("/api/admin", adminRouter);
 app.use("/api/weather", weatherRouter);
 app.use("/api/advisories", advisoriesRouter);
 app.use("/api/notifications", notificationsRouter);
+app.use("/api/needs", needsRouter);
+app.use("/api/offers", offersRouter);
+app.use("/api/orders", ordersRouter);
 
 // Keep this last, after all routes
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

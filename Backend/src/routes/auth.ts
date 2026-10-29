@@ -8,7 +8,7 @@ import { requireAuth } from "../middleware/auth";
 export const authRouter = Router();
 
 // 09171234567, +639171234567 and 639171234567 all become 09171234567
-function normalizeMobile(input: unknown): string | null {
+export function normalizeMobile(input: unknown): string | null {
   if (typeof input !== "string") return null;
   let m = input.replace(/[\s\-()]/g, "");
   if (m.startsWith("+63")) m = "0" + m.slice(3);

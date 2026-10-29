@@ -19,6 +19,7 @@ enum AccountStatus {
   ACTIVE
   PENDING
   SUSPENDED
+  REJECTED
 }
 
 enum CatchStatus {
@@ -27,6 +28,46 @@ enum CatchStatus {
   REDISTRIBUTED
   PROCESSED
   DISCARDED
+}
+
+enum AdvisorySeverity {
+  INFO
+  WARNING
+  DANGER
+}
+
+enum NotificationType {
+  ADVISORY
+  HIGH_RISK
+  OFFER
+  ORDER
+  SYSTEM
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum NeedStatus {
+  OPEN
+  FULFILLED
+  CANCELLED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+  EXPIRED
+}
+
+enum OrderStatus {
+  CONFIRMED
+  COMPLETED
+  CANCELLED
 }
 
 model User {
@@ -46,10 +87,19 @@ model User {
   // buyer only (optional)
   businessName String?
   buyerType    String?
+  statusNote   String?
+  profile      Json?
 
-  catches      CatchBatch[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  catches        CatchBatch[]
+  advisories     Advisory[]
+  notifications  Notification[]
+  needs          BuyerNeed[]
+  offersMade     Offer[]        @relation("OfferFisher")
+  offersReceived Offer[]        @relation("OfferBuyer")
+  ordersSelling  Order[]        @relation("OrderFisher")
+  ordersBuying   Order[]        @relation("OrderBuyer")
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 }
 
 model Species {
@@ -59,6 +109,8 @@ model Species {
   localNames         String[]
   shelfLifeHoursAt0C Int?
   catches            CatchBatch[]
+  pathways           Pathway[]
+  needs              BuyerNeed[]
 }
 
 model CatchBatch {
@@ -73,7 +125,125 @@ model CatchBatch {
 
   user      User        @relation(fields: [userId], references: [id])
   species   Species     @relation(fields: [speciesId], references: [id])
+  offers    Offer[]
+  orders    Order[]
 
   @@index([userId])
   @@index([speciesId])
+}
+
+model Advisory {
+  id          String           @id @default(cuid())
+  title       String
+  body        String
+  severity    AdvisorySeverity @default(INFO)
+  audience    Role?
+  active      Boolean          @default(true)
+  expiresAt   DateTime?
+  createdById String
+  createdAt   DateTime         @default(now())
+
+  createdBy     User           @relation(fields: [createdById], references: [id])
+  notifications Notification[]
+
+  @@index([active, createdAt])
+}
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  title      String
+  body       String
+  advisoryId String?
+  readAt     DateTime?
+  createdAt  DateTime         @default(now())
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  advisory Advisory? @relation(fields: [advisoryId], references: [id], onDelete: SetNull)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model Pathway {
+  id                 String      @id @default(cuid())
+  speciesId          String
+  name               String
+  allowedRisks       RiskLevel[]
+  requiredConditions String
+  avoidConditions    String
+  recommendation     String
+  source             String?
+  active             Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+
+  @@unique([speciesId, name])
+}
+
+model BuyerNeed {
+  id         String     @id @default(cuid())
+  buyerId    String
+  speciesId  String
+  kilos      Float
+  pricePerKg Float?
+  neededBy   DateTime?
+  barangay   String
+  note       String?
+  status     NeedStatus @default(OPEN)
+  createdAt  DateTime   @default(now())
+
+  buyer   User    @relation(fields: [buyerId], references: [id])
+  species Species @relation(fields: [speciesId], references: [id])
+  offers  Offer[]
+
+  @@index([speciesId, status])
+  @@index([buyerId])
+}
+
+model Offer {
+  id          String      @id @default(cuid())
+  catchId     String
+  fisherId    String
+  buyerId     String
+  needId      String?
+  kilos       Float
+  pricePerKg  Float
+  message     String?
+  status      OfferStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  respondedAt DateTime?
+
+  catch  CatchBatch @relation(fields: [catchId], references: [id])
+  fisher User       @relation("OfferFisher", fields: [fisherId], references: [id])
+  buyer  User       @relation("OfferBuyer", fields: [buyerId], references: [id])
+  need   BuyerNeed? @relation(fields: [needId], references: [id])
+  order  Order?
+
+  @@index([catchId, status])
+  @@index([buyerId, status])
+  @@index([fisherId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  offerId     String      @unique
+  catchId     String
+  fisherId    String
+  buyerId     String
+  kilos       Float
+  pricePerKg  Float
+  status      OrderStatus @default(CONFIRMED)
+  createdAt   DateTime    @default(now())
+  completedAt DateTime?
+
+  offer  Offer      @relation(fields: [offerId], references: [id])
+  catch  CatchBatch @relation(fields: [catchId], references: [id])
+  fisher User       @relation("OrderFisher", fields: [fisherId], references: [id])
+  buyer  User       @relation("OrderBuyer", fields: [buyerId], references: [id])
+
+  @@index([fisherId])
+  @@index([buyerId])
+  @@index([catchId, status])
 }

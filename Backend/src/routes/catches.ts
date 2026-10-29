@@ -2,6 +2,7 @@ import { Router } from "express";
 import type { CatchStatus } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth";
+import { assess } from "../lib/engine";
 
 export const catchesRouter = Router();
 
@@ -15,6 +16,21 @@ const speciesSelect = {
   localNames: true,
   shelfLifeHoursAt0C: true,
 };
+
+function withAssessment<
+  T extends {
+    status: CatchStatus;
+    caughtAt: Date;
+    kilos: number;
+    iceSacks: number | null;
+    species: { shelfLifeHoursAt0C: number | null };
+  }
+>(c: T) {
+  return {
+    ...c,
+    assessment: c.status === "ACTIVE" ? assess(c, c.species.shelfLifeHoursAt0C) : null,
+  };
+}
 
 // Log a new catch (fisherfolk only)
 catchesRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
@@ -71,7 +87,7 @@ catchesRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res)
     include: { species: { select: speciesSelect } },
   });
 
-  res.status(201).json(created);
+  res.status(201).json(withAssessment(created));
 });
 
 // List my catches (optional ?status=ACTIVE)
@@ -90,7 +106,7 @@ catchesRouter.get("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) 
     include: { species: { select: speciesSelect } },
   });
 
-  res.json(catches);
+  res.json(catches.map(withAssessment));
 });
 
 // One catch (the owner, or an admin)
@@ -107,7 +123,7 @@ catchesRouter.get("/:id", requireAuth, async (req, res) => {
     return;
   }
 
-  res.json(found);
+  res.json(withAssessment(found));
 });
 
 // Mark what happened to a catch: SOLD, REDISTRIBUTED, PROCESSED or DISCARDED
@@ -136,5 +152,70 @@ catchesRouter.patch("/:id/outcome", requireAuth, requireRole("FISHERFOLK"), asyn
     include: { species: { select: speciesSelect } },
   });
 
-  res.json(updated);
+  res.json(withAssessment(updated));
+});
+// Potential value-added pathways for one of my active catches
+catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+
+  const found = await prisma.catchBatch.findUnique({
+    where: { id: String(req.params.id) },
+    include: { species: { select: speciesSelect } },
+  });
+  if (!found || found.userId !== userId) {
+    res.status(404).json({ error: "Catch not found" });
+    return;
+  }
+
+  const disclaimer =
+    "These are potential value-added pathways for decision support only. This is not a food-safety certification.";
+
+  if (found.status !== "ACTIVE") {
+    res.json({ risk: null, pathways: [], note: "This catch already has an outcome.", disclaimer });
+    return;
+  }
+
+  const a = assess(found, found.species.shelfLifeHoursAt0C);
+
+  if (!a.risk) {
+    res.json({
+      risk: null,
+      pathways: [],
+      note: "Not enough shelf-life data to suggest a pathway yet.",
+      disclaimer,
+      placeholder: a.placeholder,
+    });
+    return;
+  }
+  if (a.risk === "HIGH") {
+    res.json({
+      risk: "HIGH",
+      pathways: [],
+      note: "No processing pathway is suggested for a high-risk catch.",
+      disclaimer,
+      placeholder: a.placeholder,
+    });
+    return;
+  }
+
+  const pathways = await prisma.pathway.findMany({
+    where: { speciesId: found.speciesId, active: true, allowedRisks: { has: a.risk } },
+    select: {
+      id: true,
+      name: true,
+      requiredConditions: true,
+      avoidConditions: true,
+      recommendation: true,
+      source: true,
+    },
+    orderBy: { name: "asc" },
+  });
+
+  res.json({
+    risk: a.risk,
+    label: "Potential value-added pathway",
+    pathways,
+    disclaimer,
+    placeholder: a.placeholder,
+  });
 });

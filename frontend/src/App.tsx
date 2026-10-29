@@ -25,9 +25,11 @@ import Reference from './pages/admin/Reference'
 import BuyerWaiting from './pages/buyer/BuyerWaiting'
 import BuyerHome from './pages/buyer/BuyerHome'
 import BuyerOffers from './pages/buyer/BuyerOffers'
+import BuyerStall from './pages/buyer/BuyerStall'
+import BuyerAlerts from './pages/buyer/BuyerAlerts'
 import BuyerNeeds from './pages/buyer/BuyerNeeds'
 import BuyerOrders from './pages/buyer/BuyerOrders'
-import BuyerStall from './pages/buyer/BuyerStall'
+
 import { MarketProvider } from './lib/market'
 import BuyerShell from './components/buyer/BuyerShell'
 
@@ -76,13 +78,14 @@ export default function App() {
         <Route path="/register" element={<Register />} />
 
         <Route path="/buyer/waiting" element={<Guard role="buyer"><BuyerWaiting /></Guard>} />
-        <Route path="/buyer" element={<BuyerGate />}>
-          <Route element={<BuyerShell />}>
+          <Route path="/buyer" element={<BuyerGate />}>
+            <Route element={<BuyerShell />}>
             <Route index element={<BuyerHome />} />
             <Route path="offers" element={<BuyerOffers />} />
             <Route path="needs" element={<BuyerNeeds />} />
             <Route path="orders" element={<BuyerOrders />} />
             <Route path="stall" element={<BuyerStall />} />
+            <Route path="alerts" element={<BuyerAlerts />} />
           </Route>
         </Route>
         <Route path="/org" element={<Guard role="organization"><Soon /></Guard>} />

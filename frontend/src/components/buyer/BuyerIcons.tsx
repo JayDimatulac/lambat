@@ -58,3 +58,11 @@ export const LifebuoyIcon = (p: IconProps) => (
     <path d="M5.6 5.6L9.3 9.3M18.4 5.6L14.7 9.3M5.6 18.4L9.3 14.7M18.4 18.4L14.7 14.7" />
   </Svg>
 )
+/** Abiso: the budyong, the conch horn used to call people in */
+export const HornIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 15.6C3 11.4 6.6 8 12 8c5 0 8.5 2.2 8.5 4.8 0 2.4-3 4.2-7.5 4.2H3Z" />
+    <path d="M8.2 8.6V16.7M12.6 8.1V16.9" />
+    <path d="M20.5 12.8H22" />
+  </Svg>
+)

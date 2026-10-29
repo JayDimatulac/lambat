@@ -6,6 +6,7 @@ import Lifeline from '../components/detail/Lifeline'
 import AddIceSheet from '../components/detail/AddIceSheet'
 import OutcomeSheet from '../components/detail/OutcomeSheet'
 import SpeakButton from '../components/detail/SpeakButton'
+import NeedAlert from '../components/detail/NeedAlert'
 import { Story, WhyList } from '../components/detail/Story'
 import Disclaimer from '../components/ui/Disclaimer'
 import RiskBadge from '../components/ui/RiskBadge'
@@ -97,6 +98,7 @@ export default function CatchDetail() {
 
         {/* THE FORK, or the record of what happened */}
         <div className="space-y-4 lg:col-start-2 lg:row-span-3 lg:row-start-1">
+          {!closed && <NeedAlert c={c} />}
           {closed && c.outcome ? (
             <section className="space-y-3 rounded-lg border-2 border-teal bg-seafoam p-5 text-center">
               <span className="mx-auto grid size-14 place-items-center rounded-full bg-teal text-on-accent"><Check size={30} strokeWidth={2.4} aria-hidden /></span>

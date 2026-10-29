@@ -37,6 +37,12 @@ const en = {
   'wait.no.title': 'Not approved yet', 'wait.no.why': 'Why', 'wait.no.fix': 'Fix your details and send again.', 'wait.no.send': 'Send again', 'wait.no.fill': 'Fill in every box.',
   'wait.ok': 'You are approved! Opening your pier…',
   'who': 'Account', 'unit.kg': 'kg',
+'nav.alerts': 'Alerts',
+  'alerts.title': 'Alerts', 'alerts.sub': 'New lots for your needs and news about your orders.', 'alerts.empty': 'Nothing new yet. Post a need and matching lots will appear here.', 'alerts.new': 'New',
+  'alert.match': 'Matching lot for your need', 'alert.match.body': '{fisher} · {place} · ₱{ask}/kg',
+  'alert.o.confirmed': 'Order confirmed', 'alert.o.onway': 'You are on the way', 'alert.o.received': 'Fish received',
+  'ago.now': 'just now', 'ago.min': '{n} min ago', 'ago.hr': '{n} h ago',
+  'fneed.title': 'Someone is looking for {species}', 'fneed.offer': 'Offer my catch', 'fneed.sent': 'Offered. The buyer can see your catch now.', 'fneed.others': 'See other buyers',
 } as const
 
 type BKey = keyof typeof en
@@ -74,6 +80,12 @@ const fil: Record<BKey, string> = {
   'wait.no.title': 'Hindi pa inaprubahan', 'wait.no.why': 'Dahilan', 'wait.no.fix': 'Ayusin ang detalye at ipadala ulit.', 'wait.no.send': 'Ipadala ulit', 'wait.no.fill': 'Punan ang bawat kahon.',
   'wait.ok': 'Aprubado ka na! Binubuksan ang pantalan mo…',
   who: 'Account', 'unit.kg': 'kg',
+  'nav.alerts': 'Abiso',
+  'alerts.title': 'Mga abiso', 'alerts.sub': 'Mga bagong lote para sa kailangan mo at balita sa mga order mo.', 'alerts.empty': 'Wala pang bago. Mag-post ng kailangan at lalabas dito ang mga tugmang lote.', 'alerts.new': 'Bago',
+  'alert.match': 'Tugmang lote sa kailangan mo', 'alert.match.body': '{fisher} · {place} · ₱{ask}/kg',
+  'alert.o.confirmed': 'Kumpirmado ang order', 'alert.o.onway': 'Papunta ka na', 'alert.o.received': 'Natanggap na ang isda',
+  'ago.now': 'ngayon lang', 'ago.min': '{n} minuto na ang nakalipas', 'ago.hr': '{n} oras na ang nakalipas',
+  'fneed.title': 'May naghahanap ng {species}', 'fneed.offer': 'Ialok ang huli ko', 'fneed.sent': 'Naialok na. Makikita na ng mamimili ang huli mo.', 'fneed.others': 'Tingnan ang ibang mamimili',  
 }
 
 export type { BKey }

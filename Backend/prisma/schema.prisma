@@ -19,6 +19,7 @@ enum AccountStatus {
   ACTIVE
   PENDING
   SUSPENDED
+  REJECTED
 }
 
 enum CatchStatus {
@@ -86,6 +87,8 @@ model User {
   // buyer only (optional)
   businessName String?
   buyerType    String?
+  statusNote   String?
+  profile      Json?
 
   catches        CatchBatch[]
   advisories     Advisory[]

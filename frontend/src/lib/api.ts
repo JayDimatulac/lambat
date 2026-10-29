@@ -3,7 +3,7 @@ const TOKEN_KEY = "lambat_token";
 
 export function getToken(): string | null {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    return sessionStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
@@ -11,8 +11,8 @@ export function getToken(): string | null {
 
 export function setToken(token: string | null): void {
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-    else localStorage.removeItem(TOKEN_KEY);
+    if (token) sessionStorage.setItem(TOKEN_KEY, token);
+    else sessionStorage.removeItem(TOKEN_KEY);
   } catch {
     // storage blocked: the user just has to log in again next time
   }

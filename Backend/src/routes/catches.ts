@@ -154,3 +154,68 @@ catchesRouter.patch("/:id/outcome", requireAuth, requireRole("FISHERFOLK"), asyn
 
   res.json(withAssessment(updated));
 });
+// Potential value-added pathways for one of my active catches
+catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+
+  const found = await prisma.catchBatch.findUnique({
+    where: { id: String(req.params.id) },
+    include: { species: { select: speciesSelect } },
+  });
+  if (!found || found.userId !== userId) {
+    res.status(404).json({ error: "Catch not found" });
+    return;
+  }
+
+  const disclaimer =
+    "These are potential value-added pathways for decision support only. This is not a food-safety certification.";
+
+  if (found.status !== "ACTIVE") {
+    res.json({ risk: null, pathways: [], note: "This catch already has an outcome.", disclaimer });
+    return;
+  }
+
+  const a = assess(found, found.species.shelfLifeHoursAt0C);
+
+  if (!a.risk) {
+    res.json({
+      risk: null,
+      pathways: [],
+      note: "Not enough shelf-life data to suggest a pathway yet.",
+      disclaimer,
+      placeholder: a.placeholder,
+    });
+    return;
+  }
+  if (a.risk === "HIGH") {
+    res.json({
+      risk: "HIGH",
+      pathways: [],
+      note: "No processing pathway is suggested for a high-risk catch.",
+      disclaimer,
+      placeholder: a.placeholder,
+    });
+    return;
+  }
+
+  const pathways = await prisma.pathway.findMany({
+    where: { speciesId: found.speciesId, active: true, allowedRisks: { has: a.risk } },
+    select: {
+      id: true,
+      name: true,
+      requiredConditions: true,
+      avoidConditions: true,
+      recommendation: true,
+      source: true,
+    },
+    orderBy: { name: "asc" },
+  });
+
+  res.json({
+    risk: a.risk,
+    label: "Potential value-added pathway",
+    pathways,
+    disclaimer,
+    placeholder: a.placeholder,
+  });
+});

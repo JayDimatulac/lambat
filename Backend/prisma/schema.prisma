@@ -75,6 +75,7 @@ model Species {
   localNames         String[]
   shelfLifeHoursAt0C Int?
   catches            CatchBatch[]
+  pathways           Pathway[]
 }
 
 model CatchBatch {
@@ -125,4 +126,26 @@ model Notification {
   advisory Advisory? @relation(fields: [advisoryId], references: [id], onDelete: SetNull)
 
   @@index([userId, readAt, createdAt])
+}
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Pathway {
+  id                 String      @id @default(cuid())
+  speciesId          String
+  name               String
+  allowedRisks       RiskLevel[]
+  requiredConditions String
+  avoidConditions    String
+  recommendation     String
+  source             String?
+  active             Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+
+  @@unique([speciesId, name])
 }

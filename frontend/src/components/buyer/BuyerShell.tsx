@@ -1,9 +1,10 @@
 import type { ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { BuoyIcon, KnotPlusIcon, PierIcon } from '../icons'
-import { CrateIcon, RopeIcon, StallIcon } from './BuyerIcons'
+import { CrateIcon, HornIcon, RopeIcon, StallIcon } from './BuyerIcons'
 import LangToggle from '../layout/LangToggle'
 import { useUser } from '../../lib/auth'
+import { useBuyerAlerts } from '../../lib/buyerAlerts'
 import { useBT, type BKey } from '../../lib/buyerText'
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
@@ -92,6 +93,8 @@ function BottomBar() {
 
 export default function BuyerShell() {
   const user = useUser()
+  const b = useBT()
+  const { unread } = useBuyerAlerts()
   return (
     <div className="min-h-dvh lg:flex">
       <Rail />
@@ -103,6 +106,10 @@ export default function BuyerShell() {
           </Link>
           <div className="flex items-center gap-2">
             <LangToggle />
+            <Link to="/buyer/alerts" aria-label={b('nav.alerts')} className="relative grid size-12 place-items-center rounded-full hover:bg-seafoam">
+              <HornIcon size={26} className="text-teal" />
+              {unread > 0 && <em className="absolute -right-0.5 top-0.5 min-w-5 rounded-full bg-coral px-1.5 text-center text-xs font-bold not-italic text-deep">{unread}</em>}
+            </Link>
             <Link to="/buyer/stall" aria-label={user.name} className="grid size-12 place-items-center rounded-full bg-teal text-sm font-bold text-on-accent">{user.initials}</Link>
           </div>
         </header>

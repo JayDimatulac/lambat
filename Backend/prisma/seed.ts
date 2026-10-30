@@ -16,6 +16,7 @@ const species = [
   { code: "bullet", englishName: "Bullet tuna", scientificName: "Auxis rochei", localNames: ["Tulingang bilog"], l0Min: 192, l0Max: 192, histamine: true },
   { code: "yellowfin", englishName: "Yellowfin tuna", scientificName: "Thunnus albacares", localNames: ["Tambakol"], l0Min: 288, l0Max: 288, histamine: true },
   { code: "moonfish", englishName: "Moonfish", scientificName: "Mene maculata", localNames: ["Hiwas"], l0Min: 168, l0Max: 192, histamine: false },
+  { code: "other", englishName: "Other", scientificName: "Unknown", localNames: [], l0Min: 120, l0Max: 120, histamine: true },
 ];
 
 async function main() {

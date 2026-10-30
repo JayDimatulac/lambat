@@ -108,16 +108,21 @@ export default function LogCatch() {
   const [draft, setDraft] = useState<Draft>(emptyDraft)
   const [saved, setSaved] = useState<{ id: string; level: IceLevel } | null>(null)
   const [lastTileId] = useState(readLast)
+  const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }))
   const reveal = step === STEPS
 
-  const save = () => {
+  const save = async () => {
+    if (saving) return
     const sp = SPECIES[draft.variant ?? draft.speciesId ?? 'other']
     const tile = TILES.find((x) => x.id === draft.tileId)
     const caughtAt = Date.now() - draft.hoursAgo * 3_600_000
     const iceKg = iceKgOf(draft)
-    const id = addCatch({
+    setSaving(true)
+    setSaveError(null)
+    const res = await addCatch({
       species: tile ? tile.name : t('species.other'),
       speciesId: draft.tileId === 'other' ? undefined : (draft.variant ?? draft.speciesId ?? undefined),
       shape: tile?.shape ?? 'scad',
@@ -126,8 +131,13 @@ export default function LogCatch() {
       caughtAt,
       model: { l0Min: sp.l0Min, l0Max: sp.l0Max, histamine: !!sp.histamine, kg: draft.kg, events: [{ at: caughtAt, iceKg }] },
     })
+    setSaving(false)
+    if (!res.ok) {
+      setSaveError(res.message)
+      return
+    }
     try { if (draft.tileId && draft.tileId !== 'other') localStorage.setItem(LAST_KEY, draft.tileId) } catch { /* storage can be blocked */ }
-    setSaved({ id, level: iceLevel(iceKg, draft.kg) })
+    setSaved({ id: res.id, level: iceLevel(iceKg, draft.kg) })
     setStep(STEPS)
   }
 
@@ -160,6 +170,7 @@ export default function LogCatch() {
 
       {!reveal && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 px-4 py-3 backdrop-blur">
+          {saveError && <p role="alert" className="mx-auto mb-2 max-w-md text-center text-sm font-semibold text-risk-high">{saveError}</p>}
           <div className="mx-auto flex max-w-md gap-3">
             {step > 0 && (
               <Button variant="secondary" className="min-h-14" onClick={() => setStep(step - 1)}>
@@ -168,7 +179,7 @@ export default function LogCatch() {
             )}
             <Button
               className="min-h-14 flex-1 text-base"
-              disabled={step === 0 && !draft.speciesId}
+              disabled={(step === 0 && !draft.speciesId) || saving}
               onClick={() => (step === STEPS - 1 ? save() : setStep(step + 1))}
             >
               {step === STEPS - 1 ? t('log.save') : t('log.next')}

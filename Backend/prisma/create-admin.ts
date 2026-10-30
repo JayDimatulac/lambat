@@ -20,10 +20,20 @@ async function main() {
     process.exit(1);
   }
 
+  const passwordHash = await bcrypt.hash(password, 10);
   const existing = await prisma.user.findUnique({ where: { mobile } });
+
   if (existing) {
-    console.error("That mobile number is already registered");
-    process.exit(1);
+    if (existing.role !== "ADMIN") {
+      console.error("That mobile number belongs to a non-admin account. Use a different number.");
+      process.exit(1);
+    }
+    await prisma.user.update({
+      where: { mobile },
+      data: { passwordHash, name, status: "ACTIVE" },
+    });
+    console.log("Existing admin updated: password reset and account set to ACTIVE.");
+    return;
   }
 
   await prisma.user.create({
@@ -33,7 +43,7 @@ async function main() {
       name,
       mobile,
       barangay: "N/A",
-      passwordHash: await bcrypt.hash(password, 10),
+      passwordHash,
     },
   });
   console.log("Admin created. You can log in with that mobile number.");

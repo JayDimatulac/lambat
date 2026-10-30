@@ -1,6 +1,5 @@
 import { api, ApiError, getToken, setToken } from './api'
-import { initialsOf, shortName, type BuyerProfile, type BuyerType, type FisherProfile, type Role, type SessionUser, type Status } from './accounts'
-
+import { initialsOf, shortName, type Account, type BuyerProfile, type BuyerType, type FisherProfile, type Role, type SessionUser, type Status } from './accounts'
 type ApiUser = {
   id: string
   role: 'FISHERFOLK' | 'BUYER' | 'ADMIN' | 'ORGANIZATION'
@@ -137,4 +136,31 @@ export async function apiReapply(buyer: BuyerProfile): Promise<SessionUser | nul
 
 export function apiLogout() {
   setToken(null)
+}
+function toAccount(u: ApiUser): Account {
+  const { initials: _initials, shortName: _short, ...rest } = fromApiUser(u)
+  void _initials
+  void _short
+  return { ...rest, salt: '', hash: '' }
+}
+
+// everyone, for the admin screens (null if the request failed, so the old list is kept)
+export async function apiAdminUsers(): Promise<Account[] | null> {
+  try {
+    const rows = await api.get<ApiUser[]>('/admin/users')
+    return rows.map(toAccount)
+  } catch {
+    return null
+  }
+}
+
+// approve, reject (with a note) or suspend. The server does not accept PENDING.
+export async function apiSetStatus(id: string, status: Status, note?: string): Promise<boolean> {
+  if (status === 'PENDING') return false
+  try {
+    await api.patch(`/admin/users/${id}/status`, { status, note })
+    return true
+  } catch {
+    return false
+  }
 }

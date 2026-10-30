@@ -103,14 +103,17 @@ model User {
 }
 
 model Species {
-  id                 String       @id @default(cuid())
-  englishName        String       @unique
-  scientificName     String
-  localNames         String[]
-  shelfLifeHoursAt0C Int?
-  catches            CatchBatch[]
-  pathways           Pathway[]
-  needs              BuyerNeed[]
+  id             String       @id @default(cuid())
+  code           String?      @unique
+  englishName    String       @unique
+  scientificName String
+  localNames     String[]
+  l0Min          Int?
+  l0Max          Int?
+  histamine      Boolean      @default(false)
+  catches        CatchBatch[]
+  pathways       Pathway[]
+  needs          BuyerNeed[]
 }
 
 model CatchBatch {
@@ -118,13 +121,14 @@ model CatchBatch {
   userId    String
   speciesId String
   kilos     Float
-  iceSacks  Float?
+  place     String?
   caughtAt  DateTime
   status    CatchStatus @default(ACTIVE)
   createdAt DateTime    @default(now())
 
   user      User        @relation(fields: [userId], references: [id])
   species   Species     @relation(fields: [speciesId], references: [id])
+  iceEvents IceEvent[]
   offers    Offer[]
   orders    Order[]
 
@@ -246,4 +250,14 @@ model Order {
   @@index([fisherId])
   @@index([buyerId])
   @@index([catchId, status])
+}
+model IceEvent {
+  id      String     @id @default(cuid())
+  catchId String
+  at      DateTime
+  iceKg   Float
+
+  catch CatchBatch @relation(fields: [catchId], references: [id], onDelete: Cascade)
+
+  @@index([catchId, at])
 }

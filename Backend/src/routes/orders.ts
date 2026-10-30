@@ -63,7 +63,7 @@ ordersRouter.patch("/:id/complete", async (req, res) => {
     if (flipped.count === 0) return null;
 
     if (order.kilos >= order.catch.kilos && order.catch.status === "ACTIVE") {
-      await tx.catchBatch.update({ where: { id: order.catchId }, data: { status: "SOLD" } });
+      await tx.catchBatch.update({ where: { id: order.catchId }, data: { status: "SOLD", closedAt: new Date() } });
     }
     await tx.notification.create({
       data: {

@@ -117,14 +117,16 @@ model Species {
 }
 
 model CatchBatch {
-  id        String      @id @default(cuid())
-  userId    String
-  speciesId String
-  kilos     Float
-  place     String?
-  caughtAt  DateTime
-  status    CatchStatus @default(ACTIVE)
-  createdAt DateTime    @default(now())
+  id         String      @id @default(cuid())
+  userId     String
+  speciesId  String
+  kilos      Float
+  place      String?
+  caughtAt   DateTime
+  status     CatchStatus @default(ACTIVE)
+  closedAt   DateTime?
+  closedRisk String?
+  createdAt  DateTime    @default(now())
 
   user      User        @relation(fields: [userId], references: [id])
   species   Species     @relation(fields: [speciesId], references: [id])

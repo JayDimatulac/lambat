@@ -192,7 +192,10 @@ catchesRouter.patch("/:id/outcome", requireAuth, requireRole("FISHERFOLK"), asyn
     return;
   }
 
-  const found = await prisma.catchBatch.findUnique({ where: { id: String(req.params.id) } });
+  const found = await prisma.catchBatch.findUnique({
+    where: { id: String(req.params.id) },
+    include: catchInclude,
+  });
   if (!found || found.userId !== userId) {
     res.status(404).json({ error: "Catch not found" });
     return;
@@ -202,12 +205,43 @@ catchesRouter.patch("/:id/outcome", requireAuth, requireRole("FISHERFOLK"), asyn
     return;
   }
 
+  // remember how risky it was at the moment it was closed
+  const a = assess(found, found.iceEvents, found.species);
   const updated = await prisma.catchBatch.update({
     where: { id: found.id },
-    data: { status },
+    data: { status, closedAt: new Date(), closedRisk: a.risk },
     include: catchInclude,
   });
 
+  res.json(withAssessment(updated));
+});
+
+// Undo an outcome (not possible once an order exists for the catch)
+catchesRouter.patch("/:id/reopen", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+
+  const found = await prisma.catchBatch.findUnique({ where: { id: String(req.params.id) } });
+  if (!found || found.userId !== userId) {
+    res.status(404).json({ error: "Catch not found" });
+    return;
+  }
+  if (found.status === "ACTIVE") {
+    res.status(409).json({ error: "This catch is already active" });
+    return;
+  }
+  const order = await prisma.order.findFirst({
+    where: { catchId: found.id, status: { in: ["CONFIRMED", "COMPLETED"] } },
+  });
+  if (order) {
+    res.status(409).json({ error: "This catch has an order, so it can't be reopened" });
+    return;
+  }
+
+  const updated = await prisma.catchBatch.update({
+    where: { id: found.id },
+    data: { status: "ACTIVE", closedAt: null, closedRisk: null },
+    include: catchInclude,
+  });
   res.json(withAssessment(updated));
 });
 

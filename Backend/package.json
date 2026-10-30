@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "prisma generate && tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test:api": "powershell -ExecutionPolicy Bypass -File scripts/regression.ps1"
   },
   "keywords": [],
   "author": "",

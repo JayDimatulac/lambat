@@ -1,3 +1,5 @@
+import { rateLimit } from "express-rate-limit";
+import { explain } from "../lib/llm";
 import { Router } from "express";
 import type { CatchStatus, RiskLevel } from "@prisma/client";
 import { prisma } from "../db";
@@ -312,3 +314,65 @@ catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async
     placeholder: a.placeholder,
   });
 });
+// 20 questions per hour per person, so the AI bill can't run away
+const explainLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 20,
+  keyGenerator: (_req, res) => (res.locals.auth as { userId: string }).userId,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Too many questions for now. Please try again later." },
+});
+
+// "Bakit ganito?": explain one of my active catches in plain words
+catchesRouter.post(
+  "/:id/explain",
+  requireAuth,
+  requireRole("FISHERFOLK"),
+  explainLimiter,
+  async (req, res) => {
+    const { userId } = res.locals.auth as { userId: string };
+    const lang = req.body?.lang === "fil" ? "fil" : "en";
+
+    const found = await prisma.catchBatch.findUnique({
+      where: { id: String(req.params.id) },
+      include: catchInclude,
+    });
+    if (!found || found.userId !== userId) {
+      res.status(404).json({ error: "Catch not found" });
+      return;
+    }
+    if (found.status !== "ACTIVE") {
+      res.status(409).json({ error: "This catch already has an outcome" });
+      return;
+    }
+
+    const a = assess(found, found.iceEvents, found.species);
+    if (!a.risk || !a.iceLevel || a.hoursMin === null || a.hoursMax === null) {
+      res.status(409).json({ error: "Not enough shelf-life data for this species yet" });
+      return;
+    }
+
+    const out = await explain(
+      {
+        species: found.species.englishName,
+        localNames: found.species.localNames,
+        kilos: found.kilos,
+        hoursElapsed: a.hoursElapsed,
+        iceLevel: a.iceLevel,
+        risk: a.risk,
+        hoursMin: a.hoursMin,
+        hoursMax: a.hoursMax,
+        histamine: found.species.histamine,
+      },
+      lang
+    );
+
+    res.json({
+      ...out,
+      lang,
+      assessment: a,
+      disclaimer: "This explanation is for decision support only. AI can make mistakes.",
+    });
+  }
+);

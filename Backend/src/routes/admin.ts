@@ -149,16 +149,19 @@ adminRouter.get("/stats", async (_req, res) => {
     catches: catches.map((c) => ({ status: c.status, count: c._count })),
   });
 });
-// Set a species' shelf life at 0 C, in hours (send null to clear it)
+// Set a species' shelf life at 0 C (hours). Send l0Min and l0Max together, or both null to clear.
 adminRouter.patch("/species/:id", async (req, res) => {
-  const { shelfLifeHoursAt0C } = req.body ?? {};
+  const { l0Min, l0Max, histamine } = req.body ?? {};
   const id = String(req.params.id);
 
-  const valid =
-    shelfLifeHoursAt0C === null ||
-    (Number.isInteger(shelfLifeHoursAt0C) && shelfLifeHoursAt0C > 0 && shelfLifeHoursAt0C <= 2000);
-  if (!valid) {
-    res.status(400).json({ error: "Hours must be a whole number from 1 to 2000, or null" });
+  const hours = (v: unknown): v is number => Number.isInteger(v) && (v as number) > 0 && (v as number) <= 2000;
+  const clearing = l0Min === null && l0Max === null;
+  if (!clearing && !(hours(l0Min) && hours(l0Max) && l0Max >= l0Min)) {
+    res.status(400).json({ error: "Send l0Min and l0Max as whole hours from 1 to 2000 (max not below min), or both null" });
+    return;
+  }
+  if (histamine !== undefined && typeof histamine !== "boolean") {
+    res.status(400).json({ error: "histamine must be true or false" });
     return;
   }
 
@@ -168,7 +171,10 @@ adminRouter.patch("/species/:id", async (req, res) => {
     return;
   }
 
-  const updated = await prisma.species.update({ where: { id }, data: { shelfLifeHoursAt0C } });
+  const updated = await prisma.species.update({
+    where: { id },
+    data: { l0Min, l0Max, ...(histamine !== undefined ? { histamine } : {}) },
+  });
   res.json(updated);
 });
 // ---- Pathways (admin) ----

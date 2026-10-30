@@ -1,21 +1,22 @@
-// PLACEHOLDER VALUES. Replace every number below with the ones from your
-// research table / estimator.ts, then set PLACEHOLDER to false.
+// PLACEHOLDER VALUES, copied as they are from the frontend estimator.ts.
+// Replace each one with a figure you can cite, then set PLACEHOLDER to false.
 export const PLACEHOLDER = true;
 
-// TODO: real weight of one sako of ice, in kg
-export const KG_PER_ICE_SACK = 25;
+export type IceLevel = "none" | "low" | "fair" | "good" | "plenty";
 
-// TODO: how well the ice keeps the fish cold. ratio = ice kg / fish kg.
-// factor multiplies the shelf life at 0 C (1 = as good as 0 C).
-// Rows are checked from the top, first match wins.
-export const ICE_FACTORS: { minRatio: number; factor: number }[] = [
-  { minRatio: 1.0, factor: 1.0 },
-  { minRatio: 0.5, factor: 0.7 },
-  { minRatio: 0.25, factor: 0.5 },
-  { minRatio: 0.0001, factor: 0.35 },
-];
-export const NO_ICE_FACTOR = 0.25;
+// temperature of the fish at each ice level (ambient with no ice)
+export const AMBIENT_C = 30;
+export const ICE_TEMP_C: Record<IceLevel, number> = {
+  none: AMBIENT_C,
+  low: 18,
+  fair: 10,
+  good: 5,
+  plenty: 2,
+};
 
-// TODO: share of the shelf life used up when risk changes level
-export const MEDIUM_FROM = 0.5;
-export const HIGH_FROM = 0.8;
+// margins on each end of the shelf-life range
+export const MARGIN_LOW = 0.9;
+export const MARGIN_HIGH = 1.1;
+
+// risk by hours left (middle of the range)
+export const RISK_HOURS = { critical: 2, high: 6, moderate: 14 };

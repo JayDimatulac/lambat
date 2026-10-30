@@ -1,5 +1,5 @@
 import { Router } from "express";
-import type { CatchStatus } from "@prisma/client";
+import type { CatchStatus, RiskLevel } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { assess } from "../lib/engine";
@@ -11,31 +11,39 @@ const ALL_STATUSES: CatchStatus[] = ["ACTIVE", ...OUTCOMES];
 
 const speciesSelect = {
   id: true,
+  code: true,
   englishName: true,
   scientificName: true,
   localNames: true,
-  shelfLifeHoursAt0C: true,
+  l0Min: true,
+  l0Max: true,
+  histamine: true,
 };
 
-function withAssessment<
-  T extends {
-    status: CatchStatus;
-    caughtAt: Date;
-    kilos: number;
-    iceSacks: number | null;
-    species: { shelfLifeHoursAt0C: number | null };
-  }
->(c: T) {
+const catchInclude = {
+  species: { select: speciesSelect },
+  iceEvents: { select: { at: true, iceKg: true }, orderBy: { at: "asc" as const } },
+};
+
+type CatchRow = {
+  status: CatchStatus;
+  caughtAt: Date;
+  kilos: number;
+  iceEvents: { at: Date; iceKg: number }[];
+  species: { l0Min: number | null; l0Max: number | null; histamine: boolean };
+};
+
+function withAssessment<T extends CatchRow>(c: T) {
   return {
     ...c,
-    assessment: c.status === "ACTIVE" ? assess(c, c.species.shelfLifeHoursAt0C) : null,
+    assessment: c.status === "ACTIVE" ? assess(c, c.iceEvents, c.species) : null,
   };
 }
 
-// Log a new catch (fisherfolk only)
+// Log a new catch (fisherfolk only). iceKg is the total ice on the fish at the time of the catch.
 catchesRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
   const { userId } = res.locals.auth as { userId: string };
-  const { speciesId, kilos, iceSacks, caughtAt } = req.body ?? {};
+  const { speciesId, kilos, iceKg, place, caughtAt } = req.body ?? {};
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || user.status !== "ACTIVE") {
@@ -58,13 +66,22 @@ catchesRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res)
     return;
   }
 
-  let ice: number | null = null;
-  if (iceSacks !== undefined && iceSacks !== null) {
-    if (typeof iceSacks !== "number" || iceSacks < 0 || iceSacks > 1000) {
+  let ice = 0;
+  if (iceKg !== undefined && iceKg !== null) {
+    if (typeof iceKg !== "number" || iceKg < 0 || iceKg > 100000) {
       res.status(400).json({ error: "Ice must be 0 or more" });
       return;
     }
-    ice = iceSacks;
+    ice = iceKg;
+  }
+
+  let placeText: string | null = null;
+  if (place !== undefined && place !== null) {
+    if (typeof place !== "string" || place.length > 80) {
+      res.status(400).json({ error: "Place must be 80 characters or less" });
+      return;
+    }
+    placeText = place.trim() || null;
   }
 
   const when = caughtAt === undefined || caughtAt === null ? new Date() : new Date(caughtAt);
@@ -83,8 +100,15 @@ catchesRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res)
   }
 
   const created = await prisma.catchBatch.create({
-    data: { userId, speciesId, kilos, iceSacks: ice, caughtAt: when },
-    include: { species: { select: speciesSelect } },
+    data: {
+      userId,
+      speciesId,
+      kilos,
+      place: placeText,
+      caughtAt: when,
+      iceEvents: { create: [{ at: when, iceKg: ice }] },
+    },
+    include: catchInclude,
   });
 
   res.status(201).json(withAssessment(created));
@@ -103,7 +127,7 @@ catchesRouter.get("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) 
   const catches = await prisma.catchBatch.findMany({
     where: { userId, ...(status ? { status: status as CatchStatus } : {}) },
     orderBy: { caughtAt: "desc" },
-    include: { species: { select: speciesSelect } },
+    include: catchInclude,
   });
 
   res.json(catches.map(withAssessment));
@@ -115,7 +139,7 @@ catchesRouter.get("/:id", requireAuth, async (req, res) => {
 
   const found = await prisma.catchBatch.findUnique({
     where: { id: String(req.params.id) },
-    include: { species: { select: speciesSelect } },
+    include: catchInclude,
   });
 
   if (!found || (role !== "ADMIN" && found.userId !== userId)) {
@@ -124,6 +148,38 @@ catchesRouter.get("/:id", requireAuth, async (req, res) => {
   }
 
   res.json(withAssessment(found));
+});
+
+// Add ice later: kg is the extra ice, the new total is the last total plus kg
+catchesRouter.post("/:id/ice", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+  const { kg } = req.body ?? {};
+
+  if (typeof kg !== "number" || !(kg > 0) || kg > 10000) {
+    res.status(400).json({ error: "Enter how many kilos of ice you added" });
+    return;
+  }
+
+  const found = await prisma.catchBatch.findUnique({
+    where: { id: String(req.params.id) },
+    include: catchInclude,
+  });
+  if (!found || found.userId !== userId) {
+    res.status(404).json({ error: "Catch not found" });
+    return;
+  }
+  if (found.status !== "ACTIVE") {
+    res.status(409).json({ error: "This catch already has an outcome" });
+    return;
+  }
+
+  const lastTotal = found.iceEvents.length ? found.iceEvents[found.iceEvents.length - 1].iceKg : 0;
+  await prisma.iceEvent.create({
+    data: { catchId: found.id, at: new Date(), iceKg: lastTotal + kg },
+  });
+
+  const updated = await prisma.catchBatch.findUnique({ where: { id: found.id }, include: catchInclude });
+  res.json(withAssessment(updated!));
 });
 
 // Mark what happened to a catch: SOLD, REDISTRIBUTED, PROCESSED or DISCARDED
@@ -136,7 +192,10 @@ catchesRouter.patch("/:id/outcome", requireAuth, requireRole("FISHERFOLK"), asyn
     return;
   }
 
-  const found = await prisma.catchBatch.findUnique({ where: { id: String(req.params.id) } });
+  const found = await prisma.catchBatch.findUnique({
+    where: { id: String(req.params.id) },
+    include: catchInclude,
+  });
   if (!found || found.userId !== userId) {
     res.status(404).json({ error: "Catch not found" });
     return;
@@ -146,21 +205,53 @@ catchesRouter.patch("/:id/outcome", requireAuth, requireRole("FISHERFOLK"), asyn
     return;
   }
 
+  // remember how risky it was at the moment it was closed
+  const a = assess(found, found.iceEvents, found.species);
   const updated = await prisma.catchBatch.update({
     where: { id: found.id },
-    data: { status },
-    include: { species: { select: speciesSelect } },
+    data: { status, closedAt: new Date(), closedRisk: a.risk },
+    include: catchInclude,
   });
 
   res.json(withAssessment(updated));
 });
+
+// Undo an outcome (not possible once an order exists for the catch)
+catchesRouter.patch("/:id/reopen", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+
+  const found = await prisma.catchBatch.findUnique({ where: { id: String(req.params.id) } });
+  if (!found || found.userId !== userId) {
+    res.status(404).json({ error: "Catch not found" });
+    return;
+  }
+  if (found.status === "ACTIVE") {
+    res.status(409).json({ error: "This catch is already active" });
+    return;
+  }
+  const order = await prisma.order.findFirst({
+    where: { catchId: found.id, status: { in: ["CONFIRMED", "COMPLETED"] } },
+  });
+  if (order) {
+    res.status(409).json({ error: "This catch has an order, so it can't be reopened" });
+    return;
+  }
+
+  const updated = await prisma.catchBatch.update({
+    where: { id: found.id },
+    data: { status: "ACTIVE", closedAt: null, closedRisk: null },
+    include: catchInclude,
+  });
+  res.json(withAssessment(updated));
+});
+
 // Potential value-added pathways for one of my active catches
 catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
   const { userId } = res.locals.auth as { userId: string };
 
   const found = await prisma.catchBatch.findUnique({
     where: { id: String(req.params.id) },
-    include: { species: { select: speciesSelect } },
+    include: catchInclude,
   });
   if (!found || found.userId !== userId) {
     res.status(404).json({ error: "Catch not found" });
@@ -175,7 +266,7 @@ catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async
     return;
   }
 
-  const a = assess(found, found.species.shelfLifeHoursAt0C);
+  const a = assess(found, found.iceEvents, found.species);
 
   if (!a.risk) {
     res.json({
@@ -187,9 +278,10 @@ catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async
     });
     return;
   }
-  if (a.risk === "HIGH") {
+  // the safety rule lives here, not in the data: no pathway when time is short
+  if (a.risk === "high" || a.risk === "critical") {
     res.json({
-      risk: "HIGH",
+      risk: a.risk,
       pathways: [],
       note: "No processing pathway is suggested for a high-risk catch.",
       disclaimer,
@@ -198,8 +290,9 @@ catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async
     return;
   }
 
+  const level: RiskLevel = a.risk === "low" ? "LOW" : "MEDIUM";
   const pathways = await prisma.pathway.findMany({
-    where: { speciesId: found.speciesId, active: true, allowedRisks: { has: a.risk } },
+    where: { speciesId: found.speciesId, active: true, allowedRisks: { has: level } },
     select: {
       id: true,
       name: true,

@@ -15,10 +15,13 @@ class HttpError extends Error {
 const catchSelect = {
   id: true,
   kilos: true,
-  iceSacks: true,
+  place: true,
   caughtAt: true,
   status: true,
-  species: { select: { id: true, englishName: true, localNames: true, shelfLifeHoursAt0C: true } },
+  species: {
+    select: { id: true, code: true, englishName: true, localNames: true, l0Min: true, l0Max: true, histamine: true },
+  },
+  iceEvents: { select: { at: true, iceKg: true }, orderBy: { at: "asc" as const } },
 };
 
 const offerInclude = {
@@ -35,8 +38,8 @@ function shape<
       status: string;
       caughtAt: Date;
       kilos: number;
-      iceSacks: number | null;
-      species: { shelfLifeHoursAt0C: number | null };
+      iceEvents: { at: Date; iceKg: number }[];
+      species: { l0Min: number | null; l0Max: number | null; histamine: boolean };
     };
   }
 >(o: T) {
@@ -45,7 +48,7 @@ function shape<
     ...o,
     catch: {
       ...c,
-      assessment: c.status === "ACTIVE" ? assess(c, c.species.shelfLifeHoursAt0C) : null,
+      assessment: c.status === "ACTIVE" ? assess(c, c.iceEvents, c.species) : null,
     },
   };
 }

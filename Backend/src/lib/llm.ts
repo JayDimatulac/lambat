@@ -73,23 +73,34 @@ export async function explain(
     "Write at most 4 short sentences, in " +
     (lang === "fil" ? "simple Filipino (Tagalog)." : "simple English.");
 
+  const url = `${base.replace(/\/+$/, "")}/chat/completions`;
+  const body = JSON.stringify({
+    model,
+    temperature: 0.2,
+    max_tokens: 800,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: JSON.stringify(facts) },
+    ],
+  });
+  const BUSY = [429, 500, 502, 503, 504];
+
   try {
-    const res = await fetch(`${base.replace(/\/+$/, "")}/chat/completions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        model,
-        temperature: 0.2,
-        max_tokens: 800,
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: JSON.stringify(facts) },
-        ],
-      }),
-      signal: AbortSignal.timeout(12_000),
-    });
-    if (!res.ok) {
-      console.error("LLM responded with status", res.status);
+    let res: Response | null = null;
+    // the provider is sometimes briefly overloaded: try twice before giving up
+    for (let attempt = 0; attempt < 2; attempt++) {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+        body,
+        signal: AbortSignal.timeout(8_000),
+      });
+      if (res.ok || !BUSY.includes(res.status)) break;
+      console.error("LLM busy, status", res.status);
+      if (attempt === 0) await new Promise((r) => setTimeout(r, 1500));
+    }
+    if (!res || !res.ok) {
+      console.error("LLM gave no answer, status", res?.status);
       return fallback;
     }
     const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };

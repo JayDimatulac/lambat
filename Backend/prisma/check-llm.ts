@@ -19,7 +19,7 @@ async function main() {
     const ids = (data.data ?? []).map((m) => m.id);
     const found = ids.some((id) => id === model || id === `models/${model}`);
     console.log(`Model "${model}" is listed:`, found);
-    if (!found) console.log("Some models you can use:", ids.slice(0, 15).join(", "));
+    console.log("Models you can use:", ids.slice(0, 40).join(", "));
   }
 
   const r = await fetch(`${base}/chat/completions`, {

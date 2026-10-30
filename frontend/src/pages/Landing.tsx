@@ -8,7 +8,7 @@ import { DEMO_LOGINS, ROLE_HOME } from '../lib/accounts'
 import { useT, type Key } from '../lib/i18n'
 
 const ERRORS: Record<string, Key> = { creds: 'auth.err.creds', rejected: 'auth.err.rejected', suspended: 'auth.err.suspended' }
-const DEMO_LABEL: Record<string, Key> = { fisher: 'auth.demo.fisher', buyer: 'auth.demo.buyer', admin: 'auth.demo.admin' }
+const DEMO_LABEL: Record<string, Key> = { fisher: 'auth.demo.fisher', buyer: 'auth.demo.buyer', buyerok: 'auth.demo.buyerok', buyerno: 'auth.demo.buyerno', admin: 'auth.demo.admin' }
 
 // Landing and login in one screen: type your number and password, or make an account.
 export default function Landing() {

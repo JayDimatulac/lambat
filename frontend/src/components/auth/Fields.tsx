@@ -2,16 +2,26 @@ import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react
 import { Check, Eye, EyeOff } from 'lucide-react'
 import { useT } from '../../lib/i18n'
 
-const inputCls = 'min-h-14 w-full rounded-md border-2 bg-card px-4 text-lg text-navy placeholder:text-ink-soft/70 focus:border-teal focus:outline-none'
+const inputCls = 'min-h-14 w-full rounded-md border-2 bg-card px-4 text-lg text-navy transition placeholder:text-ink-soft/70 focus:border-teal focus:outline-none focus:ring-4 focus:ring-teal/15'
 
 type FieldProps = { label: string; hint?: string; error?: string | null }
+type TextProps = FieldProps & { leading?: ReactNode }
 
-export function TextField({ label, hint, error, className = '', ...rest }: FieldProps & InputHTMLAttributes<HTMLInputElement>) {
+export function TextField({ label, hint, error, leading, className = '', ...rest }: TextProps & InputHTMLAttributes<HTMLInputElement>) {
   const id = useId()
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-base font-semibold">{label}</label>
-      <input id={id} aria-invalid={!!error} aria-describedby={error ? `${id}-e` : hint ? `${id}-h` : undefined} className={`${inputCls} ${error ? 'border-risk-critical-line' : 'border-line'} ${className}`} {...rest} />
+      <div className="relative">
+        {leading && <span aria-hidden className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-teal">{leading}</span>}
+        <input
+          id={id}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${id}-e` : hint ? `${id}-h` : undefined}
+          className={`${inputCls} ${leading ? 'pl-12' : ''} ${error ? 'border-risk-critical-line' : 'border-line'} ${className}`}
+          {...rest}
+        />
+      </div>
       {error ? <p id={`${id}-e`} role="alert" className="text-sm font-semibold text-risk-critical">{error}</p> : hint ? <p id={`${id}-h`} className="text-sm text-ink-soft">{hint}</p> : null}
     </div>
   )
@@ -26,8 +36,21 @@ export function PasswordField({ label, hint, error, ...rest }: FieldProps & Omit
     <div className="space-y-1.5">
       <label htmlFor={id} className="block text-base font-semibold">{label}</label>
       <div className="relative">
-        <input id={id} type={shown ? 'text' : 'password'} aria-invalid={!!error} aria-describedby={error ? `${id}-e` : hint ? `${id}-h` : undefined} className={`${inputCls} pr-14 ${error ? 'border-risk-critical-line' : 'border-line'}`} {...rest} />
-        <button type="button" onClick={() => setShown(!shown)} aria-label={shown ? t('auth.hide') : t('auth.show')} aria-pressed={shown} className="absolute right-1 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full text-teal">
+        <input
+          id={id}
+          type={shown ? 'text' : 'password'}
+          aria-invalid={!!error}
+          aria-describedby={error ? `${id}-e` : hint ? `${id}-h` : undefined}
+          className={`${inputCls} pr-14 ${error ? 'border-risk-critical-line' : 'border-line'}`}
+          {...rest}
+        />
+        <button
+          type="button"
+          onClick={() => setShown(!shown)}
+          aria-label={shown ? t('auth.hide') : t('auth.show')}
+          aria-pressed={shown}
+          className="absolute right-1 top-1/2 grid size-12 -translate-y-1/2 place-items-center rounded-full text-teal"
+        >
           {shown ? <EyeOff size={22} strokeWidth={1.8} aria-hidden /> : <Eye size={22} strokeWidth={1.8} aria-hidden />}
         </button>
       </div>
@@ -41,7 +64,13 @@ type TileProps = { selected: boolean; onClick: () => void; icon?: ReactNode; tit
 // A big tap target for a choice. Picture first, words second.
 export function ChoiceTile({ selected, onClick, icon, title, sub, role = 'radio' }: TileProps) {
   return (
-    <button type="button" role={role} aria-checked={selected} onClick={onClick} className={`relative flex min-h-16 w-full items-center gap-3 rounded-md border-2 p-3 text-left transition active:scale-[0.98] ${selected ? 'border-teal bg-seafoam' : 'border-line bg-card'}`}>
+    <button
+      type="button"
+      role={role}
+      aria-checked={selected}
+      onClick={onClick}
+      className={`relative flex min-h-16 w-full items-center gap-3 rounded-md border-2 p-3 text-left transition active:scale-[0.98] ${selected ? 'border-teal bg-seafoam' : 'border-line bg-card'}`}
+    >
       {icon && <span className="grid size-12 shrink-0 place-items-center rounded-full bg-mint text-teal">{icon}</span>}
       <span className="min-w-0 flex-1">
         <span className="block text-base font-semibold leading-tight">{title}</span>

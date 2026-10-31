@@ -161,6 +161,16 @@ function Run-Tests {
   else { Check "weather answers" $false }
   Check "weather needs login (401)" ((Api GET "/weather").code -eq 401)
 
+  "--- risk notices ---"
+  $cr = Api POST "/catches" @{ speciesId = $sk.id; kilos = 7; caughtAt = (Ago 26) } $F
+  $n1 = Api GET "/notifications" $null $F
+  $mine1 = @($n1.data.items) | Where-Object { $_.type -eq "HIGH_RISK" -and $_.catchId -eq $cr.data.id }
+  Check "critical catch raises one HIGH_RISK notice" ($cr.code -eq 200 -and @($mine1).Count -eq 1)
+  $n2 = Api GET "/notifications" $null $F
+  $mine2 = @($n2.data.items) | Where-Object { $_.type -eq "HIGH_RISK" -and $_.catchId -eq $cr.data.id }
+  Check "reading again does not duplicate it" (@($mine2).Count -eq 1)
+  Check "buyer gets no risk notices" (-not (@((Api GET "/notifications" $null $B).data.items) | Where-Object { $_.type -eq "HIGH_RISK" }))
+
   "--- account profile and reapply ---"
   $rf = Ensure-User @{ role = "FISHERFOLK"; name = "Prof Fisher"; mobile = "09170000031"; barangay = "Calan"; password = "password123"; boatOrGear = "motor, net"; fishingArea = "near"; profile = @{ fisher = @{ boat = "motor"; gear = @("net"); ground = "near"; landing = "Balayan" } } }
   $rb = Ensure-User @{ role = "BUYER"; name = "Prof Buyer"; mobile = "09170000032"; barangay = "Poblacion"; password = "password123"; businessName = "Prof Stall"; buyerType = "market"; profile = @{ buyer = @{ address = "Balayan Public Market" } } }

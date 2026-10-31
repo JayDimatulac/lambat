@@ -4,7 +4,7 @@ import { useT } from '../../lib/i18n'
 
 const inputCls = 'min-h-14 w-full rounded-md border-2 bg-card px-4 text-lg text-navy transition placeholder:text-ink-soft/70 focus:border-teal focus:outline-none focus:ring-4 focus:ring-teal/15'
 
-type FieldProps = { label: string; hint?: string; error?: string }
+type FieldProps = { label: string; hint?: string; error?: string | null }
 type TextProps = FieldProps & { leading?: ReactNode }
 
 export function TextField({ label, hint, error, leading, className = '', ...rest }: TextProps & InputHTMLAttributes<HTMLInputElement>) {

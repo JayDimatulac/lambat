@@ -187,3 +187,13 @@ html[data-simple='true'] .simple-hide { display: none; }
 @layer utilities {
   .anim-radar { animation: radar 6s linear infinite; }
 }
+/* A short shake when a sign-in fails */
+@keyframes shake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+@layer utilities {
+  .anim-shake { animation: shake 0.4s ease-in-out; }
+}
+/* The tide staff on the login: its waterline settles into place once when the page opens */
+@keyframes settle { from { transform: translateY(-84px); } to { transform: none; } }
+@layer utilities {
+  .anim-settle { animation: settle 2.2s cubic-bezier(0.22, 0.7, 0.2, 1) both; }
+}

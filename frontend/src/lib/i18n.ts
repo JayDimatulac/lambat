@@ -111,10 +111,10 @@ const en = {
   'why.ice': 'Ice: {level}. More ice keeps fish fresh longer.',
   'why.species.fast': '{species} spoils quickly in warm weather.',
   'why.species.mid': '{species} keeps a little longer, but warm weather still shortens it.',
-'why.histamine': 'Tuna and mackerel can make histamine when they get warm, even if they still look and smell fresh.',
+  'why.histamine': 'Tuna and mackerel can make histamine when they get warm, even if they still look and smell fresh.',
   'reveal.another': 'Log another',
   'reveal.mine': 'See my catches',
-    'detail.notfound': 'We could not find this catch.',
+  'detail.notfound': 'We could not find this catch.',
   'detail.timeleft': 'Time left',
   'detail.timesup': 'Time is up',
   'detail.upto': 'could be up to {time}',
@@ -344,7 +344,10 @@ const en = {
   'admin.undo': 'Move back to waiting',
   'admin.applied': 'Applied',
   'admin.note': 'Admin and organization accounts are only created by an admin.',
-  'org.soon': 'The organization app is still being built.'
+  'org.soon': 'The organization app is still being built.',
+  'auth.caps': 'Caps Lock is on.',  
+  'auth.err.busy': 'Masyadong maraming subok. Maghintay ng ilang minuto bago subukan ulit.',
+  'auth.err.network': 'Hindi maabot ang server. Tingnan ang signal at subukan ulit.',     
 } as const
 
 export type Key = keyof typeof en
@@ -693,6 +696,9 @@ const fil: Record<Key, string> = {
   'admin.applied': 'Nag-apply',
   'admin.note': 'Ang mga account ng admin at organisasyon ay ginagawa lang ng admin.',
   'org.soon': 'Ginagawa pa ang app ng organisasyon.',
+  'auth.caps': 'Naka-on ang Caps Lock.',
+  'auth.err.busy': 'Masyadong maraming subok. Maghintay ng ilang minuto bago subukan ulit.',
+  'auth.err.network': 'Hindi maabot ang server. Tingnan ang signal at subukan ulit.',
 }
 
 const dict: Record<'en' | 'fil', Record<Key, string>> = { en, fil }

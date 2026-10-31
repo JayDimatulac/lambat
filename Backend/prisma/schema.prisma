@@ -162,12 +162,15 @@ model Notification {
   title      String
   body       String
   advisoryId String?
+  catchId    String?
+  dedupeKey  String?
   readAt     DateTime?
   createdAt  DateTime         @default(now())
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   advisory Advisory? @relation(fields: [advisoryId], references: [id], onDelete: SetNull)
 
+  @@unique([userId, dedupeKey])
   @@index([userId, readAt, createdAt])
 }
 

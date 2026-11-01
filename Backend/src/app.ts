@@ -38,6 +38,7 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
+app.use("/api/auth/change-password", authLimiter);
 
 app.get("/", (_req, res) => {
   res.send("LAMBAT API is running. Try /api/health or /api/species");

@@ -28,7 +28,9 @@ function Ensure-User($body) {
 function Run-Tests {
   if ((Api GET "/health").code -ne 200) { "The server is not running. Start it with npm run dev in Backend, then try again."; return }
 
-  $la = Api POST "/auth/login" @{ mobile = (Read-Host "Admin mobile"); password = (Read-Host "Admin password") }
+  $mobile = Read-Host "Admin mobile"
+  $secure = Read-Host "Admin password" -AsSecureString
+  $la = Api POST "/auth/login" @{ mobile = $mobile; password = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)) }
   if ($la.code -ne 200 -or $la.data.user.role -ne "ADMIN") { "Admin login failed ($($la.code)): $($la.err)"; return }
   $A = $la.data.token
 

@@ -1,20 +1,39 @@
 import { Request, Response, NextFunction } from "express";
 import { Role } from "@prisma/client";
+import { prisma } from "../db";
 import { verifyToken } from "../lib/jwt";
 
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   const header = req.headers.authorization;
   if (!header || !header.startsWith("Bearer ")) {
     res.status(401).json({ error: "Not logged in" });
     return;
   }
+
+  let payload: { sub: string; iat: number };
   try {
-    const payload = verifyToken(header.slice(7));
-    res.locals.auth = { userId: payload.sub, role: payload.role };
-    next();
+    payload = verifyToken(header.slice(7));
   } catch {
     res.status(401).json({ error: "Session expired. Please log in again." });
+    return;
   }
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.sub },
+    select: { id: true, role: true, status: true, passwordChangedAt: true },
+  });
+  if (!user || user.status === "SUSPENDED") {
+    res.status(401).json({ error: "Account not available" });
+    return;
+  }
+  // a token made before the last password change is no longer valid (compared in whole seconds)
+  if (user.passwordChangedAt && payload.iat < Math.floor(user.passwordChangedAt.getTime() / 1000)) {
+    res.status(401).json({ error: "Your password was changed. Please log in again." });
+    return;
+  }
+
+  res.locals.auth = { userId: user.id, role: user.role };
+  next();
 }
 
 export function requireRole(...roles: Role[]) {

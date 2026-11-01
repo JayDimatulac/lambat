@@ -14,7 +14,7 @@ export function signToken(user: { id: string; role: Role }): string {
   });
 }
 
-export function verifyToken(token: string): { sub: string; role: Role } {
+export function verifyToken(token: string): { sub: string; role: Role; iat: number } {
   const payload = jwt.verify(token, getSecret()) as jwt.JwtPayload;
-  return { sub: payload.sub as string, role: payload.role as Role };
+  return { sub: payload.sub as string, role: payload.role as Role, iat: payload.iat as number };
 }

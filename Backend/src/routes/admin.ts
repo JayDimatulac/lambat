@@ -336,3 +336,29 @@ adminRouter.patch("/pathways/:id", async (req, res) => {
     throw e;
   }
 });
+// Reset a forgotten password (SMS is not available yet, so the admin tells the person the new one).
+// Admin accounts are reset with the create-admin script, never through the API.
+adminRouter.patch("/users/:id/password", async (req, res) => {
+  const { password } = req.body ?? {};
+  const id = String(req.params.id);
+
+  if (typeof password !== "string" || password.length < 8 || password.length > 72) {
+    res.status(400).json({ error: "The password must be 8 to 72 characters" });
+    return;
+  }
+  const found = await prisma.user.findUnique({ where: { id } });
+  if (!found) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+  if (found.role === "ADMIN") {
+    res.status(403).json({ error: "Admin passwords are reset with the create-admin script" });
+    return;
+  }
+
+  await prisma.user.update({
+    where: { id },
+    data: { passwordHash: await bcrypt.hash(password, 10), passwordChangedAt: new Date() },
+  });
+  res.json({ ok: true });
+});

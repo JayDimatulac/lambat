@@ -178,3 +178,136 @@ authRouter.patch("/reapply", requireAuth, requireRole("BUYER"), async (req, res)
 
   res.json({ user: publicUser(updated) });
 });
+function cleanLine(v: unknown, max: number): string | null {
+  return typeof v === "string" && v.trim() && v.trim().length <= max ? v.trim() : null;
+}
+
+// Edit my own details. The mobile number can't be changed here because it is how people log in.
+authRouter.patch("/me", requireAuth, async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+  const body = req.body ?? {};
+
+  const me = await prisma.user.findUnique({ where: { id: userId } });
+  if (!me) {
+    res.status(401).json({ error: "Account not available" });
+    return;
+  }
+
+  const data: Prisma.UserUpdateInput = {};
+
+  if (body.name !== undefined) {
+    const v = cleanLine(body.name, 80);
+    if (!v || v.length < 2) {
+      res.status(400).json({ error: "Enter your name" });
+      return;
+    }
+    data.name = v;
+  }
+  if (body.barangay !== undefined) {
+    const v = cleanLine(body.barangay, 80);
+    if (!v) {
+      res.status(400).json({ error: "Enter your barangay" });
+      return;
+    }
+    data.barangay = v;
+  }
+  if (body.email !== undefined) {
+    if (body.email === null || body.email === "") {
+      data.email = null;
+    } else {
+      const v = cleanLine(body.email, 120);
+      if (!v || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+        res.status(400).json({ error: "That does not look like an email" });
+        return;
+      }
+      const taken = await prisma.user.findUnique({ where: { email: v } });
+      if (taken && taken.id !== userId) {
+        res.status(409).json({ error: "This email is already registered" });
+        return;
+      }
+      data.email = v;
+    }
+  }
+  if (me.role === "FISHERFOLK") {
+    for (const field of ["boatOrGear", "fishingArea"] as const) {
+      if (body[field] === undefined) continue;
+      if (body[field] === null || body[field] === "") {
+        data[field] = null;
+      } else {
+        const v = cleanLine(body[field], 80);
+        if (!v) {
+          res.status(400).json({ error: "That text is too long" });
+          return;
+        }
+        data[field] = v;
+      }
+    }
+  }
+  if (me.role === "BUYER") {
+    if (body.businessName !== undefined) {
+      const v = cleanLine(body.businessName, 80);
+      if (!v) {
+        res.status(400).json({ error: "Enter your business name" });
+        return;
+      }
+      data.businessName = v;
+    }
+    if (body.buyerType !== undefined) {
+      const v = cleanLine(body.buyerType, 40);
+      if (!v) {
+        res.status(400).json({ error: "Choose a buyer type" });
+        return;
+      }
+      data.buyerType = v;
+    }
+  }
+  if (body.profile !== undefined) {
+    const p = readProfile(body.profile);
+    if (!p.ok) {
+      res.status(400).json({ error: "Invalid profile details" });
+      return;
+    }
+    if (p.value) data.profile = p.value;
+  }
+
+  if (Object.keys(data).length === 0) {
+    res.status(400).json({ error: "Nothing to change" });
+    return;
+  }
+
+  const updated = await prisma.user.update({ where: { id: userId }, data });
+  res.json({ user: publicUser(updated) });
+});
+
+// Change my password. A wrong current password is a 400 on purpose: a 401 would log the person out in the app.
+authRouter.post("/change-password", requireAuth, async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+  const { currentPassword, newPassword } = req.body ?? {};
+
+  if (typeof currentPassword !== "string" || typeof newPassword !== "string") {
+    res.status(400).json({ error: "Enter your current and new password" });
+    return;
+  }
+  if (newPassword.length < 8 || newPassword.length > 72) {
+    res.status(400).json({ error: "The new password must be 8 to 72 characters" });
+    return;
+  }
+  if (newPassword === currentPassword) {
+    res.status(400).json({ error: "Choose a different password from the current one" });
+    return;
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+    res.status(400).json({ error: "Your current password is wrong" });
+    return;
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: { passwordHash: await bcrypt.hash(newPassword, 10), passwordChangedAt: new Date() },
+  });
+
+  // this device gets a fresh token; every older one stops working
+  res.json({ token: signToken(updated), user: publicUser(updated) });
+});

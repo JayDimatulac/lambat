@@ -89,6 +89,7 @@ model User {
   buyerType    String?
   statusNote   String?
   profile      Json?
+  passwordChangedAt DateTime?
 
   catches        CatchBatch[]
   advisories     Advisory[]

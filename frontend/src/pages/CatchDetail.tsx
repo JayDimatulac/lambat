@@ -15,6 +15,7 @@ import type { Outcome } from '../data/mock'
 import { agoText, clockText, countdownText, rangeText, sellByText } from '../lib/time'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
+import ExplainCard from '../components/detail/ExplainCard'
 
 export default function CatchDetail() {
   const { id } = useParams()
@@ -115,7 +116,12 @@ export default function CatchDetail() {
           <Disclaimer />
         </div>
 
-        {!closed && <div className="lg:col-start-1"><WhyList c={c} /></div>}
+        {!closed && (
+          <div className="space-y-4 lg:col-start-1">
+            <WhyList c={c} />
+            <ExplainCard id={c.id} />
+          </div>
+        )}
         <div className="lg:col-start-1"><Story c={c} /></div>
       </div>
 
@@ -127,7 +133,7 @@ export default function CatchDetail() {
           addIce(c.id, kg)
           setSheet(null)
           setPulse((p) => p + 1)
-          setToast(t('toast.ice', { n: Math.max(1, Math.round(extraMins / 60)) }))
+          setToast(extraMins >= 30 ? t('toast.ice', { n: Math.round(extraMins / 60) }) : t('toast.ice.none'))
         }}
       />
       <OutcomeSheet

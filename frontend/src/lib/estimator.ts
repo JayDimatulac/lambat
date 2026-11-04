@@ -75,3 +75,13 @@ export function remaining(m: Model, now: number) {
 
 // Hours the fish keeps at room temperature with no ice (used for the "why" text)
 export const hoursAtAmbient = (l0Min: number) => l0Min / relativeRate(AMBIENT_C)
+
+// How many more kilos of ice reach the next ice level, or null if it is already at the top
+export function iceToNextLevel(iceKg: number, fishKg: number): { next: IceLevel; kg: number } | null {
+  const fish = Math.max(fishKg, 1)
+  const steps: [IceLevel, number][] = [['low', 0], ['fair', 0.25], ['good', 0.5], ['plenty', 1]]
+  const cur = iceLevel(iceKg, fishKg)
+  const step = steps.find(([lvl]) => ICE_LEVELS.indexOf(lvl) > ICE_LEVELS.indexOf(cur))
+  if (!step) return null
+  return { next: step[0], kg: Math.max(1, Math.ceil(step[1] * fish - iceKg)) }
+}

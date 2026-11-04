@@ -1,4 +1,5 @@
-# Set up or clean the PRODUCTION database. Your local .env is never read or changed for the URLs.
+# Set up or clean the PRODUCTION database. Your local .env is never changed.
+# The two URLs come from Backend\.env.production if it exists, otherwise from hidden prompts.
 # Run from Backend:  npm run prod:setup   or   npm run prod:cleanup
 param([ValidateSet("setup", "cleanup")][string]$Task = "setup")
 
@@ -8,9 +9,17 @@ function Plain($secure) {
 function RefOf($url) { if ($url -match 'postgres\.([a-z0-9]+):') { $Matches[1] } else { "?" } }
 function HostOf($url) { if ($url -match '@([^:/]+)') { $Matches[1] } else { "?" } }
 function Stop-Here($msg) { Write-Host $msg -ForegroundColor Red; exit 1 }
+function FromFile($name) {
+  if (-not (Test-Path ".env.production")) { return $null }
+  $l = Select-String -Path ".env.production" -Pattern "^\s*$name\s*=" | Select-Object -First 1
+  if (-not $l) { return $null }
+  return ($l.Line -replace "^\s*$name\s*=\s*", "").Trim().Trim('"')
+}
 
-$db = Plain (Read-Host "PRODUCTION DATABASE_URL (the 6543 one)" -AsSecureString)
-$direct = Plain (Read-Host "PRODUCTION DIRECT_URL (the 5432 one)" -AsSecureString)
+$db = FromFile "DATABASE_URL"
+$direct = FromFile "DIRECT_URL"
+if (-not $db) { $db = Plain (Read-Host "PRODUCTION DATABASE_URL (the 6543 one)" -AsSecureString) }
+if (-not $direct) { $direct = Plain (Read-Host "PRODUCTION DIRECT_URL (the 5432 one)" -AsSecureString) }
 
 if (($db + $direct) -match 'YOUR-PASSWORD|YOUR-PROJECT|REGION|\[') { Stop-Here "A URL still contains a placeholder or brackets. Put the real password in." }
 if ($db -notmatch ':6543/' -or $db -notmatch 'pgbouncer=true') { Stop-Here "DATABASE_URL must be the transaction pooler: port 6543 and ?pgbouncer=true" }

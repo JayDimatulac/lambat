@@ -57,8 +57,8 @@ authRouter.post("/register", async (req, res) => {
     res.status(400).json({ error: "Enter your barangay" });
     return;
   }
-  if (typeof password !== "string" || password.length < 8) {
-    res.status(400).json({ error: "Password must be at least 8 characters" });
+  if (typeof password !== "string" || password.length < 8 || password.length > 72) {
+    res.status(400).json({ error: "Password must be 8 to 72 characters" });
     return;
   }
   const businessName = optional(body.businessName);

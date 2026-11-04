@@ -4,6 +4,8 @@ import type { AccountStatus, Role, RiskLevel } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { normalizeMobile } from "./auth";
+import { assess } from "../lib/engine";
+import type { CatchStatus, NeedStatus, OfferStatus, OrderStatus } from "@prisma/client";
 
 export const adminRouter = Router();
 
@@ -361,4 +363,167 @@ adminRouter.patch("/users/:id/password", async (req, res) => {
     data: { passwordHash: await bcrypt.hash(password, 10), passwordChangedAt: new Date() },
   });
   res.json({ ok: true });
+});
+// ---- Moderation views (admin only; the whole router already requires an admin) ----
+
+function limitOf(v: unknown): number {
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 ? Math.min(n, 200) : 100;
+}
+
+const CATCH_STATUSES: CatchStatus[] = ["ACTIVE", "SOLD", "REDISTRIBUTED", "PROCESSED", "DISCARDED"];
+const NEED_STATUSES: NeedStatus[] = ["OPEN", "FULFILLED", "CANCELLED"];
+const OFFER_STATUSES: OfferStatus[] = ["PENDING", "ACCEPTED", "DECLINED", "WITHDRAWN", "EXPIRED"];
+const ORDER_STATUSES: OrderStatus[] = ["CONFIRMED", "COMPLETED", "CANCELLED"];
+
+// who a row belongs to, with the contact details an admin needs when checking a complaint
+const who = { select: { id: true, name: true, mobile: true, barangay: true, businessName: true } };
+
+// All catches (optional ?status=, ?userId=, ?limit=), newest first
+adminRouter.get("/catches", async (req, res) => {
+  const status = typeof req.query.status === "string" ? req.query.status : undefined;
+  const userId = typeof req.query.userId === "string" ? req.query.userId : undefined;
+  if (status && !CATCH_STATUSES.includes(status as CatchStatus)) {
+    res.status(400).json({ error: "Unknown status" });
+    return;
+  }
+
+  const rows = await prisma.catchBatch.findMany({
+    where: { ...(status ? { status: status as CatchStatus } : {}), ...(userId ? { userId } : {}) },
+    orderBy: { createdAt: "desc" },
+    take: limitOf(req.query.limit),
+    include: {
+      user: who,
+      species: { select: { id: true, code: true, englishName: true, l0Min: true, l0Max: true, histamine: true } },
+      iceEvents: { select: { at: true, iceKg: true }, orderBy: { at: "asc" } },
+    },
+  });
+
+  res.json(
+    rows.map((c) => ({
+      ...c,
+      assessment: c.status === "ACTIVE" ? assess(c, c.iceEvents, c.species) : null,
+    }))
+  );
+});
+
+// All buyer needs (optional ?status=OPEN)
+adminRouter.get("/needs", async (req, res) => {
+  const status = typeof req.query.status === "string" ? req.query.status : undefined;
+  if (status && !NEED_STATUSES.includes(status as NeedStatus)) {
+    res.status(400).json({ error: "Unknown status" });
+    return;
+  }
+  const rows = await prisma.buyerNeed.findMany({
+    where: status ? { status: status as NeedStatus } : {},
+    orderBy: { createdAt: "desc" },
+    take: limitOf(req.query.limit),
+    include: {
+      buyer: who,
+      species: { select: { id: true, englishName: true } },
+      _count: { select: { offers: true } },
+    },
+  });
+  res.json(rows);
+});
+
+// All offers (optional ?status=PENDING)
+adminRouter.get("/offers", async (req, res) => {
+  const status = typeof req.query.status === "string" ? req.query.status : undefined;
+  if (status && !OFFER_STATUSES.includes(status as OfferStatus)) {
+    res.status(400).json({ error: "Unknown status" });
+    return;
+  }
+  const rows = await prisma.offer.findMany({
+    where: status ? { status: status as OfferStatus } : {},
+    orderBy: { createdAt: "desc" },
+    take: limitOf(req.query.limit),
+    include: {
+      fisher: who,
+      buyer: who,
+      catch: { select: { id: true, kilos: true, status: true, species: { select: { englishName: true } } } },
+    },
+  });
+  res.json(rows);
+});
+
+// All orders (optional ?status=CONFIRMED)
+adminRouter.get("/orders", async (req, res) => {
+  const status = typeof req.query.status === "string" ? req.query.status : undefined;
+  if (status && !ORDER_STATUSES.includes(status as OrderStatus)) {
+    res.status(400).json({ error: "Unknown status" });
+    return;
+  }
+  const rows = await prisma.order.findMany({
+    where: status ? { status: status as OrderStatus } : {},
+    orderBy: { createdAt: "desc" },
+    take: limitOf(req.query.limit),
+    include: {
+      fisher: who,
+      buyer: who,
+      catch: { select: { id: true, kilos: true, status: true, species: { select: { englishName: true } } } },
+    },
+  });
+  res.json(rows);
+});
+
+// Take down an open need (a fake or abusive request). The buyer is told, and offers still waiting on it close.
+adminRouter.patch("/needs/:id/cancel", async (req, res) => {
+  const id = String(req.params.id);
+  const { note } = req.body ?? {};
+
+  let reason: string | null = null;
+  if (note !== undefined && note !== null) {
+    if (typeof note !== "string" || note.length > 300) {
+      res.status(400).json({ error: "Note must be 300 characters or less" });
+      return;
+    }
+    reason = note.trim() || null;
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const need = await tx.buyerNeed.findUnique({ where: { id } });
+    if (!need) return { code: 404 as const };
+    if (need.status !== "OPEN") return { code: 409 as const };
+
+    const updated = await tx.buyerNeed.update({ where: { id }, data: { status: "CANCELLED" } });
+
+    const pending = await tx.offer.findMany({
+      where: { needId: id, status: "PENDING" },
+      select: { id: true, fisherId: true },
+    });
+    if (pending.length > 0) {
+      await tx.offer.updateMany({
+        where: { id: { in: pending.map((o) => o.id) } },
+        data: { status: "EXPIRED", respondedAt: new Date() },
+      });
+      await tx.notification.createMany({
+        data: pending.map((o) => ({
+          userId: o.fisherId,
+          type: "OFFER" as const,
+          title: "Offer closed",
+          body: "The buyer's request was removed by an admin.",
+        })),
+      });
+    }
+    await tx.notification.create({
+      data: {
+        userId: need.buyerId,
+        type: "SYSTEM",
+        title: "Request removed",
+        body: reason ?? "An admin removed your request.",
+      },
+    });
+    return { code: 200 as const, need: updated };
+  });
+
+  if (result.code === 404) {
+    res.status(404).json({ error: "Need not found" });
+    return;
+  }
+  if (result.code === 409) {
+    res.status(409).json({ error: "This need is already closed" });
+    return;
+  }
+  res.json(result.need);
 });

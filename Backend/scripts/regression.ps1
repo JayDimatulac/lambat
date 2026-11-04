@@ -156,6 +156,70 @@ function Run-Tests {
   Api PATCH "/catches/$($ce.data.id)/outcome" @{ status = "DISCARDED" } $F | Out-Null
   Check "closed catch refused (409)" ((Api POST "/catches/$($ce.data.id)/explain" @{ lang = "en" } $F).code -eq 409)
 
+  "--- admin moderation ---"
+  Check "fisherfolk blocked from admin catches (403)" ((Api GET "/admin/catches" $null $F).code -eq 403)
+  $ac = Api GET "/admin/catches?status=ACTIVE" $null $A
+  Check "admin lists active catches with owner and assessment" ($ac.code -eq 200 -and @($ac.data).Count -ge 1 -and $null -ne @($ac.data)[0].user.name -and $null -ne @($ac.data)[0].assessment)
+  Check "bad catch status refused (400)" ((Api GET "/admin/catches?status=NOPE" $null $A).code -eq 400)
+  Check "admin lists needs" ((Api GET "/admin/needs?status=OPEN" $null $A).code -eq 200)
+  Check "admin lists offers" ((Api GET "/admin/offers" $null $A).code -eq 200)
+  Check "admin lists orders" ((Api GET "/admin/orders" $null $A).code -eq 200)
+  Check "bad order status refused (400)" ((Api GET "/admin/orders?status=NOPE" $null $A).code -eq 400)
+  $mn = Api POST "/needs" @{ speciesId = $sk.id; kilos = 3; pricePerKg = 100 } $B
+  Check "fisherfolk cannot cancel a need (403)" ($mn.code -eq 200 -and (Api PATCH "/admin/needs/$($mn.data.id)/cancel" @{} $F).code -eq 403)
+  $cn = Api PATCH "/admin/needs/$($mn.data.id)/cancel" @{ note = "Test removal" } $A
+  Check "admin cancels an open need" ($cn.code -eq 200 -and $cn.data.status -eq "CANCELLED")
+  Check "buyer was told it was removed" (@((Api GET "/notifications" $null $B).data.items) | Where-Object { $_.title -eq "Request removed" })
+  Check "cancelling it again refused (409)" ((Api PATCH "/admin/needs/$($mn.data.id)/cancel" @{} $A).code -eq 409)
+  Check "unknown need gives 404" ((Api PATCH "/admin/needs/nope/cancel" @{} $A).code -eq 404)
+  
+    "--- account security ---"
+  $acct = Ensure-User @{ role = "FISHERFOLK"; name = "Acct Fisher"; mobile = "09170000041"; barangay = "Calan"; password = "password123" }
+  if ($acct.code -ne 200) {
+    $row = @((Api GET "/admin/users?role=FISHERFOLK" $null $A).data) | Where-Object { $_.mobile -eq "09170000041" }
+    if ($row) {
+      Api PATCH "/admin/users/$($row.id)/status" @{ status = "ACTIVE" } $A | Out-Null
+      Api PATCH "/admin/users/$($row.id)/password" @{ password = "password123" } $A | Out-Null
+      $acct = Api POST "/auth/login" @{ mobile = "09170000041"; password = "password123" }
+    }
+  }
+  if ($acct.code -ne 200) { "Account test user unavailable: $($acct.err)" }
+  else {
+    $T1 = $acct.data.token; $aid = $acct.data.user.id
+    $up = Api PATCH "/auth/me" @{ name = "Acct Fisher Renamed"; barangay = "Calan" } $T1
+    Check "profile edit saves the new name, no hash" ($up.code -eq 200 -and $up.data.user.name -eq "Acct Fisher Renamed" -and -not ($up.data.user.PSObject.Properties.Name -contains "passwordHash"))
+    Check "mobile cannot be changed (400)" ((Api PATCH "/auth/me" @{ mobile = "09170000099" } $T1).code -eq 400)
+    Check "short name refused (400)" ((Api PATCH "/auth/me" @{ name = "x" } $T1).code -eq 400)
+    $bad = Api POST "/auth/change-password" @{ currentPassword = "wrongpass1"; newPassword = "brandnew123" } $T1
+    Check "wrong current password gives 400, not 401" ($bad.code -eq 400)
+    Check "session still works after a wrong attempt" ((Api GET "/auth/me" $null $T1).code -eq 200)
+    Check "same password refused (400)" ((Api POST "/auth/change-password" @{ currentPassword = "password123"; newPassword = "password123" } $T1).code -eq 400)
+    Start-Sleep -Seconds 2
+    $chg = Api POST "/auth/change-password" @{ currentPassword = "password123"; newPassword = "brandnew123" } $T1
+    Check "password change returns a new token" ($chg.code -eq 200 -and [bool]$chg.data.token)
+    $T2 = $chg.data.token
+    Check "old token is rejected after the change (401)" ((Api GET "/auth/me" $null $T1).code -eq 401)
+    Check "new token works" ((Api GET "/auth/me" $null $T2).code -eq 200)
+    Check "old password no longer logs in (401)" ((Api POST "/auth/login" @{ mobile = "09170000041"; password = "password123" }).code -eq 401)
+    Check "new password logs in" ((Api POST "/auth/login" @{ mobile = "09170000041"; password = "brandnew123" }).code -eq 200)
+
+    Check "fisherfolk cannot reset a password (403)" ((Api PATCH "/admin/users/$aid/password" @{ password = "resetpass99" } $F).code -eq 403)
+    Check "short reset password refused (400)" ((Api PATCH "/admin/users/$aid/password" @{ password = "short" } $A).code -eq 400)
+    Check "admin password cannot be reset by API (403)" ((Api PATCH "/admin/users/$($la.data.user.id)/password" @{ password = "resetpass99" } $A).code -eq 403)
+    Start-Sleep -Seconds 2
+    Check "admin resets the password" ((Api PATCH "/admin/users/$aid/password" @{ password = "resetpass99" } $A).code -eq 200)
+    Check "token from before the reset is rejected (401)" ((Api GET "/auth/me" $null $T2).code -eq 401)
+    $T3 = Api POST "/auth/login" @{ mobile = "09170000041"; password = "resetpass99" }
+    Check "reset password logs in" ($T3.code -eq 200)
+    Api PATCH "/admin/users/$aid/status" @{ status = "SUSPENDED" } $A | Out-Null
+    Check "suspended user's existing token stops working (401)" ((Api GET "/catches" $null $T3.data.token).code -eq 401)
+    Check "suspended user cannot log in (403)" ((Api POST "/auth/login" @{ mobile = "09170000041"; password = "resetpass99" }).code -eq 403)
+    Api PATCH "/admin/users/$aid/status" @{ status = "ACTIVE" } $A | Out-Null
+    Check "reactivated user logs in again" ((Api POST "/auth/login" @{ mobile = "09170000041"; password = "resetpass99" }).code -eq 200)
+    # leave the account ready for the next run
+    Api PATCH "/admin/users/$aid/password" @{ password = "password123" } $A | Out-Null
+  }
+
   "--- weather ---"
   $w = Api GET "/weather" $null $F
   if ($w.code -eq 200) { Check "weather: 7 forecast days" (@($w.data.daily.time).Count -eq 7) }

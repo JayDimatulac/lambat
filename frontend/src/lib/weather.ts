@@ -1,12 +1,15 @@
-// SAMPLE forecast until a real weather source is connected. The screens label it as sample data.
-// The shape below is what a real forecast (hourly and daily) would be turned into.
+import { useEffect, useMemo, useState } from 'react'
+import { api } from './api'
+
+// The sample forecast is what shows when the real one can't be loaded. Screens label it as sample data.
+// Kept for older screens that import it; use useForecast().live to know whether real data is showing.
 export const WEATHER_IS_LIVE = false
 
 export type Sky = 'sun' | 'partly' | 'cloud' | 'rain'
 export type Level = 'good' | 'caution' | 'danger'
 
 export type Hour = { h: number; sky: Sky; wind: number; wave: number; rain: number } // wind km/h, wave metres, rain %
-export type Day = { date: Date; sky: Sky; tMax: number; tMin: number; rain: number; wind: number; gust: number; wave: number }
+export type Day = { date: Date; sky: Sky; tMax: number; tMin: number; rain: number; wind: number; gust: number; wave: number; waveEst?: boolean }
 
 // Sail level. PLACEHOLDER limits: replace them with the guidance you follow, and always tell people to follow PAGASA and the Coast Guard.
 export function sailLevel(wind: number, gust: number, wave: number, rain: number): Level {
@@ -68,3 +71,134 @@ export function calmWindow(hours: Hour[]) {
 }
 
 export const hour12 = (h: number) => `${((h + 11) % 12) + 1} ${h % 24 < 12 ? 'AM' : 'PM'}`
+
+/* ---------- the real forecast, from the backend ---------- */
+
+type ApiForecast = {
+  stale?: boolean
+  hourly?: {
+    time: string[]
+    precipitation_probability: (number | null)[]
+    wind_speed_10m: (number | null)[]
+    weather_code: (number | null)[]
+  }
+  daily?: {
+    time: string[]
+    weather_code: (number | null)[]
+    temperature_2m_max: (number | null)[]
+    temperature_2m_min: (number | null)[]
+    precipitation_probability_max: (number | null)[]
+    wind_speed_10m_max: (number | null)[]
+    wind_gusts_10m_max?: (number | null)[]
+  }
+  waves?: { hourly?: { time: string[]; wave_height: (number | null)[] } | null } | null
+}
+
+export type Forecast = { week: Day[]; hours: Hour[]; live: boolean; stale: boolean }
+
+// Approximate coordinates of the landing places on the sign-up list. Anything else uses the server's default (Balayan).
+const COORDS: Record<string, [number, number]> = {
+  Balayan: [13.94, 120.73],
+  Calatagan: [13.83, 120.63],
+  Lemery: [13.88, 120.91],
+  Tuy: [14.02, 120.73],
+  'Batangas City': [13.76, 121.06],
+}
+
+// WMO weather codes to the four skies the screens draw
+function skyOf(code: number | null | undefined): Sky {
+  if (typeof code !== 'number') return 'cloud'
+  if (code <= 1) return 'sun'
+  if (code === 2) return 'partly'
+  if (code === 3 || code === 45 || code === 48) return 'cloud'
+  if (code >= 71 && code <= 77) return 'cloud'
+  return 'rain'
+}
+
+// Wave height is only forecast for a few days. Past that, it is estimated from the wind (same rule as the sample).
+const estWave = (wind: number) => Math.round((0.4 + wind / 32) * 10) / 10
+
+function fromApi(r: ApiForecast): Forecast {
+  const d = r.daily
+  if (!d || !d.time?.length) throw new Error('no forecast')
+
+  const mTime = r.waves?.hourly?.time ?? []
+  const mWave = r.waves?.hourly?.wave_height ?? []
+  const waveAt = (stamp: string): number | null => {
+    const i = mTime.indexOf(stamp)
+    const v = i >= 0 ? mWave[i] : null
+    return typeof v === 'number' ? Math.round(v * 10) / 10 : null
+  }
+  const waveMax = (iso: string): number | null => {
+    let best = -1
+    for (let i = 0; i < mTime.length; i++) {
+      const v = mWave[i]
+      if (mTime[i].startsWith(iso) && typeof v === 'number' && v > best) best = v
+    }
+    return best < 0 ? null : Math.round(best * 10) / 10
+  }
+
+  const week: Day[] = d.time.map((iso, i) => {
+    const wind = Math.round(d.wind_speed_10m_max[i] ?? 0)
+    const gust = d.wind_gusts_10m_max?.[i]
+    const measured = waveMax(iso)
+    return {
+      date: new Date(`${iso}T12:00:00`),
+      sky: skyOf(d.weather_code[i]),
+      tMax: Math.round(d.temperature_2m_max[i] ?? 0),
+      tMin: Math.round(d.temperature_2m_min[i] ?? 0),
+      rain: Math.round(d.precipitation_probability_max[i] ?? 0),
+      wind,
+      gust: typeof gust === 'number' ? Math.round(gust) : Math.round(wind * 1.5),
+      wave: measured ?? estWave(wind),
+      waveEst: measured === null,
+    }
+  })
+
+  // today, 5 AM to 7 PM, by the forecast's own local date (Asia/Manila)
+  const today = d.time[0]
+  const hours: Hour[] = []
+  const h = r.hourly
+  if (h?.time) {
+    h.time.forEach((stamp, i) => {
+      if (!stamp.startsWith(today)) return
+      const hr = Number(stamp.slice(11, 13))
+      if (hr < 5 || hr > 19) return
+      const wind = Math.round(h.wind_speed_10m[i] ?? 0)
+      hours.push({
+        h: hr,
+        sky: skyOf(h.weather_code[i]),
+        wind,
+        rain: Math.round(h.precipitation_probability[i] ?? 0),
+        wave: waveAt(stamp) ?? estWave(wind),
+      })
+    })
+  }
+
+  return { week, hours: hours.length ? hours : todayHours(), live: true, stale: !!r.stale }
+}
+
+// The forecast for a landing place. Shows the labeled sample until the real one arrives, and keeps showing it if it never does.
+export function useForecast(landing?: string): Forecast {
+  const [data, setData] = useState<Forecast | null>(null)
+
+  useEffect(() => {
+    let off = false
+    const c = landing ? COORDS[landing] : undefined
+    const q = c ? `?lat=${c[0]}&lon=${c[1]}` : ''
+    const load = () => {
+      api
+        .get<ApiForecast>(`/weather${q}`)
+        .then((r) => { if (!off) setData(fromApi(r)) })
+        .catch(() => { /* keep what is on screen */ })
+    }
+    load()
+    const id = setInterval(load, 15 * 60 * 1000)
+    return () => {
+      off = true
+      clearInterval(id)
+    }
+  }, [landing])
+
+  return useMemo(() => data ?? { week: weekFrom(new Date()), hours: todayHours(), live: false, stale: false }, [data])
+}

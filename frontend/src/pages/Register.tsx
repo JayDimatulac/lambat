@@ -45,6 +45,7 @@ export default function Register() {
   const [step, setStep] = useState(0)
   const [role, setRole] = useState<Role | null>(null)
   const [errors, setErrors] = useState<Errors>({})
+  const [formError, setFormError] = useState<Key | null>(null)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -73,7 +74,7 @@ export default function Register() {
     if (name.trim().length < 2) e.name = 'reg.err.name'
     if (!normalizeMobile(mobile)) e.mobile = 'reg.err.mobile'
     if (!barangay.trim()) e.barangay = 'reg.err.barangay'
-    if (password.length < 6) e.password = 'reg.err.password'
+    if (password.length < 8) e.password = 'reg.err.password' // the server requires 8
     if (email.trim() && !looksLikeEmail(email.trim())) e.email = 'reg.err.email'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -94,6 +95,7 @@ export default function Register() {
   const finish = async () => {
     if (!role || !checkStep3()) return
     setBusy(true)
+    setFormError(null)
     const res = await register({
       role,
       name: name.trim(),
@@ -106,8 +108,12 @@ export default function Register() {
     })
     setBusy(false)
     if (!res.ok) {
-      setErrors({ mobile: 'reg.err.taken' })
-      setStep(1)
+      if (res.error === 'mobile_taken') {
+        setErrors({ mobile: 'reg.err.taken' })
+        setStep(1)
+      } else {
+        setFormError(res.error === 'busy' ? 'auth.err.busy' : res.error === 'network' ? 'auth.err.network' : 'reg.err.generic')
+      }
     } else if (res.signedIn) navigate(ROLE_HOME[res.user.role], { replace: true })
     else setDone(true)
   }
@@ -245,6 +251,10 @@ export default function Register() {
             <TextField label={t('reg.address')} hint={t('reg.address.hint')} value={address} onChange={(e) => setAddress(e.target.value)} />
             <p className="flex items-start gap-2 rounded-md bg-seafoam p-3 text-sm leading-snug"><Clock size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-teal" aria-hidden />{t('reg.buyer.tag')}: {t('reg.buyer.note')}</p>
           </>
+        )}
+
+        {formError && step === 2 && (
+          <p role="alert" className="rounded-md bg-risk-critical-bg p-3 text-base font-semibold text-risk-critical">{t(formError)}</p>
         )}
 
         <button type="button" onClick={next} disabled={(step === 0 && !role) || busy} className="flex min-h-14 w-full items-center justify-center rounded-full bg-coral text-lg font-semibold text-deep shadow-raised transition active:scale-[0.98] disabled:opacity-40">

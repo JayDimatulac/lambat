@@ -54,7 +54,21 @@ Check "TypeScript compiles" ($LASTEXITCODE -eq 0) "paste the errors below to me"
 if ($LASTEXITCODE -ne 0) { ($tsc -split "`n" | Select-Object -First 8) | ForEach-Object { "      $_" } }
 $mig = npx prisma migrate status 2>&1 | Out-String
 Check "database schema is up to date, no pending migration" ($mig -match 'Database schema is up to date') "run: npx prisma migrate deploy"
-
+"--- project pieces ---"
+function Has($file, $pattern) { (Test-Path $file) -and [bool](Select-String -Path $file -Pattern $pattern -Quiet) }
+Check "live account check in the middleware" (Has "src\middleware\auth.ts" "passwordChangedAt")
+Check "change-password route" (Has "src\routes\auth.ts" "change-password")
+Check "admin password reset route" (Has "src\routes\admin.ts" "users/:id/password")
+Check "admin moderation routes" (Has "src\routes\admin.ts" "needs/:id/cancel")
+Check "risk notices in notifications" (Has "src\routes\notifications.ts" "raiseRiskNotices")
+Check "account security checks in the regression test" (Has "scripts\regression.ps1" "account security")
+Check "admin moderation checks in the regression test" (Has "scripts\regression.ps1" "admin moderation")
+Check "README exists" (Test-Path "README.md")
+Check "pathway importer has check mode" (Has "prisma\import-pathways.ts" "--check")
+Check "production setup script exists" (Test-Path "scripts\prod-setup.ps1")
+$csvLines = 0
+if (Test-Path "prisma\pathways.csv") { $csvLines = @(Get-Content "prisma\pathways.csv").Count }
+if ($csvLines -gt 1) { "INFO  pathways.csv has $($csvLines - 1) data rows" } else { "INFO  pathways.csv is empty or missing: the app will say there is no pathway yet" }
 "--- running server (optional) ---"
 try {
   $h = Invoke-RestMethod "http://localhost:4000/api/health" -TimeoutSec 3

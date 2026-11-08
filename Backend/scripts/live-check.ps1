@@ -12,8 +12,13 @@ function Get-Url($url, $headers) {
     return @{ code = [int]$r.StatusCode; headers = $r.Headers; body = $r.Content }
   } catch {
     $c = 0
+    $body = ""
     if ($_.Exception.Response) { $c = [int]$_.Exception.Response.StatusCode }
-    return @{ code = $c; headers = @{}; body = "" }
+    if ($_.ErrorDetails -and $_.ErrorDetails.Message) { $body = $_.ErrorDetails.Message }
+    elseif ($_.Exception.Response) {
+      try { $body = (New-Object IO.StreamReader($_.Exception.Response.GetResponseStream())).ReadToEnd() } catch { }
+    }
+    return @{ code = $c; headers = @{}; body = $body }
   }
 }
 

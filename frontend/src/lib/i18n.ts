@@ -375,6 +375,16 @@ const en = {
   'settings.reset.hint': 'Puts the sample catches back the way they started.',
   'settings.reset.done': 'Demo data reset',
   'settings.account': 'Account',
+    'notif.markall': 'Mark all as read',
+  'notif.new': '{n} new',
+  'notif.empty': 'You are all caught up.',
+  'notif.empty.sub': 'Alerts about your catches and the weather will show up here.',
+  'notif.catch.body': 'Risk: {risk}. {sellby}.',
+  'notif.wind.title': 'Strong wind today',
+  'wx.more': 'More details',
+  'wx.stat.temp': 'Temperature',
+  'wx.stat.wind': 'Wind',
+  'wx.stat.rain': 'Chance of rain',
 } as const
 
 export type Key = keyof typeof en
@@ -753,7 +763,16 @@ const fil: Record<Key, string> = {
   'settings.reset.hint': 'Ibabalik ang mga sample na huli sa dati nilang ayos.',
   'settings.reset.done': 'Na-reset na ang demo data',
   'settings.account': 'Account', 
-
+  'notif.markall': 'Markahan lahat na nabasa na',
+  'notif.new': '{n} bago',
+  'notif.empty': 'Wala nang bago.',
+  'notif.empty.sub': 'Dito lalabas ang mga abiso tungkol sa mga huli mo at sa panahon.',
+  'notif.catch.body': 'Panganib: {risk}. {sellby}.',
+  'notif.wind.title': 'Malakas na hangin ngayon',
+  'wx.more': 'Karagdagang detalye',
+  'wx.stat.temp': 'Temperatura',
+  'wx.stat.wind': 'Hangin',
+  'wx.stat.rain': 'Tsansa ng ulan',
 }
 
 const dict: Record<'en' | 'fil', Record<Key, string>> = { en, fil }

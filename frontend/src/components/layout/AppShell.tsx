@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Check, ChevronDown, CloudSun, LogOut, Send, Sparkles, UserRound, Wifi, WifiLow, WifiOff } from 'lucide-react'
+import { Check, ChevronDown, CloudSun, LogOut, Send, Sparkles, UserRound, Wifi, WifiLow, WifiOff } from 'lucide-react'
 import { FishIcon, KnotPlusIcon, PierIcon, TideIcon } from '../icons'
 import { useT, type Key } from '../../lib/i18n'
 import { useSettings, type Connection } from '../../lib/settings'
 import { useUser } from '../../lib/auth'
 import LangToggle from './LangToggle'
 import MenuSheet from './MenuSheet'
+import NotificationsMenu from './NotificationsMenu'
 import LogoutSheet from '../auth/LogoutSheet'
 
 
@@ -289,7 +290,7 @@ export default function AppShell() {
       <Rail />
       <div className="min-w-0 flex-1">
         {/* Top bar: a floating glass bar that lines up with the page content */}
-        <header className="sticky top-0 z-20 pt-3">
+        <header className="sticky top-0 z-30 pt-3">
           <div className="mx-auto max-w-5xl px-4 lg:px-8">
             <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
@@ -310,10 +311,7 @@ export default function AppShell() {
                 <ParolaToggle />
                 <LangToggle />
                 <span aria-hidden="true" className="mx-1 hidden h-8 w-px bg-line sm:block" />
-                <Link to="/notifications" aria-label={t('nav.alerts')} className="relative grid size-11 place-items-center rounded-full hover:bg-seafoam">
-                  <Bell size={22} strokeWidth={1.8} aria-hidden />
-                  <span className="absolute right-2.5 top-2.5 size-2.5 rounded-full bg-coral ring-2 ring-card" aria-hidden="true" />
-                </Link>
+                <NotificationsMenu />
                 <button
                   type="button"
                   onClick={() => setMenuOpen(true)}

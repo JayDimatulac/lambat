@@ -171,7 +171,11 @@ html[data-simple='true'] .simple-hide { display: none; }
   .anim-glow { animation: glow 2.4s ease-in-out infinite; }
   .anim-twinkle { animation: twinkle 3s ease-in-out infinite; }
 }
-
+/* The bell: it rings now and then while there is something new */
+@keyframes ring { 0%, 55%, 100% { transform: rotate(0); } 60% { transform: rotate(14deg); } 66% { transform: rotate(-12deg); } 72% { transform: rotate(9deg); } 78% { transform: rotate(-6deg); } 84% { transform: rotate(3deg); } }
+@layer utilities {
+  .anim-ring { animation: ring 4s ease-in-out infinite; transform-origin: 50% 12%; }
+}
 /* Weather: clouds drift, flags flutter, the bangka rocks with the waves */
 @keyframes cloud-drift { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(14px); } }
 @keyframes flutter { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(0.86); } }
@@ -205,4 +209,4 @@ html[data-simple='true'] .simple-hide { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-drift { animation: none; }
-}
+}\

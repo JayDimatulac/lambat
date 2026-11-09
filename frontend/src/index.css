@@ -209,4 +209,4 @@ html[data-simple='true'] .simple-hide { display: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .anim-drift { animation: none; }
-}\
+}

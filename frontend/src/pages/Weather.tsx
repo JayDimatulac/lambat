@@ -20,7 +20,7 @@ const LEVEL: Record<Level, { word: Key; why: Key; dot: string }> = {
 
 export default function Weather() {
   const t = useT()
-  const { lang } = useSettings()
+  const { lang, theme } = useSettings()
   const [now] = useState(() => new Date())
   const week = useMemo(() => weekFrom(now), [now])
   const hours = useMemo(() => todayHours(), [])
@@ -36,7 +36,8 @@ export default function Weather() {
   const best = week.reduce((b, d, i) => (dryScore(d) > dryScore(week[b]) ? i : b), 0)
   const dayName = (i: number) => week[i].date.toLocaleDateString(localeOf(lang), { weekday: 'long' })
 
-  const dark = hour < 5 || hour >= 16 // night and dusk skies are dark, so the words on them turn light
+  // dark when the app is in night mode, or when the sky itself is dark (night and dusk)
+  const dark = theme === 'night' || hour < 5 || hour >= 16
   const ink = dark ? 'text-white' : 'text-deep'
   const glass = dark ? 'bg-white/15 text-white' : 'bg-white/70 text-deep'
 
@@ -53,7 +54,7 @@ export default function Weather() {
 
       {/* ONE CALM ANSWER: is it good to go out? */}
       <section className="relative isolate h-[22rem] overflow-hidden rounded-lg shadow-raised sm:h-[24rem]">
-        <CalmSky day={day} hour={hour} />
+        <CalmSky day={day} hour={hour} night={dark} />
         <div className={`relative z-10 flex h-full max-w-[17rem] flex-col justify-start gap-3 p-6 sm:max-w-md sm:p-8 ${ink}`}>
           <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
             <span className="font-numeral text-lg font-bold">{day.tMax}°</span>

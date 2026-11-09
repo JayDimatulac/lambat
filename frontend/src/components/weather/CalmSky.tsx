@@ -1,102 +1,139 @@
 import { useId } from 'react'
-import type { Day } from '../../lib/weather'
+import type { Sky } from '../../lib/weather'
 
-// A soft, quiet picture of the sea: one sky, the sun or moon, a few clouds, gentle waves and a small bangka.
-// No signal flags and no numbers. The words and numbers sit on top of it in the page.
-type Phase = 'night' | 'dawn' | 'day' | 'dusk'
-const phaseOf = (h: number): Phase => (h < 5 || h >= 19 ? 'night' : h < 8 ? 'dawn' : h < 16 ? 'day' : 'dusk')
+type Props = { day: { sky: Sky }; hour: number; night?: boolean }
 
-const SKY: Record<Phase, [string, string, string]> = {
-  night: ['#0b2a3a', '#12465a', '#1d6a7a'],
-  dawn: ['#9ccfe0', '#f6d2b8', '#fde7d0'],
-  day: ['#7fcde0', '#d6eff1', '#fde3c8'],
-  dusk: ['#3f5f7f', '#c98a8a', '#fbd9b8'],
-}
-const SEA: Record<Phase, [string, string]> = {
-  night: ['#12465a', '#0a2f3c'],
-  dawn: ['#4aa3b1', '#1c6c7b'],
-  day: ['#4aa3b1', '#1c6c7b'],
-  dusk: ['#2b6f85', '#123f52'],
-}
+const HORIZON = 250
 
-const CLOUD_SPOTS: [number, number, number][] = [[300, 66, 0.9], [215, 36, 1], [130, 28, 0.7], [335, 30, 0.7], [250, 84, 0.8]]
-const CLOUD_COUNT = { sun: 1, partly: 3, cloud: 5, rain: 5 }
+// a row of gentle waves, repeated across the width
+const wave = (y: number, amp: number) =>
+  `M-100 ${y} ` + Array.from({ length: 13 }, (_, i) => (i === 0 ? `q 50 ${-amp} 100 0` : 't 100 0')).join(' ')
 
-const waves = (amp: number) => {
-  let d = 'M-60 0'
-  for (let i = 0; i < 9; i++) d += `q15 ${-amp} 30 0t30 0`
-  return d
-}
+export default function CalmSky({ day, hour, night }: Props) {
+  const id = useId().replace(/:/g, '')
+  const dark = night ?? (hour < 5 || hour >= 16)
+  const cloudy = day.sky === 'cloud' || day.sky === 'rain'
+  const showCloud = day.sky !== 'sun'
 
-export default function CalmSky({ day, hour }: { day: Pick<Day, 'sky' | 'wave'>; hour: number }) {
-  const uid = useId().replace(/:/g, '')
-  const skyId = `calmsky${uid}`
-  const seaId = `calmsea${uid}`
-  const phase = phaseOf(hour)
-  const night = phase === 'night'
-  const [c0, c1, c2] = SKY[phase]
-  const [s0, s1] = SEA[phase]
-  const p = Math.min(1, Math.max(0, (hour - 6) / 12))
-  const sunX = 190 + p * 130
-  const sunY = 112 - Math.sin(p * Math.PI) * 66
-  const low = p < 0.15 || p > 0.85
-  const clouds = CLOUD_SPOTS.slice(0, CLOUD_COUNT[day.sky])
-  const rain = day.sky === 'rain'
-  const amp = Math.min(9, 2.5 + day.wave * 3)
-  const rock = Math.min(5, 1.5 + day.wave * 1.5)
+  const c = dark
+    ? {
+        skyTop: '#07142b',
+        skyBot: '#1c3a5e',
+        seaTop: '#1a4a5e',
+        seaBot: '#0a2230',
+        wave: 'rgba(255,255,255,0.14)',
+        halo: 'rgba(200,215,255,0.10)',
+        body: '#f4f0d8',
+        cloud: cloudy ? '#3b4d66' : '#4a5d78',
+        sail: '#e9eef5',
+        hull: '#c9604f',
+      }
+    : {
+        skyTop: cloudy ? '#9fb7c4' : '#a9dbe8',
+        skyBot: cloudy ? '#d3dfe3' : '#e3efe6',
+        seaTop: '#4aa3b3',
+        seaBot: '#256e80',
+        wave: 'rgba(255,255,255,0.35)',
+        halo: 'rgba(255,224,150,0.35)',
+        body: '#ffd98a',
+        cloud: cloudy ? '#e8eef0' : '#ffffff',
+        sail: '#ffffff',
+        hull: '#e8705b',
+      }
 
   return (
-    <svg viewBox="0 0 360 200" preserveAspectRatio="xMaxYMax slice" className="absolute inset-0 h-full w-full" aria-hidden="true">
+    <svg
+      viewBox="0 0 1000 400"
+      preserveAspectRatio="xMidYMid slice"
+      className="absolute inset-0 h-full w-full"
+      aria-hidden="true"
+    >
       <defs>
-        <linearGradient id={skyId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={c0} />
-          <stop offset="0.6" stopColor={c1} />
-          <stop offset="1" stopColor={c2} />
+        <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={c.skyTop} />
+          <stop offset="1" stopColor={c.skyBot} />
         </linearGradient>
-        <linearGradient id={seaId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={s0} />
-          <stop offset="1" stopColor={s1} />
+        <linearGradient id={`${id}-sea`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={c.seaTop} />
+          <stop offset="1" stopColor={c.seaBot} />
         </linearGradient>
       </defs>
-      <rect width="360" height="200" fill={`url(#${skyId})`} />
 
-      {night ? (
+      {/* sky and sea */}
+      <rect width="1000" height={HORIZON} fill={`url(#${id}-sky)`} />
+      <rect y={HORIZON} width="1000" height={400 - HORIZON} fill={`url(#${id}-sea)`} />
+
+      {/* stars at night */}
+      {dark &&
+        [
+          [560, 40, 1.8], [620, 95, 1.4], [690, 30, 2], [780, 60, 1.5], [850, 120, 1.6],
+          [910, 40, 1.8], [470, 80, 1.3], [940, 150, 1.4], [720, 140, 1.2],
+        ].map(([x, y, r], i) => (
+          <circle key={i} cx={x} cy={y} r={r} fill="#fff" opacity={cloudy ? 0.25 : 0.85} />
+        ))}
+
+      {/* sun by day, moon by night */}
+      {!(cloudy && !dark) && (
         <g>
-          <path d="M270 26A16 16 0 0 0 270 58A24 24 0 0 1 270 26Z" style={{ fill: 'var(--color-ice)' }} />
-          {[[200, 30], [160, 62], [320, 24], [340, 80], [230, 78]].map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="1.6" fill="#fff" className="anim-twinkle" style={{ animationDelay: `${i * 0.7}s` }} />
-          ))}
-        </g>
-      ) : (
-        <g>
-          <circle cx={sunX} cy={sunY} r="38" fill="#ffe9b8" fillOpacity="0.4" className="anim-glow" />
-          <circle cx={sunX} cy={sunY} r="17" fill={low ? '#f6a77f' : '#ffd98a'} />
+          <circle cx="800" cy="80" r="125" fill={c.halo} />
+          <circle cx="800" cy="80" r="52" fill={c.body} />
+          {dark && <circle cx="822" cy="68" r="46" fill={c.skyTop} opacity="0.92" />}
         </g>
       )}
 
-      {clouds.map(([x, y, s], i) => (
-        <g key={i} transform={`translate(${x} ${y}) scale(${s})`}>
-          <g className="anim-cloud" style={{ animationDelay: `${i * -1.7}s` }} fill={night ? '#35525c' : rain ? '#b7c7ce' : '#fff'} fillOpacity={night ? 0.55 : 0.92}>
-            <circle cx="0" cy="0" r="13" />
-            <circle cx="16" cy="-6" r="16" />
-            <circle cx="34" cy="0" r="12" />
-            <rect x="-12" y="0" width="58" height="12" rx="6" />
-          </g>
+      {/* clouds */}
+      {showCloud && (
+        <g fill={c.cloud}>
+          <rect x="800" y="42" width="190" height="46" rx="23" />
+          <circle cx="850" cy="42" r="26" />
+          <circle cx="905" cy="36" r="32" />
+          {cloudy && (
+            <>
+              <rect x="560" y="95" width="170" height="40" rx="20" opacity="0.9" />
+              <circle cx="610" cy="95" r="22" opacity="0.9" />
+              <circle cx="665" cy="90" r="28" opacity="0.9" />
+            </>
+          )}
         </g>
-      ))}
-      {rain && [...Array(12)].map((_, i) => (
-        <path key={i} d={`M${150 + i * 18} ${88 + (i % 3) * 8}l-3 12`} stroke="#fff" strokeOpacity="0.5" strokeWidth="1.6" strokeLinecap="round" />
-      ))}
+      )}
 
-      <rect y="140" width="360" height="60" fill={`url(#${seaId})`} />
-      <g className="anim-rock" style={{ transformOrigin: '215px 148px', ['--rock' as string]: `${rock}deg` }}>
-        <path d="M195 140C203 150 227 150 235 140Z" style={{ fill: 'var(--color-coral)' }} />
-        <path d="M215 140V114" stroke="#fff" strokeOpacity="0.9" strokeWidth="2" strokeLinecap="round" />
-        <path d="M215 114L231 136H215Z" fill="#fff" fillOpacity="0.95" />
+      {/* rain */}
+      {day.sky === 'rain' &&
+        Array.from({ length: 18 }, (_, i) => {
+          const x = 560 + i * 24
+          const y = 140 + (i % 3) * 22
+          return (
+            <line
+              key={i}
+              x1={x}
+              y1={y}
+              x2={x - 8}
+              y2={y + 26}
+              stroke={dark ? 'rgba(190,210,240,0.5)' : 'rgba(70,100,130,0.45)'}
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          )
+        })}
+
+      {/* sailboat, gently bobbing */}
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="0 0; 0 4; 0 0"
+          dur="4s"
+          repeatCount="indefinite"
+        />
+        <path d="M498 128 L498 246" stroke={c.sail} strokeWidth="5" strokeLinecap="round" />
+        <path d="M506 132 L558 218 L506 218 Z" fill={c.sail} />
+        <path d="M460 248 Q500 292 545 248 Z" fill={c.hull} />
       </g>
-      <g transform="translate(0 140)"><g className="anim-drift"><path d={waves(amp)} fill="none" stroke="#fff" strokeOpacity="0.4" strokeWidth="2" /></g></g>
-      <g transform="translate(0 160)"><g className="anim-drift-rev"><path d={waves(amp * 0.8)} fill="none" stroke="#fff" strokeOpacity="0.2" strokeWidth="2" /></g></g>
-      <g transform="translate(0 182)"><g className="anim-drift"><path d={waves(amp * 0.6)} fill="none" stroke="#fff" strokeOpacity="0.12" strokeWidth="2" /></g></g>
+
+      {/* waves */}
+      <path d={wave(HORIZON, 14)} fill="none" stroke={c.wave} strokeWidth="5" strokeLinecap="round" />
+      <path d={wave(HORIZON + 55, 14)} fill="none" stroke={c.wave} strokeWidth="4" strokeLinecap="round" opacity="0.8" />
+      <path d={wave(HORIZON + 110, 12)} fill="none" stroke={c.wave} strokeWidth="3.5" strokeLinecap="round" opacity="0.6" />
     </svg>
   )
 }

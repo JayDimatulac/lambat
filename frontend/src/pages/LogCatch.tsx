@@ -5,7 +5,8 @@ import TideScene from '../components/tide/TideScene'
 import Disclaimer from '../components/ui/Disclaimer'
 import RiskBadge from '../components/ui/RiskBadge'
 import Button from '../components/ui/Button'
-import { IceStep, KilosStep, SpeciesStep, WhenStep, iceKgOf, type Draft } from '../components/log/steps'
+import { IceStep, SpeciesStep, WhenStep, iceKgOf, type Draft } from '../components/log/steps'
+import KilosScaleStep from '../components/log/KilosScale'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
 import { hoursAtAmbient, iceLevel, type IceLevel } from '../lib/estimator'
@@ -162,7 +163,7 @@ export default function LogCatch() {
       <div key={step} className="anim-rise mt-6 flex-1 space-y-6">
         {!reveal && <h1 className="text-center text-[28px] leading-tight">{t(questions[step])}</h1>}
         {step === 0 && <SpeciesStep draft={draft} set={set} lastTileId={lastTileId} />}
-        {step === 1 && <KilosStep draft={draft} set={set} />}
+        {step === 1 && <KilosScaleStep draft={draft} set={set} />}
         {step === 2 && <WhenStep draft={draft} set={set} />}
         {step === 3 && <IceStep draft={draft} set={set} />}
         {reveal && saved && <Reveal draft={draft} level={saved.level} savedId={saved.id} onAgain={again} />}

@@ -1,8 +1,6 @@
+import { Navigate } from 'react-router-dom'
+
+/* Alerts live in the bell dropdown now, not on a page. */
 export default function BuyerAlerts() {
-  return (
-    <div>
-      <h1 className="font-display text-2xl font-bold text-navy">Alerts</h1>
-      <p className="mt-2 text-navy/70">No alerts yet.</p>
-    </div>
-  )
+  return <Navigate to="/buyer" replace />
 }

@@ -43,6 +43,7 @@ const en = {
   'alert.o.confirmed': 'Order confirmed', 'alert.o.onway': 'You are on the way', 'alert.o.received': 'Fish received',
   'ago.now': 'just now', 'ago.min': '{n} min ago', 'ago.hr': '{n} h ago',
   'fneed.title': 'Someone is looking for {species}', 'fneed.offer': 'Offer my catch', 'fneed.sent': 'Offered. The buyer can see your catch now.', 'fneed.others': 'See other buyers',
+  'bset.reset.hint': 'Puts the sample offers back the way they started.', 'bset.reset.done': 'Demo offers reset',
 } as const
 
 type BKey = keyof typeof en
@@ -86,6 +87,7 @@ const fil: Record<BKey, string> = {
   'alert.o.confirmed': 'Kumpirmado ang order', 'alert.o.onway': 'Papunta ka na', 'alert.o.received': 'Natanggap na ang isda',
   'ago.now': 'ngayon lang', 'ago.min': '{n} minuto na ang nakalipas', 'ago.hr': '{n} oras na ang nakalipas',
   'fneed.title': 'May naghahanap ng {species}', 'fneed.offer': 'Ialok ang huli ko', 'fneed.sent': 'Naialok na. Makikita na ng mamimili ang huli mo.', 'fneed.others': 'Tingnan ang ibang mamimili',  
+  'bset.reset.hint': 'Ibabalik ang mga sample na alok sa dati nilang ayos.', 'bset.reset.done': 'Na-reset na ang demo na alok',
 }
 
 export type { BKey }

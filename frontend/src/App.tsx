@@ -31,9 +31,9 @@ import BuyerStall from './pages/buyer/BuyerStall'
 import BuyerAlerts from './pages/buyer/BuyerAlerts'
 import BuyerNeeds from './pages/buyer/BuyerNeeds'
 import BuyerOrders from './pages/buyer/BuyerOrders'
-
+import BuyerSettings from './pages/buyer/BuyerSettings'
 import { MarketProvider } from './lib/market'
-import BuyerShell from './components/buyer/BuyerShell'
+import BuyerLayout from './pages/buyer/BuyerLayout'
 
 // Placeholder screens get their title from the dictionary so the language toggle works on them too
 function Ph({ k }: { k: Key }) {
@@ -81,13 +81,14 @@ export default function App() {
 
         <Route path="/buyer/waiting" element={<Guard role="buyer"><BuyerWaiting /></Guard>} />
           <Route path="/buyer" element={<BuyerGate />}>
-            <Route element={<BuyerShell />}>
+            <Route element={<BuyerLayout />}>
             <Route index element={<BuyerHome />} />
             <Route path="offers" element={<BuyerOffers />} />
             <Route path="needs" element={<BuyerNeeds />} />
             <Route path="orders" element={<BuyerOrders />} />
             <Route path="stall" element={<BuyerStall />} />
-            <Route path="alerts" element={<BuyerAlerts />} />
+            <Route path="alerts" element={<Navigate to="/buyer" replace />} />
+            <Route path="settings" element={<BuyerSettings />} />
           </Route>
         </Route>
         <Route path="/org" element={<Guard role="organization"><Soon /></Guard>} />

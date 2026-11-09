@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Minus, Plus } from 'lucide-react'
-import Sheet from '../../components/ui/Sheet'
+import { Minus, Plus, X } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import Chip from '../../components/ui/Chip'
 import Segmented from '../../components/ui/Segmented'
@@ -10,17 +10,116 @@ import { BASE_PRICE } from '../../lib/buyers'
 import { useUser } from '../../lib/auth'
 import { openListings, useMarket, type Need } from '../../lib/market'
 import { useBT } from '../../lib/buyerText'
+import { useT } from '../../lib/i18n'
 
 type When = Need['when']
 const FISH = Object.keys(BASE_PRICE)
 
-const Stepper = ({ value, onChange, step, min, max, fmt }: { value: number; onChange: (n: number) => void; step: number; min: number; max: number; fmt: (n: number) => string }) => (
-  <div className="flex items-center justify-between gap-3 rounded-md bg-mint p-3">
-    <button type="button" aria-label={`-${step}`} onClick={() => onChange(Math.max(min, value - step))} className="grid size-12 place-items-center rounded-full border-2 border-teal text-teal"><Minus size={22} strokeWidth={2} aria-hidden /></button>
-    <p className="font-numeral text-3xl font-extrabold text-teal">{fmt(value)}</p>
-    <button type="button" aria-label={`+${step}`} onClick={() => onChange(Math.min(max, value + step))} className="grid size-12 place-items-center rounded-full border-2 border-teal text-teal"><Plus size={22} strokeWidth={2} aria-hidden /></button>
-  </div>
-)
+const MAX_KG = 100
+const MAX_PRICE = 100000
+
+/* A number you can tap and type, or nudge with - and +. The typed value is checked when you leave the field. */
+const Stepper = ({ value, onChange, step, min, max, prefix = '', suffix = '', emptyLabel = '', label }: {
+  value: number
+  onChange: (n: number) => void
+  step: number
+  min: number
+  max: number
+  prefix?: string
+  suffix?: string
+  emptyLabel?: string // shown when the value is 0, like "No limit"
+  label: string
+}) => {
+  const [text, setText] = useState<string | null>(null) // null means the buyer is not typing
+  const shown = text ?? (value ? String(value) : '')
+
+  const commit = () => {
+    if (text === null) return
+    const n = parseInt(text, 10)
+    if (!text || Number.isNaN(n)) onChange(min === 0 ? 0 : value) // empty: no limit, or keep the old value
+    else onChange(Math.min(max, Math.max(min, n)))
+    setText(null)
+  }
+  const bump = (next: number) => {
+    setText(null)
+    onChange(Math.min(max, Math.max(min, next)))
+  }
+
+  const btn = 'grid size-12 shrink-0 place-items-center rounded-full border-2 border-teal text-teal'
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-md bg-mint p-3">
+      <button type="button" aria-label={`-${step}`} onClick={() => bump(value - step)} className={btn}>
+        <Minus size={22} strokeWidth={2} aria-hidden />
+      </button>
+
+      <label className="flex min-w-0 flex-1 items-center justify-center gap-1 font-numeral text-3xl font-extrabold text-teal">
+        {shown && prefix}
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          aria-label={label}
+          value={shown}
+          placeholder={emptyLabel}
+          maxLength={String(max).length}
+          onFocus={(e) => { setText(value ? String(value) : ''); e.currentTarget.select() }}
+          onChange={(e) => setText(e.target.value.replace(/\D/g, ''))}
+          onBlur={commit}
+          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+          style={{ width: `${shown ? shown.length : Math.max(emptyLabel.length, 1)}ch` }}
+          className="max-w-full bg-transparent text-center outline-none placeholder:text-teal/60"
+        />
+        {shown && suffix}
+      </label>
+
+      <button type="button" aria-label={`+${step}`} onClick={() => bump(value + step)} className={btn}>
+        <Plus size={22} strokeWidth={2} aria-hidden />
+      </button>
+    </div>
+  )
+}
+
+/* A modal in the middle of the screen. Click outside or press Esc to close. */
+function CenterModal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
+  const t = useT()
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [open, onClose])
+
+  if (!open) return null
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-deep/60 p-4 backdrop-blur-sm"
+      onMouseDown={(e) => { if (e.target === e.currentTarget) onClose() }}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        className="anim-rise max-h-[90dvh] w-full max-w-md space-y-6 overflow-y-auto rounded-3xl border border-line bg-card p-5 shadow-raised"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-display text-2xl font-bold">{title}</h2>
+          <button type="button" onClick={onClose} aria-label={t('menu.close')} className="grid size-11 place-items-center rounded-full hover:bg-seafoam">
+            <X size={24} strokeWidth={1.8} aria-hidden />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>,
+    document.body,
+  )
+}
 
 export default function BuyerNeeds() {
   const b = useBT()
@@ -71,19 +170,25 @@ export default function BuyerNeeds() {
         </div>
       )}
 
-      <Sheet open={params.get('new') === '1'} onClose={close} title={b('needs.new')}>
+      <CenterModal open={params.get('new') === '1'} onClose={close} title={b('needs.new')}>
         <div className="space-y-2">
           <p className="font-semibold">{b('needs.fish')}</p>
           <div className="flex flex-wrap gap-2">{FISH.map((f) => <Chip key={f} active={fish === f} onClick={() => setFish(f)}>{f}</Chip>)}</div>
         </div>
-        <div className="space-y-2"><p className="font-semibold">{b('needs.kg')}</p><Stepper value={kg} onChange={setKg} step={5} min={5} max={500} fmt={(n) => `${n} kg`} /></div>
+        <div className="space-y-2">
+          <p className="font-semibold">{b('needs.kg')}</p>
+          <Stepper value={kg} onChange={setKg} step={5} min={5} max={MAX_KG} suffix=" kg" label={b('needs.kg')} />
+        </div>
         <div className="space-y-2">
           <p className="font-semibold">{b('needs.when')}</p>
           <Segmented<When> label={b('needs.when')} value={when} onChange={setWhen} options={[{ value: 'today', label: b('when.today') }, { value: 'tomorrow', label: b('when.tomorrow') }, { value: 'week', label: b('when.week') }]} />
         </div>
-        <div className="space-y-2"><p className="font-semibold">{b('needs.max')}</p><Stepper value={max} onChange={setMax} step={5} min={0} max={500} fmt={(n) => (n ? `₱${n}` : b('needs.nomax'))} /></div>
+        <div className="space-y-2">
+          <p className="font-semibold">{b('needs.max')}</p>
+          <Stepper value={max} onChange={setMax} step={5} min={0} max={MAX_PRICE} prefix="₱" emptyLabel={b('needs.nomax')} label={b('needs.max')} />
+        </div>
         <Button className="min-h-14 w-full text-base" onClick={() => { m.addNeed({ buyerId: user.id, species: fish, kg, when, maxPrice: max || undefined }); close() }}>{b('needs.post')}</Button>
-      </Sheet>
+      </CenterModal>
     </div>
   )
 }

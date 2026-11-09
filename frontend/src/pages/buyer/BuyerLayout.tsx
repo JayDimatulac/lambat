@@ -1,23 +1,32 @@
 import { useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LogOut, Store } from 'lucide-react'
+import { LogOut, Settings } from 'lucide-react'
 import Sheet from '../../components/ui/Sheet'
 import LogoutSheet from '../../components/auth/LogoutSheet'
 import LangToggle from '../../components/layout/LangToggle'
 import Logo from '../../components/Logo'
-import { TideIcon } from '../../components/icons'
+import BuyerNotificationsMenu from '../../components/buyer/BuyerNotificationsMenu'
+import { CrateIcon, RopeIcon, StallIcon } from '../../components/buyer/BuyerIcons'
+import { KnotPlusIcon, PierIcon, TideIcon } from '../../components/icons'
 import { useUser } from '../../lib/auth'
-import { useT, type Key } from '../../lib/i18n'
+import { useBT, type BKey } from '../../lib/buyerText'
+import { useT } from '../../lib/i18n'
 import { useSettings } from '../../lib/settings'
 import { MoonTideIcon } from '../admin/AdminIcons'
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
-type Item = { to: string; label: Key; icon: Icon; end?: boolean }
+type Item = { to: string; label: BKey; icon: Icon; end?: boolean }
 
-// Add more pages here later (orders, profile, and so on). The dock, top bar and phone bar all follow this list.
-const NAV: Item[] = [
-  { to: '/buyer', label: 'byr.nav.offers', icon: Store, end: true },
-]
+const NEED = '/buyer/needs'
+const PIER: Item = { to: '/buyer', label: 'nav.pantalan', icon: PierIcon, end: true }
+const OFFERS: Item = { to: '/buyer/offers', label: 'nav.offers', icon: CrateIcon }
+const NEEDS: Item = { to: NEED, label: 'nav.needs', icon: KnotPlusIcon }
+const ORDERS: Item = { to: '/buyer/orders', label: 'nav.orders', icon: RopeIcon }
+const STALL: Item = { to: '/buyer/stall', label: 'nav.stall', icon: StallIcon }
+
+// The dock follows NAV. The phone bar has four tabs and the float button in the middle.
+const NAV: Item[] = [PIER, OFFERS, NEEDS, ORDERS, STALL]
+const PHONE_TABS: Item[] = [PIER, OFFERS, ORDERS, STALL]
 const isActive = (i: Item, path: string) => (i.end ? path === i.to : path.startsWith(i.to))
 
 /* The harbor dock, same as the fisherfolk and admin ones: a slim icon strip that opens on hover or focus and pushes the page. */
@@ -32,6 +41,20 @@ function ActiveGlow() {
       <span aria-hidden="true" className="absolute inset-0 rounded-2xl bg-gradient-to-r from-coral/30 via-coral/10 to-transparent" />
       <span aria-hidden="true" className="absolute -left-3 top-3 h-6 w-1 rounded-r-full bg-coral" />
     </>
+  )
+}
+
+/* The float: the one main action for a buyer is to say what they need. Same buoy as the fisher's log button. */
+function FloatButton() {
+  const b = useBT()
+  return (
+    <Link to={`${NEED}?new=1`} aria-label={b('needs.new')} className="relative grid size-16 place-items-center rounded-full bg-coral text-deep shadow-raised transition active:scale-95">
+      <svg viewBox="0 0 72 72" className="pointer-events-none absolute -inset-1 size-[calc(100%+8px)]" aria-hidden="true">
+        <circle cx="36" cy="36" r="33" fill="none" stroke="var(--color-cream)" strokeWidth="4" strokeDasharray="7 4.4" strokeLinecap="round" />
+        <circle cx="36" cy="36" r="33" fill="none" stroke="var(--color-coral)" strokeOpacity="0.5" strokeWidth="1.2" />
+      </svg>
+      <KnotPlusIcon size={30} />
+    </Link>
   )
 }
 
@@ -80,6 +103,7 @@ function SwitchRow({ label, hint, checked, onChange, icon }: { label: string; hi
 
 export default function BuyerLayout() {
   const t = useT()
+  const b = useBT()
   const user = useUser()
   const { theme, setTheme } = useSettings()
   const { pathname } = useLocation()
@@ -88,6 +112,9 @@ export default function BuyerLayout() {
 
   const night = theme === 'night'
   const current = NAV.find((i) => isActive(i, pathname))
+  const onSettings = pathname.startsWith('/buyer/settings')
+  const title = current ? b(current.label) : onSettings ? t('nav.settings') : pathname.startsWith('/buyer/alerts') ? b('nav.alerts') : 'LAMBAT'
+  const place = user.buyer?.businessName ?? t('byr.role')
 
   return (
     <div className="min-h-dvh lg:flex">
@@ -107,24 +134,39 @@ export default function BuyerLayout() {
             </span>
           </Link>
 
-          <div aria-hidden="true" className="mb-4 h-px shrink-0 bg-line" />
+          {/* The one primary action */}
+          <Link
+            to={`${NEED}?new=1`}
+            aria-label={b('needs.new')}
+            className="flex h-12 shrink-0 items-center gap-3 rounded-full bg-coral pl-3 pr-5 font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95"
+          >
+            <KnotPlusIcon size={24} className="shrink-0" />
+            <span className={label}>{b('nav.need')}</span>
+          </Link>
+
+          <div aria-hidden="true" className="my-4 h-px shrink-0 bg-line" />
 
           <nav className="flex flex-col gap-1.5" aria-label={t('nav.main')}>
             {NAV.map((item) => {
               const active = item === current
               return (
-                <NavLink key={item.to} to={item.to} end={item.end} aria-label={t(item.label)} className={`${rowBase} ${active ? rowOn : rowIdle}`}>
+                <NavLink key={item.to} to={item.to} end={item.end} aria-label={b(item.label)} className={`${rowBase} ${active ? rowOn : rowIdle}`}>
                   {active && <ActiveGlow />}
                   <item.icon size={24} strokeWidth={1.8} className="relative shrink-0" />
-                  <span className={`relative ${label}`}>{t(item.label)}</span>
+                  <span className={`relative ${label}`}>{b(item.label)}</span>
                 </NavLink>
               )
             })}
           </nav>
 
-          {/* Sign out, kept at the bottom of the dock */}
+          {/* Settings and sign out, kept at the bottom of the dock */}
           <div className="mt-auto flex shrink-0 flex-col gap-1.5 pt-4">
             <div aria-hidden="true" className="mb-2 h-px bg-line" />
+            <NavLink to="/buyer/settings" aria-label={t('nav.settings')} className={`${rowBase} ${onSettings ? rowOn : rowIdle}`}>
+              {onSettings && <ActiveGlow />}
+              <Settings size={24} strokeWidth={1.8} className="relative shrink-0" />
+              <span className={`relative ${label}`}>{t('nav.settings')}</span>
+            </NavLink>
             <button type="button" onClick={() => setAskLogout(true)} aria-label={t('auth.logout')}
               className={`${rowBase} text-navy/75 hover:bg-risk-critical-bg hover:text-risk-critical`}>
               <LogOut size={24} strokeWidth={1.8} className="shrink-0" />
@@ -136,7 +178,7 @@ export default function BuyerLayout() {
 
       <div className="min-w-0 flex-1">
         {/* Top bar: a floating glass bar that lines up with the page content */}
-        <header className="sticky top-0 z-20 pt-3">
+        <header className="sticky top-0 z-30 pt-3">
           <div className="mx-auto max-w-5xl px-4 lg:px-8">
             <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
@@ -149,8 +191,8 @@ export default function BuyerLayout() {
               <div className="hidden items-center gap-3 lg:flex">
                 <span aria-hidden="true" className="h-9 w-1 rounded-full bg-coral" />
                 <div className="leading-tight">
-                  <p className="font-display text-xl font-bold">{current ? t(current.label) : 'LAMBAT'}</p>
-                  <p className="text-sm font-medium text-ink-soft">{t('byr.role')}</p>
+                  <p className="font-display text-xl font-bold">{title}</p>
+                  <p className="text-sm font-medium text-ink-soft">{place}</p>
                 </div>
               </div>
 
@@ -158,6 +200,7 @@ export default function BuyerLayout() {
                 <ParolaToggle night={night} onToggle={() => setTheme(night ? 'day' : 'night')} />
                 <LangToggle />
                 <span aria-hidden="true" className="mx-1 hidden h-8 w-px bg-line sm:block" />
+                <BuyerNotificationsMenu />
                 <button
                   type="button"
                   onClick={() => setMenu(true)}
@@ -174,26 +217,32 @@ export default function BuyerLayout() {
         <main className="mx-auto max-w-5xl px-4 pb-32 pt-5 lg:px-8 lg:pb-10"><Outlet /></main>
       </div>
 
-      {/* Phone bar: only worth showing once there is more than one page */}
-      {NAV.length > 1 && (
-        <nav aria-label={t('nav.main')} className="net-mesh fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden" style={{ gridTemplateColumns: `repeat(${NAV.length}, minmax(0, 1fr))` }}>
-          {NAV.map((item) => {
-            const active = item === current
+      {/* Phone bar: four tabs with the "I need" float in the middle */}
+      <nav aria-label={t('nav.main')} className="net-mesh fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
+        {[PHONE_TABS[0], PHONE_TABS[1], null, PHONE_TABS[2], PHONE_TABS[3]].map((item, i) => {
+          if (!item) {
             return (
-              <NavLink key={item.to} to={item.to} end={item.end} className="relative flex min-h-16 flex-col items-center justify-center gap-0.5 text-[13px] font-semibold">
-                <span aria-hidden="true" className={`absolute left-1/2 -translate-x-1/2 rounded-full ${active ? '-top-1 size-2.5 bg-teal' : '-top-0.5 size-1.5 bg-line'}`} />
-                {active && <span aria-hidden="true" className="absolute left-1/2 top-0 h-2 w-0.5 -translate-x-1/2 bg-teal" />}
-                <span className={`grid h-8 w-14 place-items-center rounded-full transition ${active ? 'bg-seafoam text-teal' : 'text-navy'}`}>
-                  <item.icon size={24} strokeWidth={1.8} />
-                </span>
-                <span className={active ? 'text-teal' : 'text-navy'}>{t(item.label)}</span>
-              </NavLink>
+              <div key={i} className="relative flex flex-col items-center justify-end pb-1.5">
+                <div className="-mt-8"><FloatButton /></div>
+                <span className="mt-1 text-[13px] font-semibold">{b('nav.need')}</span>
+              </div>
             )
-          })}
-        </nav>
-      )}
+          }
+          const active = isActive(item, pathname)
+          return (
+            <NavLink key={item.to} to={item.to} end={item.end} className="relative flex min-h-16 flex-col items-center justify-center gap-0.5 text-[13px] font-semibold">
+              <span aria-hidden="true" className={`absolute left-1/2 -translate-x-1/2 rounded-full ${active ? '-top-1 size-2.5 bg-teal' : '-top-0.5 size-1.5 bg-line'}`} />
+              {active && <span aria-hidden="true" className="absolute left-1/2 top-0 h-2 w-0.5 -translate-x-1/2 bg-teal" />}
+              <span className={`grid h-8 w-14 place-items-center rounded-full transition ${active ? 'bg-seafoam text-teal' : 'text-navy'}`}>
+                <item.icon size={24} strokeWidth={1.8} />
+              </span>
+              <span className={active ? 'text-teal' : 'text-navy'}>{b(item.label)}</span>
+            </NavLink>
+          )
+        })}
+      </nav>
 
-      <Sheet open={menu} onClose={() => setMenu(false)} title={t('byr.role')}>
+      <Sheet open={menu} onClose={() => setMenu(false)} title={user.buyer?.businessName ?? t('byr.role')}>
         <div className="flex items-center gap-3">
           <span className="grid size-12 place-items-center rounded-full bg-teal font-bold text-on-accent">{user.initials}</span>
           <div>
@@ -202,6 +251,20 @@ export default function BuyerLayout() {
           </div>
         </div>
         <SwitchRow icon={night ? <TideIcon size={24} /> : <MoonTideIcon size={24} />} label={t('menu.night')} hint={t('menu.night.hint')} checked={night} onChange={(v) => setTheme(v ? 'night' : 'day')} />
+        <ul className="divide-y divide-line overflow-hidden rounded-md border border-line">
+          <li>
+            <Link to={STALL.to} onClick={() => setMenu(false)} className="flex min-h-14 items-center gap-3 px-4 hover:bg-seafoam/50">
+              <StallIcon size={22} strokeWidth={1.8} className="text-teal" />
+              {b('nav.stall')}
+            </Link>
+          </li>
+          <li>
+            <Link to="/buyer/settings" onClick={() => setMenu(false)} className="flex min-h-14 items-center gap-3 px-4 hover:bg-seafoam/50">
+              <Settings size={22} strokeWidth={1.8} aria-hidden className="text-teal" />
+              {t('nav.settings')}
+            </Link>
+          </li>
+        </ul>
         <button type="button" onClick={() => { setMenu(false); setAskLogout(true) }}
           className="flex min-h-14 w-full items-center justify-center gap-2 rounded-full border-2 border-teal text-base font-semibold text-teal">
           <LogOut size={22} strokeWidth={1.8} />

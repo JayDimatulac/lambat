@@ -1,15 +1,16 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronDown } from 'lucide-react'
 import CalmSky from '../components/weather/CalmSky'
 import DayRibbon from '../components/weather/DayRibbon'
-import WeekStrip from '../components/weather/WeekStrip'
+import WeekStrip from "../components/weather/WeekStrip";
 import DryRack from '../components/weather/DryRack'
 import { WaveArrow } from '../components/home/HomeIcons'
-import { WEATHER_IS_LIVE, calmWindow, dryScore, hour12, sailLevel, todayHours, weekFrom, windWindow, type Level, type Sky } from '../lib/weather'
+import { calmWindow, dryScore, hour12, sailLevel, useForecast, windWindow, type Level, type Sky } from '../lib/weather'
 import { localeOf } from '../lib/time'
 import { useT, type Key } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
+import { useUser } from '../lib/auth'
 
 const SKY_WORD: Record<Sky, Key> = { sun: 'sky.sun', partly: 'sky.partly', cloud: 'sky.cloud', rain: 'sky.rain' }
 const LEVEL: Record<Level, { word: Key; why: Key; dot: string }> = {
@@ -21,9 +22,9 @@ const LEVEL: Record<Level, { word: Key; why: Key; dot: string }> = {
 export default function Weather() {
   const t = useT()
   const { lang, theme } = useSettings()
+  const user = useUser()
+  const { week, hours, live } = useForecast(user.fisher?.landing)
   const [now] = useState(() => new Date())
-  const week = useMemo(() => weekFrom(now), [now])
-  const hours = useMemo(() => todayHours(), [])
   const [sel, setSel] = useState(0)
 
   const day = week[sel]
@@ -60,7 +61,7 @@ export default function Weather() {
             <span className="font-numeral text-lg font-bold">{day.tMax}°</span>
             <span aria-hidden="true">·</span>
             {t(SKY_WORD[day.sky])}
-            {!WEATHER_IS_LIVE && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${glass}`}>{t('ui.sample')}</span>}
+            {!live && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${glass}`}>{t('ui.sample')}</span>}
           </p>
           <h2 className="flex items-center gap-3 font-display text-[34px] font-semibold leading-[1.1] sm:text-[42px]">
             <span aria-hidden="true" className={`size-3.5 shrink-0 rounded-full ${L.dot}`} />

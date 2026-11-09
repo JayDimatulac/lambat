@@ -21,7 +21,7 @@ export type Listing = {
   ask: number // pesos per kilo
   sample?: boolean
 }
-export type Need = { id: string; buyerId: string; species: string; kg: number; when: 'today' | 'tomorrow' | 'week'; maxPrice?: number; createdAt: number; open: boolean }
+export type Need = { id: string; buyerId: string; buyer?: string; place?: string; species: string; kg: number; when: 'today' | 'tomorrow' | 'week'; maxPrice?: number; createdAt: number; open: boolean }
 export type OrderStatus = 'offered' | 'declined' | 'confirmed' | 'onway' | 'received'
 export type Order = {
   id: string; listingId: string; buyerId: string
@@ -29,7 +29,16 @@ export type Order = {
   ask: number; price: number
   status: OrderStatus; rescue: boolean; createdAt: number; updatedAt: number
 }
-type State = { listings: Listing[]; needs: Need[]; orders: Order[] }
+// A fisher's offer to answer a buyer's need
+export type NeedOfferStatus = 'pending' | 'accepted' | 'declined'
+export type NeedOffer = {
+  id: string; needId: string
+  fisherId: string; fisher: string
+  catchId: string; species: string; kg: number; place: string
+  price: number // pesos per kilo
+  status: NeedOfferStatus; createdAt: number; updatedAt: number
+}
+type State = { listings: Listing[]; needs: Need[]; orders: Order[]; offers: NeedOffer[] }
 
 // SAMPLE listings so a buyer always has something to see. Prices are sample prices, not research.
 function seeds(now: number): State {
@@ -45,13 +54,16 @@ function seeds(now: number): State {
     ],
     needs: [],
     orders: [],
+    offers: [],
   }
 }
 
 function load(): State {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) ?? 'null')
-    if (raw && Array.isArray(raw.listings) && Array.isArray(raw.needs) && Array.isArray(raw.orders)) return raw
+    if (raw && Array.isArray(raw.listings) && Array.isArray(raw.needs) && Array.isArray(raw.orders)) {
+      return { ...raw, offers: Array.isArray(raw.offers) ? raw.offers : [] } // older saves have no offers yet
+    }
   } catch { /* fall through */ }
   return seeds(Date.now())
 }
@@ -60,6 +72,8 @@ export const hoursLeft = (l: Listing, now = Date.now()) => Math.max(0, (l.deadli
 export const riskOf = (l: Listing, now = Date.now()): RiskLevel => riskFor(hoursLeft(l, now))
 export const usualPrice = (species: string) => BASE_PRICE[species] ?? 100
 
+type OfferInput = { fisherId: string; fisher: string; catchId: string; species: string; kg: number; place: string; price: number }
+
 type Ctx = State & {
   now: number
   postListing: (c: Catch, fisher: string, fisherId: string) => void
@@ -67,6 +81,8 @@ type Ctx = State & {
   advance: (orderId: string) => void
   addNeed: (n: Omit<Need, 'id' | 'createdAt' | 'open'>) => void
   closeNeed: (id: string) => void
+  offerToNeed: (needId: string, o: OfferInput) => void // a fisher answers a need
+  answerOffer: (offerId: string, accept: boolean) => void // the buyer accepts or declines
   resetMarket: () => void
 }
 const MarketCtx = createContext<Ctx | null>(null)
@@ -141,9 +157,54 @@ export function MarketProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, needs: [{ ...n, id: `n${Date.now().toString(36)}`, createdAt: Date.now(), open: true }, ...s.needs] }))
   }, [])
   const closeNeed = useCallback((id: string) => setState((s) => ({ ...s, needs: s.needs.map((n) => (n.id === id ? { ...n, open: false } : n)) })), [])
+
+  const offerToNeed = useCallback<Ctx['offerToNeed']>((needId, o) => {
+    setState((s) => {
+      const need = s.needs.find((n) => n.id === needId)
+      if (!need || !need.open) return s
+      // one live offer per fisher per need
+      if (s.offers.some((x) => x.needId === needId && x.fisherId === o.fisherId && x.status !== 'declined')) return s
+      const at = Date.now()
+      const offer: NeedOffer = { ...o, id: `f${at.toString(36)}`, needId, status: 'pending', createdAt: at, updatedAt: at }
+      return { ...s, offers: [offer, ...s.offers] }
+    })
+  }, [])
+
+  const answerOffer = useCallback<Ctx['answerOffer']>((offerId, accept) => {
+    setState((s) => {
+      const offer = s.offers.find((x) => x.id === offerId)
+      if (!offer || offer.status !== 'pending') return s
+      const need = s.needs.find((n) => n.id === offer.needId)
+      if (!need) return s
+      const at = Date.now()
+      if (!accept) {
+        return { ...s, offers: s.offers.map((x) => (x.id === offerId ? { ...x, status: 'declined' as const, updatedAt: at } : x)) }
+      }
+      // accepting closes the need, declines the other waiting offers, and starts an order for the buyer
+      const order: Order = {
+        id: `o${at.toString(36)}`, listingId: `offer:${offer.id}`, buyerId: need.buyerId,
+        species: offer.species, kg: offer.kg, place: offer.place, fisher: offer.fisher,
+        ask: offer.price, price: offer.price, status: 'confirmed', rescue: false, createdAt: at, updatedAt: at,
+      }
+      return {
+        ...s,
+        needs: s.needs.map((n) => (n.id === need.id ? { ...n, open: false } : n)),
+        offers: s.offers.map((x) => {
+          if (x.id === offerId) return { ...x, status: 'accepted' as const, updatedAt: at }
+          if (x.needId === need.id && x.status === 'pending') return { ...x, status: 'declined' as const, updatedAt: at }
+          return x
+        }),
+        orders: [order, ...s.orders],
+      }
+    })
+  }, [])
+
   const resetMarket = useCallback(() => setState(seeds(Date.now())), [])
 
-  const value = useMemo(() => ({ ...state, now, postListing, buy, advance, addNeed, closeNeed, resetMarket }), [state, now, postListing, buy, advance, addNeed, closeNeed, resetMarket])
+  const value = useMemo(
+    () => ({ ...state, now, postListing, buy, advance, addNeed, closeNeed, offerToNeed, answerOffer, resetMarket }),
+    [state, now, postListing, buy, advance, addNeed, closeNeed, offerToNeed, answerOffer, resetMarket],
+  )
   return <MarketCtx.Provider value={value}>{children}</MarketCtx.Provider>
 }
 

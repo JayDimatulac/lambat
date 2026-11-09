@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, CheckCheck, CheckCircle2, Fish, Hourglass, PackageCheck, Truck, XCircle } from 'lucide-react'
+import { Bell, CheckCheck, CheckCircle2, Fish, Hourglass, PackageCheck, Tag, Truck, XCircle } from 'lucide-react'
 import { useUser } from '../../lib/auth'
 import { useBuyerAlerts, type Alert } from '../../lib/buyerAlerts'
 import { useBT, type BKey } from '../../lib/buyerText'
@@ -11,8 +11,9 @@ const ORDER_TEXT: Record<OrderStatus, BKey> = {
   offered: 'order.waiting', declined: 'order.declined', confirmed: 'alert.o.confirmed', onway: 'alert.o.onway', received: 'alert.o.received',
 }
 const GOOD = 'bg-risk-low-bg text-risk-low'
-const ICON: Record<OrderStatus | 'match', { icon: typeof Fish; cls: string }> = {
+const ICON: Record<OrderStatus | 'match' | 'offer', { icon: typeof Fish; cls: string }> = {
   match: { icon: Fish, cls: 'bg-seafoam text-teal' },
+  offer: { icon: Tag, cls: 'bg-risk-moderate-bg text-risk-moderate' },
   offered: { icon: Hourglass, cls: 'bg-risk-moderate-bg text-risk-moderate' },
   declined: { icon: XCircle, cls: 'bg-risk-critical-bg text-risk-critical' },
   confirmed: { icon: CheckCircle2, cls: GOOD },
@@ -33,7 +34,7 @@ const saveRead = (userId: string, ids: string[]) => {
   try { localStorage.setItem(readKey(userId), JSON.stringify(ids.slice(-200))) } catch { /* storage can be blocked */ }
 }
 
-/* The buyer's bell. It opens a small panel with the lots that match a need and the news about your orders.
+/* The buyer's bell. It opens a small panel with the lots that match a need, the offers fisherfolk send, and the news about your orders.
    It is not a page: tap an alert to go to what it is about. */
 export default function BuyerNotificationsMenu() {
   const b = useBT()
@@ -68,20 +69,30 @@ export default function BuyerNotificationsMenu() {
     const min = Math.max(0, Math.floor((now - at) / 60000))
     return min < 1 ? b('ago.now') : min < 60 ? b('ago.min', { n: min }) : b('ago.hr', { n: Math.floor(min / 60) })
   }
-  const view = (a: Alert) =>
-    a.kind === 'match'
-      ? {
-          to: '/buyer/offers',
-          tone: ICON.match,
-          title: `${a.listing.species} · ${a.listing.kg} kg`,
-          body: `${b('alert.match')}. ${b('alert.match.body', { fisher: a.listing.fisher, place: a.listing.place, ask: a.listing.ask })}`,
-        }
-      : {
-          to: '/buyer/orders',
-          tone: ICON[a.order.status],
-          title: `${a.order.species} · ${a.order.kg} kg`,
-          body: `${b(ORDER_TEXT[a.order.status])} ${a.order.fisher} · ${a.order.place}`,
-        }
+  const view = (a: Alert) => {
+    if (a.kind === 'match') {
+      return {
+        to: '/buyer/offers',
+        tone: ICON.match,
+        title: `${a.listing.species} · ${a.listing.kg} kg`,
+        body: `${b('alert.match')}. ${b('alert.match.body', { fisher: a.listing.fisher, place: a.listing.place, ask: a.listing.ask })}`,
+      }
+    }
+    if (a.kind === 'offer') {
+      return {
+        to: '/buyer/needs',
+        tone: ICON.offer,
+        title: `${a.offer.species} · ${a.offer.kg} kg`,
+        body: `${a.offer.fisher} offers ₱${a.offer.price}/kg · ${a.offer.place}`,
+      }
+    }
+    return {
+      to: '/buyer/orders',
+      tone: ICON[a.order.status],
+      title: `${a.order.species} · ${a.order.kg} kg`,
+      body: `${b(ORDER_TEXT[a.order.status])} ${a.order.fisher} · ${a.order.place}`,
+    }
+  }
 
   return (
     <div ref={box} className="sm:relative">

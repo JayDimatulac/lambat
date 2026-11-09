@@ -11,6 +11,7 @@ import { useUser } from '../../lib/auth'
 import { openListings, useMarket, type Need } from '../../lib/market'
 import { useBT } from '../../lib/buyerText'
 import { useT } from '../../lib/i18n'
+import { TOWNS, townOf } from '../../lib/geo'
 
 type When = Need['when']
 const FISH = Object.keys(BASE_PRICE)
@@ -130,6 +131,7 @@ export default function BuyerNeeds() {
   const [kg, setKg] = useState(20)
   const [when, setWhen] = useState<When>('today')
   const [max, setMax] = useState(0)
+  const [place, setPlace] = useState(townOf(user.barangay))
 
   const mine = m.needs.filter((n) => n.buyerId === user.id)
   const open = openListings(m)
@@ -149,8 +151,10 @@ export default function BuyerNeeds() {
         <div className="grid gap-4 md:grid-cols-2">
           {mine.map((n) => {
             const k = open.filter((l) => l.species === n.species && (!n.maxPrice || l.ask <= n.maxPrice)).length
+            const waiting = m.offers.filter((o) => o.needId === n.id && o.status === 'pending')
+            const accepted = m.offers.find((o) => o.needId === n.id && o.status === 'accepted')
             return (
-              <article key={n.id} className={`space-y-3 rounded-lg border bg-card p-4 shadow-rest ${n.open ? 'border-line' : 'border-line opacity-60'}`}>
+              <article key={n.id} className={`space-y-3 rounded-lg border bg-card p-4 shadow-rest ${n.open || accepted ? 'border-line' : 'border-line opacity-60'}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-numeral text-xl font-bold">{n.species}</h3>
@@ -158,11 +162,30 @@ export default function BuyerNeeds() {
                   </div>
                   <span className={`rounded-full px-3 py-1 text-xs font-bold ${!n.open ? 'bg-mint text-ink-soft' : k ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft'}`}>{!n.open ? b('needs.closed') : k ? b('home.needs.match', { n: k }) : b('home.needs.nomatch')}</span>
                 </div>
+
                 {n.open && (
                   <div className="flex flex-wrap gap-2">
                     {k > 0 && <Link to="/buyer/offers" className="inline-flex min-h-12 items-center rounded-full bg-coral px-4 text-sm font-semibold text-deep">{b('needs.view')}</Link>}
                     <button type="button" onClick={() => m.closeNeed(n.id)} className="min-h-12 rounded-full border-2 border-line px-4 text-sm font-semibold">{b('needs.close')}</button>
                   </div>
+                )}
+
+                {/* Offers from fisherfolk who have this fish */}
+                {waiting.map((o) => (
+                  <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-seafoam p-3">
+                    <p className="text-sm font-semibold">
+                      {o.fisher} · {o.kg} kg · ₱{o.price}/kg <span className="font-normal text-ink-soft">({o.place})</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => m.answerOffer(o.id, true)} className="min-h-11 rounded-full bg-coral px-4 text-sm font-semibold text-deep">Accept</button>
+                      <button type="button" onClick={() => m.answerOffer(o.id, false)} className="min-h-11 rounded-full border-2 border-line px-4 text-sm font-semibold">Decline</button>
+                    </div>
+                  </div>
+                ))}
+                {accepted && (
+                  <Link to="/buyer/orders" className="block rounded-md bg-seafoam p-3 text-sm font-semibold text-teal">
+                    Offer accepted from {accepted.fisher}. See it in Orders.
+                  </Link>
                 )}
               </article>
             )
@@ -180,6 +203,10 @@ export default function BuyerNeeds() {
           <Stepper value={kg} onChange={setKg} step={5} min={5} max={MAX_KG} suffix=" kg" label={b('needs.kg')} />
         </div>
         <div className="space-y-2">
+          <p className="font-semibold">Where are you?</p>
+          <div className="flex flex-wrap gap-2">{TOWNS.map((tn) => <Chip key={tn} active={place === tn} onClick={() => setPlace(tn)}>{tn}</Chip>)}</div>
+        </div>
+        <div className="space-y-2">
           <p className="font-semibold">{b('needs.when')}</p>
           <Segmented<When> label={b('needs.when')} value={when} onChange={setWhen} options={[{ value: 'today', label: b('when.today') }, { value: 'tomorrow', label: b('when.tomorrow') }, { value: 'week', label: b('when.week') }]} />
         </div>
@@ -187,7 +214,7 @@ export default function BuyerNeeds() {
           <p className="font-semibold">{b('needs.max')}</p>
           <Stepper value={max} onChange={setMax} step={5} min={0} max={MAX_PRICE} prefix="₱" emptyLabel={b('needs.nomax')} label={b('needs.max')} />
         </div>
-        <Button className="min-h-14 w-full text-base" onClick={() => { m.addNeed({ buyerId: user.id, species: fish, kg, when, maxPrice: max || undefined }); close() }}>{b('needs.post')}</Button>
+        <Button className="min-h-14 w-full text-base" onClick={() => { m.addNeed({ buyerId: user.id, buyer: user.buyer?.businessName ?? user.shortName, place: place || user.barangay, species: fish, kg, when, maxPrice: max || undefined }); close() }}>{b('needs.post')}</Button>
       </CenterModal>
     </div>
   )

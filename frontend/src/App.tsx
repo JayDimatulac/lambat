@@ -34,6 +34,7 @@ import BuyerOrders from './pages/buyer/BuyerOrders'
 import BuyerSettings from './pages/buyer/BuyerSettings'
 import { MarketProvider } from './lib/market'
 import BuyerLayout from './pages/buyer/BuyerLayout'
+import NeedsBoard from './pages/NeedsBoard'
 
 // Placeholder screens get their title from the dictionary so the language toggle works on them too
 function Ph({ k }: { k: Key }) {
@@ -105,6 +106,7 @@ export default function App() {
           <Route element={<FisherApp />}>
             <Route path="/catches/new" element={<LogCatch />} />
             <Route element={<AppShell />}>
+            <Route path="/needs" element={<NeedsBoard />} />
               <Route path="/home" element={<Dashboard />} />
               <Route path="/catches" element={<MyCatches />} />
               <Route path="/catches/:id" element={<CatchDetail />} />

@@ -1,20 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AlertTriangle, Bell, CheckCheck, Wind, XCircle } from 'lucide-react'
+import { AlertTriangle, Bell, CheckCheck, CheckCircle2, Fish, Wind, XCircle } from 'lucide-react'
 import { byUrgency, isActive } from '../../data/mock'
 import { useCatches } from '../../data/store'
 import { useUser } from '../../lib/auth'
 import { useT } from '../../lib/i18n'
+import { useMarket } from '../../lib/market'
 import { useSettings } from '../../lib/settings'
 import { sellByText } from '../../lib/time'
 import { hour12, useForecast, windWindow } from '../../lib/weather'
 
-type Note = { id: string; tone: 'critical' | 'high' | 'wind'; title: string; body: string; to: string }
+type Note = { id: string; tone: 'critical' | 'high' | 'wind' | 'need' | 'good'; title: string; body: string; to: string }
 
 const TONE = {
   critical: { icon: XCircle, cls: 'bg-risk-critical-bg text-risk-critical' },
   high: { icon: AlertTriangle, cls: 'bg-risk-high-bg text-risk-high' },
   wind: { icon: Wind, cls: 'bg-risk-moderate-bg text-risk-moderate' },
+  need: { icon: Fish, cls: 'bg-seafoam text-teal' },
+  good: { icon: CheckCircle2, cls: 'bg-risk-low-bg text-risk-low' },
 }
 
 const readKey = (userId: string) => `lambat.notif.read.${userId}`
@@ -30,13 +33,14 @@ const saveRead = (userId: string, ids: string[]) => {
   try { localStorage.setItem(readKey(userId), JSON.stringify(ids.slice(-200))) } catch { /* storage can be blocked */ }
 }
 
-/* The bell in the top bar. It opens a small panel of alerts built from your catches and the weather.
+/* The bell in the top bar. It opens a small panel of alerts built from your catches, the weather and what buyers need.
    It is not a page: tap an alert to go to what it is about. */
 export default function NotificationsMenu() {
   const t = useT()
   const { lang } = useSettings()
   const user = useUser()
   const { catches } = useCatches()
+  const { needs, offers } = useMarket()
   const forecast = useForecast(user.fisher?.landing)
   const [open, setOpen] = useState(false)
   const [read, setRead] = useState<string[]>(() => loadRead(user.id))
@@ -56,6 +60,34 @@ export default function NotificationsMenu() {
 
   const notes = useMemo<Note[]>(() => {
     const list: Note[] = []
+
+    // Buyers who need a fish you have. Gone once you have offered, or the need is closed.
+    const mySpecies = new Set(catches.filter(isActive).map((c) => c.species))
+    needs
+      .filter((n) => n.open && mySpecies.has(n.species))
+      .filter((n) => !offers.some((o) => o.needId === n.id && o.fisherId === user.id && o.status !== 'declined'))
+      .forEach((n) => {
+        list.push({
+          id: `need:${n.id}`,
+          tone: 'need',
+          title: `${n.species} · ${n.kg} kg wanted`,
+          body: `${n.buyer ?? 'A buyer'} needs ${n.kg} kg${n.maxPrice ? `, up to ₱${n.maxPrice}/kg` : ''}. Tap to make an offer.`,
+          to: '/needs',
+        })
+      })
+
+    // The buyer answered your offer
+    offers
+      .filter((o) => o.fisherId === user.id && o.status !== 'pending')
+      .forEach((o) => {
+        list.push({
+          id: `offer:${o.id}:${o.status}`,
+          tone: o.status === 'accepted' ? 'good' : 'critical',
+          title: o.status === 'accepted' ? 'Offer accepted' : 'Offer declined',
+          body: `${o.species} · ${o.kg} kg at ₱${o.price}/kg`,
+          to: '/needs',
+        })
+      })
 
     // Catches that are running out of time. The id includes the risk, so a catch that gets worse shows up as new again.
     catches
@@ -84,7 +116,7 @@ export default function NotificationsMenu() {
       })
     }
     return list
-  }, [catches, forecast.hours, forecast.week, lang, t])
+  }, [catches, needs, offers, user.id, forecast.hours, forecast.week, lang, t])
 
   const unread = notes.filter((n) => !read.includes(n.id)).length
 

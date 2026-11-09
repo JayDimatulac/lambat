@@ -1,39 +1,119 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
+import NeedRadar, { type Blip } from '../components/buyer/NeedRadar'
 import Radar from '../components/buyer/Radar'
 import PartyCard from '../components/buyer/PartyCard'
+import Button from '../components/ui/Button'
 import Chip from '../components/ui/Chip'
 import Disclaimer from '../components/ui/Disclaimer'
 import Segmented from '../components/ui/Segmented'
 import { BangkaIcon } from '../components/home/HomeIcons'
 import { PierIcon, RowsIcon } from '../components/icons'
-import { byUrgency, isActive } from '../data/mock'
+import { byUrgency, isActive, type Catch } from '../data/mock'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
-import { useMarket } from '../lib/market'
+import { between, locate } from '../lib/geo'
+import { useMarket, usualPrice, type Need } from '../lib/market'
 import { matchesFor, type Kind } from '../lib/buyers'
 import { countdownText, sellByText } from '../lib/time'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 
 type View = 'radar' | 'list'
+type Live = { need: Need; km: number; bearing: number; mins: number; reach: boolean }
+
+const WHEN: Record<Need['when'], string> = { today: 'Today', tomorrow: 'Tomorrow', week: 'This week' }
+const RANGES = [5, 10, 20, 40]
+const SPEED_KMH = 20 // a tricycle or motorbike on a coastal road
+const field = 'min-h-12 w-full rounded-md border border-line bg-mint px-3 text-base font-semibold'
+
+/* One real buyer need, with the offer form for the catch you picked. */
+function NeedRow({ live, c, selected }: { live: Live; c: Catch; selected?: boolean }) {
+  const user = useUser()
+  const { offers, offerToNeed } = useMarket()
+  const need = live.need
+  const sent = offers.filter((o) => o.needId === need.id && o.fisherId === user.id).sort((a, b) => b.createdAt - a.createdAt)[0]
+  const active = sent && sent.status !== 'declined'
+  const [kg, setKg] = useState(String(Math.min(need.kg, c.kg)))
+  const [price, setPrice] = useState(String(need.maxPrice ?? usualPrice(need.species)))
+
+  const send = () => {
+    const k = Math.min(c.kg, Math.max(1, parseInt(kg, 10) || 1))
+    const p = Math.max(1, parseInt(price, 10) || 1)
+    offerToNeed(need.id, { fisherId: user.id, fisher: user.shortName, catchId: c.id, species: c.species, kg: k, place: c.place, price: p })
+  }
+
+  return (
+    <article className={`space-y-3 rounded-lg border bg-card p-4 shadow-rest ${selected ? 'border-coral' : 'border-line'}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-numeral text-lg font-bold">{need.buyer ?? 'A buyer'} needs {need.kg} kg</h3>
+          <p className="text-sm text-ink-soft">{WHEN[need.when]}{need.maxPrice ? ` · up to ₱${need.maxPrice}/kg` : ' · no price limit'}</p>
+        </div>
+        <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${live.reach ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft'}`}>
+          {live.km.toFixed(1)} km
+        </span>
+      </div>
+      <p className="text-sm font-semibold text-ink-soft">
+        About {Math.max(1, Math.round(live.mins))} min away · {live.reach ? 'you can arrive in time' : 'your fish may be too old by then'}
+      </p>
+
+      {active ? (
+        <p className="rounded-md bg-seafoam p-3 text-sm font-semibold text-teal">
+          {sent.status === 'accepted' ? 'Accepted' : 'Offer sent, waiting for the buyer'} · {sent.kg} kg at ₱{sent.price}/kg
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {sent && <p className="text-sm font-semibold text-risk-critical">Your last offer was declined. You can send a new one.</p>}
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block space-y-1 text-sm font-semibold">
+              Kilos
+              <input inputMode="numeric" value={kg} onChange={(e) => setKg(e.target.value.replace(/\D/g, ''))} className={field} />
+            </label>
+            <label className="block space-y-1 text-sm font-semibold">
+              Your price (₱/kg)
+              <input inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value.replace(/\D/g, ''))} className={field} />
+            </label>
+          </div>
+          <Button className="min-h-12 w-full" onClick={send}>Send offer</Button>
+        </div>
+      )}
+    </article>
+  )
+}
 
 export default function Buyers() {
   const t = useT()
   const { lang } = useSettings()
   const { catches } = useCatches()
   const user = useUser()
-  const { postListing } = useMarket()
+  const { postListing, needs } = useMarket()
   const [params, setParams] = useSearchParams()
   const [kind, setKind] = useState<Kind>('buyer')
   const [view, setView] = useState<View>('radar')
   const [picked, setPicked] = useState<string | null>(null)
+  const [pickedNeed, setPickedNeed] = useState<string | null>(null)
+  const [range, setRange] = useState(20)
   const [offered, setOffered] = useState<Set<string>>(new Set())
 
   const active = catches.filter(isActive).sort(byUrgency)
   const c = active.find((x) => x.id === params.get('catch')) ?? active[0]
   const matches = useMemo(() => (c ? matchesFor(c, kind) : []), [c, kind])
+
+  // The real buyers asking for this fish: how far, which way, and can the fish arrive in time
+  const here = locate(user.fisher?.landing ?? user.barangay)
+  const lives = useMemo<Live[]>(() => {
+    if (!c) return []
+    return needs
+      .filter((n) => n.open && n.species === c.species)
+      .map((n) => {
+        const { km, bearing } = between(here, locate(n.place ?? n.buyerId), n.id)
+        const mins = (km / SPEED_KMH) * 60
+        return { need: n, km, bearing, mins, reach: mins <= c.minsMin }
+      })
+      .sort((a, b) => a.km - b.km)
+  }, [needs, c, here])
 
   if (!c) {
     return (
@@ -44,17 +124,43 @@ export default function Buyers() {
     )
   }
 
+  const inRange = lives.filter((l) => l.km <= range)
+  const selectedLive = inRange.find((l) => l.need.id === pickedNeed) ?? inRange.find((l) => l.reach) ?? inRange[0]
+  const blips: Blip[] = lives.map((l) => ({ id: l.need.id, label: l.need.buyer ?? 'A buyer', kg: l.need.kg, km: l.km, bearing: l.bearing, reach: l.reach }))
+  const reachableLive = inRange.filter((l) => l.reach).length
+
+  // The sample side (barangay programs), kept for the Share tab
   const selectedId = matches.some((m) => m.party.id === picked) ? picked : (matches[0]?.party.id ?? null)
   const selected = matches.find((m) => m.party.id === selectedId)
   const reachable = matches.filter((m) => m.reachable).length
-  const accent = kind === 'buyer' ? '#0f6e7a' : '#e8735a'
+  const accent = '#e8735a'
   const offer = (id: string) => {
     setOffered((s) => new Set(s).add(`${c.id}:${id}`))
-    if (kind === 'buyer') postListing(c, user.shortName, user.id) // approved buyers can now see this lot in their Mga Alok
+    if (kind === 'buyer') postListing(c, user.shortName, user.id)
   }
   const isOffered = (id: string) => offered.has(`${c.id}:${id}`)
 
-  const radar = (
+  const liveRadar = (
+    <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
+      <div className="flex items-center justify-between gap-2 px-4 pt-3 text-white">
+        <h2 className="font-numeral text-lg font-bold text-white">{t('buyers.radar')}</h2>
+        <span className="rounded-full bg-coral px-2.5 py-0.5 text-xs font-bold text-deep">Live</span>
+      </div>
+      <div className="flex flex-wrap gap-2 px-4 pt-3">
+        {RANGES.map((r) => <Chip key={r} active={range === r} onClick={() => setRange(r)}>{r} km</Chip>)}
+      </div>
+      <div className="px-2 pb-1 pt-1">
+        <NeedRadar blips={blips} selectedId={selectedLive?.need.id ?? null} onSelect={setPickedNeed} range={range} />
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 pb-4 text-xs font-semibold text-white">
+        <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-cream bg-coral" />Can arrive in time</span>
+        <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-dashed border-white/70" />May be too late</span>
+        <span>Number = kilos wanted</span>
+      </div>
+    </section>
+  )
+
+  const sampleRadar = (
     <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
       <div className="flex items-center justify-between px-4 pt-3 text-white">
         <h2 className="font-numeral text-lg font-bold text-white">{t('buyers.radar')}</h2>
@@ -77,6 +183,8 @@ export default function Buyers() {
     </section>
   )
 
+  const isLive = kind === 'buyer'
+
   return (
     <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
       <div className="space-y-4">
@@ -84,7 +192,7 @@ export default function Buyers() {
           <p className="text-sm font-semibold text-ink-soft">{t('va.pick')}</p>
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
             {active.map((x) => (
-              <Chip key={x.id} active={x.id === c.id} onClick={() => setParams({ catch: x.id })} className="shrink-0">{x.species} · {x.kg} kg</Chip>
+              <Chip key={x.id} active={x.id === c.id} onClick={() => { setParams({ catch: x.id }); setPickedNeed(null) }} className="shrink-0">{x.species} · {x.kg} kg</Chip>
             ))}
           </div>
         </div>
@@ -118,12 +226,37 @@ export default function Buyers() {
           />
         </div>
 
-        <p className="text-sm font-semibold text-ink-soft">{t('buyers.summary', { n: reachable })}</p>
-        {view === 'radar' && radar}
+        <p className="text-sm font-semibold text-ink-soft">
+          {isLive ? `${reachableLive} of ${inRange.length} buyers can be reached in time` : t('buyers.summary', { n: reachable })}
+        </p>
+        {view === 'radar' && (isLive ? liveRadar : sampleRadar)}
       </div>
 
       <div className="space-y-4">
-        {view === 'radar' && selected ? (
+        {isLive ? (
+          <>
+            {inRange.length === 0 ? (
+              <p className="rounded-md border border-dashed border-line bg-card p-6 text-center text-sm text-ink-soft">
+                {lives.length === 0
+                  ? `No buyer is asking for ${c.species} right now. You will get a notification when one does.`
+                  : `No buyer within ${range} km. Try a wider range.`}
+              </p>
+            ) : view === 'radar' && selectedLive ? (
+              <>
+                <NeedRow key={`${selectedLive.need.id}:${c.id}`} live={selectedLive} c={c} selected />
+                {inRange.length > 1 && (
+                  <div className="flex flex-wrap gap-2">
+                    {inRange.filter((l) => l.need.id !== selectedLive.need.id).map((l) => (
+                      <Chip key={l.need.id} active={false} onClick={() => setPickedNeed(l.need.id)}>{l.need.buyer ?? 'A buyer'} · {l.km.toFixed(1)} km</Chip>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              inRange.map((l) => <NeedRow key={`${l.need.id}:${c.id}`} live={l} c={c} />)
+            )}
+          </>
+        ) : view === 'radar' && selected ? (
           <PartyCard m={selected} kg={c.kg} best={selected.party.id === matches.find((m) => m.reachable)?.party.id} selected offered={isOffered(selected.party.id)} onOffer={() => offer(selected.party.id)} />
         ) : (
           matches.map((m, i) => (
@@ -136,7 +269,7 @@ export default function Buyers() {
             <ArrowRight size={18} strokeWidth={1.8} aria-hidden />
           </Link>
         )}
-        <Disclaimer>{t('buyers.note')}</Disclaimer>
+        {!isLive && <Disclaimer>{t('buyers.note')}</Disclaimer>}
       </div>
     </div>
   )

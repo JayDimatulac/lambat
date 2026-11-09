@@ -48,7 +48,7 @@ function FloatButton({ size }: { size: 'sm' | 'lg' }) {
 
 /* The harbor dock: a floating panel that follows day and night (it uses the theme colors). It rests as a slim
    icon strip and opens by itself when the pointer (or keyboard focus) reaches it. It opens OVER the page. */
-const label = 'whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover/dock:opacity-100 group-has-[:focus-visible]/dock:opacity-100'
+const label = 'min-w-0 whitespace-nowrap leading-tight opacity-0 transition-opacity duration-200 group-hover/dock:whitespace-normal group-hover/dock:opacity-100 group-has-[:focus-visible]/dock:whitespace-normal group-has-[:focus-visible]/dock:opacity-100'
 const rowBase = 'relative flex h-12 w-full items-center gap-3 rounded-2xl pl-3 pr-4 text-left text-[15px] font-semibold transition'
 const rowIdle = 'text-navy/75 hover:bg-seafoam/70 hover:text-navy'
 const rowOn = 'bg-seafoam text-teal'
@@ -71,12 +71,12 @@ function Rail() {
   return (
     <div className="hidden w-24 shrink-0 lg:block">
       <aside
-        className="group/dock fixed bottom-3 left-3 top-3 z-40 flex w-[72px] flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card via-card to-seafoam/70 px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] hover:w-60 has-[:focus-visible]:w-60"
+        className="group/dock fixed bottom-3 left-3 top-3 z-40 flex w-[72px] flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card via-card to-seafoam/70 px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] hover:w-48 has-[:focus-visible]:w-48"
       >
         {/* Brand: the emblem in a coral ring, like the circle in the logo */}
         <Link to="/home" aria-label="LAMBAT" className="mb-5 flex h-12 shrink-0 items-center gap-3">
           <img src="/lambat-logo.png" alt="" className="size-12 shrink-0 rounded-full bg-deep object-cover object-center ring-2 ring-coral/80 ring-offset-2 ring-offset-card" />
-          <span className={`font-display text-xl font-bold tracking-widest text-navy ${label}`}>LAMBAT</span>
+          <span className={`font-display text-lg font-bold tracking-wider text-navy ${label}`}>LAMBAT</span>
         </Link>
 
         {/* The one primary action */}

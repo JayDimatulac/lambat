@@ -8,7 +8,9 @@ import Landing from './pages/Landing'
 import LogCatch from './pages/LogCatch'
 import MyCatches from './pages/MyCatches'
 import Placeholder from './pages/Placeholder'
+import Profile from './pages/Profile'
 import Register from './pages/Register'
+import Settings from './pages/Settings'
 import Soon from './pages/Soon'
 import ValueAdded from './pages/ValueAdded'
 import Weather from './pages/Weather'
@@ -109,8 +111,8 @@ export default function App() {
               <Route path="/buyers" element={<Buyers />} />
               <Route path="/value-added" element={<ValueAdded />} />
               <Route path="/notifications" element={<Ph k="nav.alerts" />} />
-              <Route path="/profile" element={<Ph k="nav.profile" />} />
-              <Route path="/settings" element={<Ph k="nav.settings" />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
           </Route>
         </Route>

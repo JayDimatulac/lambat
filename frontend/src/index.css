@@ -197,3 +197,12 @@ html[data-simple='true'] .simple-hide { display: none; }
 @layer utilities {
   .anim-settle { animation: settle 2.2s cubic-bezier(0.22, 0.7, 0.2, 1) both; }
 }
+@keyframes drift {
+  from { transform: translateX(-14px); }
+  to   { transform: translateX(14px); }
+}
+.anim-drift { animation: drift 14s ease-in-out infinite alternate; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-drift { animation: none; }
+}

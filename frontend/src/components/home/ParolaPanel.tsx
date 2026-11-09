@@ -17,9 +17,31 @@ const band = (y1: number, y2: number) => `${left(y1)},${y1} ${right(y1)},${y1} $
 const WAVES = 'M0 142q15-6 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0'
 const STARS: [number, number, number][] = [[300, 18, 1.8], [330, 40, 1.3], [250, 10, 1.3], [200, 26, 1.8], [345, 12, 1.3], [280, 34, 1.3]]
 
-/* The lighthouse. Its lamp glows coral and its beam sweeps when something needs you. */
-function ParolaScene({ alert }: { alert: boolean }) {
-  const glow = alert ? 'var(--color-coral)' : 'var(--color-cream)'
+// Day scene: [x, y, scale, opacity] for each drifting cloud
+const CLOUDS: [number, number, number, number][] = [[205, 22, 1, 0.95], [318, 64, 0.8, 0.85], [150, 100, 0.7, 0.75], [262, 108, 0.6, 0.7]]
+
+// Panel background: day sea, and night's original dark sea
+const BG_DAY = 'linear-gradient(180deg, #247a89 0%, #0f6e7a 50%, #0a4f5c 100%)'
+const BG_NIGHT = 'linear-gradient(180deg, var(--tide-sky-0) 0%, #0f4a5c 55%, var(--tide-sea-2) 100%)'
+
+/* A puffy cloud built from circles. The outer <g> positions it, the inner <g> drifts. */
+function Cloud({ x, y, s, o, i }: { x: number; y: number; s: number; o: number; i: number }) {
+  return (
+    <g transform={`translate(${x} ${y}) scale(${s})`} opacity={o}>
+      <g className="anim-cloud" fill="#fff" style={{ animationDelay: `${i * -2.3}s` }}>
+        <ellipse cx="0" cy="0" rx="26" ry="8" />
+        <circle cx="-10" cy="-6" r="9" />
+        <circle cx="7" cy="-10" r="12" />
+        <circle cx="20" cy="-3" r="7" />
+      </g>
+    </g>
+  )
+}
+
+/* By night: lamp glows, beam sweeps, stars. By day: sun and drifting clouds.
+   The lamp still turns coral when something needs you, day or night. */
+function ParolaScene({ alert, night }: { alert: boolean; night: boolean }) {
+  const glow = alert ? 'var(--color-coral)' : night ? 'var(--color-cream)' : '#cfe9ee'
   return (
     <svg viewBox="0 0 360 150" className="block w-full" aria-hidden="true">
       <defs>
@@ -27,21 +49,40 @@ function ParolaScene({ alert }: { alert: boolean }) {
           <stop offset="0" style={{ stopColor: glow }} stopOpacity="0.9" />
           <stop offset="1" style={{ stopColor: glow }} stopOpacity="0" />
         </radialGradient>
+        <linearGradient id="parola-sky-day" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7fcde0" />
+          <stop offset="0.65" stopColor="#d6eff1" />
+          <stop offset="1" stopColor="#fde3c8" />
+        </linearGradient>
+        <radialGradient id="parola-sun-glow">
+          <stop offset="0" stopColor="#ffe9b8" stopOpacity="0.95" />
+          <stop offset="1" stopColor="#ffe9b8" stopOpacity="0" />
+        </radialGradient>
         <linearGradient id="parola-beam" gradientUnits="userSpaceOnUse" x1="64" y1="0" x2="380" y2="0">
           <stop offset="0" style={{ stopColor: 'var(--color-cream)' }} stopOpacity="0.75" />
           <stop offset="1" style={{ stopColor: 'var(--color-cream)' }} stopOpacity="0" />
         </linearGradient>
       </defs>
 
-      {STARS.map(([x, y, r], i) => (
-        <circle key={i} cx={x} cy={y} r={r} fill="#fff" className="anim-twinkle" style={{ animationDelay: `${i * 0.6}s` }} />
-      ))}
-
-      <g className="anim-sweep" style={{ transformOrigin: '64px 47px' }}>
-        <polygon points="64,47 380,-12 380,36" fill="url(#parola-beam)" />
-        <polygon points="64,47 -30,70 -30,28" fill="url(#parola-beam)" fillOpacity="0.35" />
-      </g>
-      <circle cx="64" cy="47" r="30" fill="url(#parola-glow)" className="anim-glow" />
+      {night ? (
+        <>
+          {STARS.map(([x, y, r], i) => (
+            <circle key={i} cx={x} cy={y} r={r} fill="#fff" className="anim-twinkle" style={{ animationDelay: `${i * 0.6}s` }} />
+          ))}
+          <g className="anim-sweep" style={{ transformOrigin: '64px 47px' }}>
+            <polygon points="64,47 380,-12 380,36" fill="url(#parola-beam)" />
+            <polygon points="64,47 -30,70 -30,28" fill="url(#parola-beam)" fillOpacity="0.35" />
+          </g>
+        </>
+      ) : (
+        <>
+          <rect width="360" height="146" fill="url(#parola-sky-day)" />
+          <circle cx="322" cy="28" r="34" fill="url(#parola-sun-glow)" className="anim-glow" />
+          <circle cx="322" cy="28" r="15" fill="#ffd98a" />
+          {CLOUDS.map(([x, y, s, o], i) => <Cloud key={i} x={x} y={y} s={s} o={o} i={i} />)}
+        </>
+      )}
+      {(night || alert) && <circle cx="64" cy="47" r="30" fill="url(#parola-glow)" className="anim-glow" />}
 
       <path d="M4 150C14 130 36 125 64 127C92 125 112 132 124 150Z" style={{ fill: 'var(--tide-seabed)' }} />
       <path d="M47 128L53 58H75L81 128Z" style={{ fill: 'var(--color-cream)' }} />
@@ -79,27 +120,28 @@ type Props = { urgent: Catch[]; next?: Catch }
 
 export default function ParolaPanel({ urgent, next }: Props) {
   const t = useT()
-  const { lang } = useSettings()
+  const { lang, theme } = useSettings()
+  const night = theme === 'night'
   const alert = urgent.length > 0
 
   return (
     <section
       aria-label={t('home.actions')}
       className="relative flex h-full flex-col overflow-hidden rounded-lg text-white shadow-raised"
-      style={{ background: 'linear-gradient(180deg, var(--tide-sky-0) 0%, #0f4a5c 55%, var(--tide-sea-2) 100%)' }}
+      style={{ background: night ? BG_NIGHT : BG_DAY }}
     >
       <div className="h-1.5 w-full shrink-0" style={{ background: alert ? HAZARD : 'var(--color-teal)' }} aria-hidden="true" />
 
       <div className="relative">
-        <ParolaScene alert={alert} />
+        <ParolaScene alert={alert} night={night} />
         <div className="absolute right-0 top-[30%] left-[40%] pr-4">
           <div className="flex items-start justify-between gap-2">
-            <h2 className="font-numeral text-[22px] font-bold leading-tight text-white">{t('home.actions')}</h2>
+            <h2 className={`font-numeral text-[22px] font-bold leading-tight ${night ? 'text-white' : 'text-deep'}`}>{t('home.actions')}</h2>
             {alert && (
               <span className="grid size-8 shrink-0 place-items-center rounded-full bg-coral font-numeral text-base font-extrabold text-deep">{urgent.length}</span>
             )}
           </div>
-          <p className="mt-1 text-sm leading-snug text-white">{alert ? t('home.urgent') : t('home.calm')}</p>
+          <p className={`mt-1 text-sm leading-snug ${night ? 'text-white' : 'text-deep'}`}>{alert ? t('home.urgent') : t('home.calm')}</p>
         </div>
       </div>
 

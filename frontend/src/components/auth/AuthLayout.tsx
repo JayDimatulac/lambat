@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import AuthScene, { NetMark } from './AuthScene'
+import AuthScene from './AuthScene'
+import Logo from '../Logo'
 import Segmented from '../ui/Segmented'
 import { useSettings, type Lang } from '../../lib/settings'
 
@@ -18,8 +19,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <div className="absolute inset-0 flex flex-col justify-between p-6 pb-14 lg:p-14">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
-              <NetMark className="size-9 shrink-0 text-seafoam lg:size-11" />
-              <span className="font-display text-[34px] font-semibold leading-none tracking-tight text-white lg:text-[44px]">Lambat</span>
+              <Logo size={64} className="lg:size-24" />
             </div>
             <Segmented<Lang>
               label="Wika / Language"

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import Sheet from '../../components/ui/Sheet'
 import LogoutSheet from '../../components/auth/LogoutSheet'
+import Logo from '../../components/Logo'
 import { TideIcon } from '../../components/icons'
 import { useAuth, useUser } from '../../lib/auth'
 import { useSettings } from '../../lib/settings'
@@ -64,9 +65,9 @@ export default function AdminLayout() {
     <div className="min-h-dvh lg:flex">
       {/* Desktop rail: the net strand with a knot per place */}
       <aside className="net-mesh sticky top-0 hidden h-dvh w-24 shrink-0 flex-col items-center overflow-y-auto border-r border-line bg-card py-4 lg:flex">
-        <Link to="/admin" className="mb-4 flex flex-col items-center gap-1 text-navy">
-          <SignalMastIcon size={30} className="text-teal" />
-          <span className="font-display text-sm font-bold tracking-wider">LAMBAT</span>
+        <Link to="/admin" aria-label="LAMBAT admin" className="mb-4 flex flex-col items-center gap-1.5 text-navy">
+          <Logo size={56} />
+          <span className="font-display text-xs font-bold tracking-wider">LAMBAT</span>
           <span className="rounded-full bg-seafoam px-2 text-[11px] font-bold tracking-widest text-teal">ADMIN</span>
         </Link>
         <nav className="flex flex-col items-center" aria-label="Admin">
@@ -95,7 +96,7 @@ export default function AdminLayout() {
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-2 border-b border-line bg-card/90 px-4 backdrop-blur lg:px-8">
           <Link to="/admin" className="flex items-center gap-2 lg:invisible">
-            <SignalMastIcon size={26} className="text-teal" />
+            <Logo size={40} />
             <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
           </Link>
           <div className="flex items-center gap-2">

@@ -11,7 +11,6 @@ const en = {
   'nav.alerts': 'Alerts',
   'nav.profile': 'Profile',
   'nav.settings': 'Settings',
-  'nav.log': 'Log',
   'page.log': 'Log a catch',
   'page.detail': 'Catch details',
   'ph.next': 'Next screen to build.',
@@ -356,6 +355,9 @@ const en = {
   'explain.plain': 'Based on your catch details.',
   'explain.err': 'Could not explain this right now. Try again.', 
   'toast.ice.none': 'Ice added, but it does not keep the fish longer yet. Add more to reach the next level.',
+  'nav.log': 'Log',
+  'nav.collapse': 'Collapse menu',
+  'nav.expand': 'Expand menu',
 } as const
 
 export type Key = keyof typeof en
@@ -370,7 +372,6 @@ const fil: Record<Key, string> = {
   'nav.alerts': 'Mga Abiso',
   'nav.profile': 'Aking Profile',
   'nav.settings': 'Mga Setting',
-  'nav.log': 'Itala',
   'page.log': 'Itala ang Huli',
   'page.detail': 'Detalye ng Huli',
   'ph.next': 'Susunod na screen na gagawin.',
@@ -540,7 +541,7 @@ const fil: Record<Key, string> = {
   'home.hours': 'oras',
   'home.urgent': 'Kumilos bago maubos ang oras',
   'home.next': 'Susunod',
-    'ui.sample': 'Halimbawang datos',
+  'ui.sample': 'Halimbawang datos',
   'sky.sun': 'Maaraw',
   'sky.partly': 'Bahagyang maulap',
   'sky.cloud': 'Maulap',
@@ -715,6 +716,9 @@ const fil: Record<Key, string> = {
   'explain.plain': 'Batay sa detalye ng huli mo.',
   'explain.err': 'Hindi maipaliwanag ngayon. Subukan ulit.',
   'toast.ice.none': 'Naidagdag ang yelo, pero hindi pa nito napapatagal ang isda. Magdagdag pa para umabot sa susunod na antas.',
+  'nav.log': 'Itala',
+  'nav.collapse': 'Paliitin ang menu',
+  'nav.expand': 'Palakihin ang menu',  
 }
 
 const dict: Record<'en' | 'fil', Record<Key, string>> = { en, fil }

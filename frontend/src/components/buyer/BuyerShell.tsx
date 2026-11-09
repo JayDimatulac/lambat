@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { BuoyIcon, KnotPlusIcon, PierIcon } from '../icons'
+import { KnotPlusIcon, PierIcon } from '../icons'
+import Logo from '../Logo'
 import { CrateIcon, HornIcon, RopeIcon, StallIcon } from './BuyerIcons'
 import LangToggle from '../layout/LangToggle'
 import { useUser } from '../../lib/auth'
@@ -40,9 +41,9 @@ function Rail() {
   const items: Item[] = [tabs[0], tabs[1], { to: NEED, label: 'nav.needs', icon: KnotPlusIcon }, tabs[2], tabs[3]]
   return (
     <aside className="net-mesh sticky top-0 hidden h-dvh w-24 shrink-0 flex-col items-center overflow-y-auto border-r border-line bg-card py-4 lg:flex">
-      <Link to="/buyer" className="mb-4 flex flex-col items-center gap-1 text-navy">
-        <BuoyIcon size={30} className="text-teal" />
-        <span className="font-display text-sm font-bold tracking-wider">LAMBAT</span>
+      <Link to="/buyer" aria-label="LAMBAT" className="mb-4 flex flex-col items-center gap-1.5 text-navy">
+        <Logo size={56} />
+        <span className="font-display text-xs font-bold tracking-wider">LAMBAT</span>
       </Link>
       <div className="mb-3 flex flex-col items-center gap-1">
         <FloatButton size="sm" />
@@ -101,7 +102,7 @@ export default function BuyerShell() {
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-2 border-b border-line bg-card/90 px-4 backdrop-blur lg:px-8">
           <Link to="/buyer" className="flex items-center gap-2 lg:invisible">
-            <BuoyIcon size={26} className="text-teal" />
+            <Logo size={40} />
             <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
           </Link>
           <div className="flex items-center gap-2">

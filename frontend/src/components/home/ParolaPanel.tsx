@@ -40,10 +40,10 @@ function Cloud({ x, y, s, o, i }: { x: number; y: number; s: number; o: number; 
 
 /* By night: lamp glows, beam sweeps, stars. By day: sun and drifting clouds.
    The lamp still turns coral when something needs you, day or night. */
-function ParolaScene({ alert, night }: { alert: boolean; night: boolean }) {
+export function ParolaScene({ alert, night, bare = false, className = 'block w-full' }: { alert: boolean; night: boolean; bare?: boolean; className?: string }) {
   const glow = alert ? 'var(--color-coral)' : night ? 'var(--color-cream)' : '#cfe9ee'
   return (
-    <svg viewBox="0 0 360 150" className="block w-full" aria-hidden="true">
+    <svg viewBox="0 0 360 150" className={className} aria-hidden="true">
       <defs>
         <radialGradient id="parola-glow">
           <stop offset="0" style={{ stopColor: glow }} stopOpacity="0.9" />
@@ -76,7 +76,7 @@ function ParolaScene({ alert, night }: { alert: boolean; night: boolean }) {
         </>
       ) : (
         <>
-          <rect width="360" height="146" fill="url(#parola-sky-day)" />
+          {!bare && <rect width="360" height="146" fill="url(#parola-sky-day)" />}
           <circle cx="322" cy="28" r="34" fill="url(#parola-sun-glow)" className="anim-glow" />
           <circle cx="322" cy="28" r="15" fill="#ffd98a" />
           {CLOUDS.map(([x, y, s, o], i) => <Cloud key={i} x={x} y={y} s={s} o={o} i={i} />)}

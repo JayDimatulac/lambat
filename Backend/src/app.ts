@@ -3,6 +3,7 @@ import type { Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
+import { ZodError } from "zod";
 import { prisma } from "./db";
 import { authRouter } from "./routes/auth";
 import { catchesRouter } from "./routes/catches";
@@ -13,6 +14,9 @@ import { notificationsRouter } from "./routes/notifications";
 import { needsRouter } from "./routes/needs";
 import { offersRouter } from "./routes/offers";
 import { ordersRouter } from "./routes/orders";
+import otpAuthRouter from "./routes/auth.routes";
+import smsRouter from "./routes/sms.routes";
+import catchSyncRouter from "./routes/catches.routes";
 
 export const app = express();
 
@@ -53,6 +57,12 @@ app.get("/api/species", async (_req, res) => {
   res.json(species);
 });
 
+// SMS / OTP (new). Mounted before the existing routers so /api/auth/otp/* and
+// /api/catches/sync are matched first; every other path falls through unchanged.
+app.use("/api/sms", smsRouter);
+app.use("/api/auth/otp", otpAuthRouter);
+app.use("/api/catches", catchSyncRouter);
+
 app.use("/api/auth", authRouter);
 app.use("/api/catches", catchesRouter);
 app.use("/api/admin", adminRouter);
@@ -70,6 +80,9 @@ app.use("/api", (_req, res) => {
 
 // Keep this last, after all routes
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof ZodError) {
+    return res.status(400).json({ error: "Invalid input", details: err.issues });
+  }
   console.error(err);
   res.status(500).json({ error: "Something went wrong" });
 });

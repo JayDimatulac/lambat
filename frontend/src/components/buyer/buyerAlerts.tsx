@@ -39,10 +39,16 @@ export default function BuyerAlerts() {
           <span className="absolute bottom-3 left-[15px] top-3 w-0.5" style={{ background: 'repeating-linear-gradient(180deg, var(--color-line) 0 8px, transparent 8px 12px)' }} aria-hidden="true" />
           {alerts.map((a) => {
             const fresh = a.at > since
-            const to = a.kind === 'match' ? '/buyer/offers' : '/buyer/orders'
-            const title = a.kind === 'match' ? b('alert.match') : b(ORDER_TEXT[a.order.status])
-            const line = a.kind === 'match' ? `${a.listing.species} · ${a.listing.kg} kg` : `${a.order.species} · ${a.order.kg} kg`
-            const body = a.kind === 'match' ? b('alert.match.body', { fisher: a.listing.fisher, place: a.listing.place, ask: a.listing.ask }) : `${a.order.fisher} · ${a.order.place}`
+            const to = a.kind === 'match' ? '/buyer/offers' : a.kind === 'offer' ? '/buyer/needs' : '/buyer/orders'
+            const title = a.kind === 'match' ? b('alert.match') : a.kind === 'offer' ? 'New offer for your need' : b(ORDER_TEXT[a.order.status])
+            const line =
+              a.kind === 'match' ? `${a.listing.species} · ${a.listing.kg} kg`
+              : a.kind === 'offer' ? `${a.offer.species} · ${a.offer.kg} kg`
+              : `${a.order.species} · ${a.order.kg} kg`
+            const body =
+              a.kind === 'match' ? b('alert.match.body', { fisher: a.listing.fisher, place: a.listing.place, ask: a.listing.ask })
+              : a.kind === 'offer' ? `${a.offer.fisher} offers ₱${a.offer.price}/kg · ${a.offer.place}`
+              : `${a.order.fisher} · ${a.order.place}`
             return (
               <li key={a.id} className="relative">
                 <span aria-hidden="true" className={`absolute -left-10 top-4 size-8 rounded-full border-2 ${fresh ? 'anim-glow border-coral bg-coral' : 'border-line bg-card'}`} />

@@ -8,7 +8,7 @@ import BuoyRack from './BuoyRack'
 import CatchOutcomes from './CatchOutcomes'
 import HarborScene from './HarborScene'
 import TideChart from './TideChart'
-import { Bar, Card, Head, RiskBuoy } from './ui'
+import { Bar, Card, Head } from './ui'
 import { LISTINGS, SENT, SPECIES, TOWNS } from './data'
 
 type LIcon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>

@@ -13,43 +13,54 @@ import { PierIcon, RowsIcon } from '../components/icons'
 import { byUrgency, isActive, type Catch } from '../data/mock'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
-import { between, locate } from '../lib/geo'
-import { useMarket, usualPrice, type Need } from '../lib/market'
+import { between, locate, townOf } from '../lib/geo'
+import { useMarket, usualPrice } from '../lib/market'
+import { ApiError } from '../lib/api'
+import { buyerName, sendOffer, useMyOffers, useNeedMatches, whenFrom, type ApiOffer, type MatchedNeed, type When } from '../lib/marketApi'
 import { matchesFor, type Kind } from '../lib/buyers'
 import { countdownText, sellByText } from '../lib/time'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 
 type View = 'radar' | 'list'
-type Live = { need: Need; km: number; bearing: number; mins: number; reach: boolean }
+type Live = { need: MatchedNeed; km: number; bearing: number; mins: number; reach: boolean }
 
-const WHEN: Record<Need['when'], string> = { today: 'Today', tomorrow: 'Tomorrow', week: 'This week' }
+const WHEN: Record<When, string> = { today: 'Today', tomorrow: 'Tomorrow', week: 'This week' }
 const RANGES = [5, 10, 20, 40]
 const SPEED_KMH = 20 // a tricycle or motorbike on a coastal road
 const field = 'min-h-12 w-full rounded-md border border-line bg-mint px-3 text-base font-semibold'
 
 /* One real buyer need, with the offer form for the catch you picked. */
-function NeedRow({ live, c, selected }: { live: Live; c: Catch; selected?: boolean }) {
-  const user = useUser()
-  const { offers, offerToNeed } = useMarket()
+function NeedRow({ live, c, offers, onSent, selected }: { live: Live; c: Catch; offers: ApiOffer[]; onSent: () => void; selected?: boolean }) {
   const need = live.need
-  const sent = offers.filter((o) => o.needId === need.id && o.fisherId === user.id).sort((a, b) => b.createdAt - a.createdAt)[0]
-  const active = sent && sent.status !== 'declined'
-  const [kg, setKg] = useState(String(Math.min(need.kg, c.kg)))
-  const [price, setPrice] = useState(String(need.maxPrice ?? usualPrice(need.species)))
+  const sent = offers.find((o) => o.needId === need.id && o.catchId === c.id) // the list is newest first
+  const active = sent && (sent.status === 'PENDING' || sent.status === 'ACCEPTED')
+  const [kg, setKg] = useState(String(Math.min(need.kilos, c.kg)))
+  const [price, setPrice] = useState(String(need.pricePerKg ?? usualPrice(c.species)))
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
 
-  const send = () => {
+  const send = async () => {
     const k = Math.min(c.kg, Math.max(1, parseInt(kg, 10) || 1))
     const p = Math.max(1, parseInt(price, 10) || 1)
-    offerToNeed(need.id, { fisherId: user.id, fisher: user.shortName, catchId: c.id, species: c.species, kg: k, place: c.place, price: p })
+    setBusy(true)
+    setErr('')
+    try {
+      await sendOffer({ catchId: c.id, buyerId: need.buyerId, needId: need.id, kilos: k, pricePerKg: p })
+      onSent()
+    } catch (e) {
+      setErr(e instanceof ApiError ? e.message : 'Could not send the offer')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <article className={`space-y-3 rounded-lg border bg-card p-4 shadow-rest ${selected ? 'border-coral' : 'border-line'}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-numeral text-lg font-bold">{need.buyer ?? 'A buyer'} needs {need.kg} kg</h3>
-          <p className="text-sm text-ink-soft">{WHEN[need.when]}{need.maxPrice ? ` · up to ₱${need.maxPrice}/kg` : ' · no price limit'}</p>
+          <h3 className="font-numeral text-lg font-bold">{buyerName(need)} needs {need.kilos} kg</h3>
+          <p className="text-sm text-ink-soft">{WHEN[whenFrom(need.neededBy)]}{need.pricePerKg ? ` · up to ₱${need.pricePerKg}/kg` : ' · no price limit'}</p>
         </div>
         <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${live.reach ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft'}`}>
           {live.km.toFixed(1)} km
@@ -58,14 +69,15 @@ function NeedRow({ live, c, selected }: { live: Live; c: Catch; selected?: boole
       <p className="text-sm font-semibold text-ink-soft">
         About {Math.max(1, Math.round(live.mins))} min away · {live.reach ? 'you can arrive in time' : 'your fish may be too old by then'}
       </p>
+      {need.note && <p className="text-sm text-ink-soft">“{need.note}”</p>}
 
       {active ? (
         <p className="rounded-md bg-seafoam p-3 text-sm font-semibold text-teal">
-          {sent.status === 'accepted' ? 'Accepted' : 'Offer sent, waiting for the buyer'} · {sent.kg} kg at ₱{sent.price}/kg
+          {sent.status === 'ACCEPTED' ? 'Accepted' : 'Offer sent, waiting for the buyer'} · {sent.kilos} kg at ₱{sent.pricePerKg}/kg
         </p>
       ) : (
         <div className="space-y-3">
-          {sent && <p className="text-sm font-semibold text-risk-critical">Your last offer was declined. You can send a new one.</p>}
+          {sent?.status === 'DECLINED' && <p className="text-sm font-semibold text-risk-critical">Your last offer was declined. You can send a new one.</p>}
           <div className="grid grid-cols-2 gap-3">
             <label className="block space-y-1 text-sm font-semibold">
               Kilos
@@ -76,7 +88,8 @@ function NeedRow({ live, c, selected }: { live: Live; c: Catch; selected?: boole
               <input inputMode="numeric" value={price} onChange={(e) => setPrice(e.target.value.replace(/\D/g, ''))} className={field} />
             </label>
           </div>
-          <Button className="min-h-12 w-full" onClick={send}>Send offer</Button>
+          {err && <p role="alert" className="text-sm font-semibold text-risk-critical">{err}</p>}
+          <Button className="min-h-12 w-full" disabled={busy} onClick={send}>{busy ? 'Sending…' : 'Send offer'}</Button>
         </div>
       )}
     </article>
@@ -88,7 +101,7 @@ export default function Buyers() {
   const { lang } = useSettings()
   const { catches } = useCatches()
   const user = useUser()
-  const { postListing, needs } = useMarket()
+  const { postListing } = useMarket()
   const [params, setParams] = useSearchParams()
   const [kind, setKind] = useState<Kind>('buyer')
   const [view, setView] = useState<View>('radar')
@@ -103,17 +116,18 @@ export default function Buyers() {
 
   // The real buyers asking for this fish: how far, which way, and can the fish arrive in time
   const here = locate(user.fisher?.landing ?? user.barangay)
+  const { needs: found, loading, error, scannedAt, scan } = useNeedMatches(c?.id)
+  const { offers: myOffers, reload: reloadOffers } = useMyOffers()
   const lives = useMemo<Live[]>(() => {
     if (!c) return []
-    return needs
-      .filter((n) => n.open && n.species === c.species)
+    return found
       .map((n) => {
-        const { km, bearing } = between(here, locate(n.place ?? n.buyerId), n.id)
+        const { km, bearing } = between(here, locate(n.barangay || n.buyer.barangay), n.id)
         const mins = (km / SPEED_KMH) * 60
         return { need: n, km, bearing, mins, reach: mins <= c.minsMin }
       })
       .sort((a, b) => a.km - b.km)
-  }, [needs, c, here])
+  }, [found, c, here])
 
   if (!c) {
     return (
@@ -126,7 +140,7 @@ export default function Buyers() {
 
   const inRange = lives.filter((l) => l.km <= range)
   const selectedLive = inRange.find((l) => l.need.id === pickedNeed) ?? inRange.find((l) => l.reach) ?? inRange[0]
-  const blips: Blip[] = lives.map((l) => ({ id: l.need.id, label: l.need.buyer ?? 'A buyer', kg: l.need.kg, km: l.km, bearing: l.bearing, reach: l.reach }))
+  const blips: Blip[] = lives.map((l) => ({ id: l.need.id, label: buyerName(l.need), place: townOf(l.need.barangay) || l.need.barangay, kg: l.need.kilos, km: l.km, bearing: l.bearing, reach: l.reach }))
   const reachableLive = inRange.filter((l) => l.reach).length
 
   // The sample side (barangay programs), kept for the Share tab
@@ -144,8 +158,13 @@ export default function Buyers() {
     <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
       <div className="flex items-center justify-between gap-2 px-4 pt-3 text-white">
         <h2 className="font-numeral text-lg font-bold text-white">{t('buyers.radar')}</h2>
-        <span className="rounded-full bg-coral px-2.5 py-0.5 text-xs font-bold text-deep">Live</span>
+        <button type="button" onClick={scan} disabled={loading} className="min-h-9 rounded-full bg-coral px-3 text-xs font-bold text-deep disabled:opacity-60">
+          {loading ? 'Scanning…' : 'Scan again'}
+        </button>
       </div>
+      <p className="px-4 pt-1 text-xs font-semibold text-white/80">
+        {error ? error : scannedAt ? `Last scan ${new Date(scannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · scans every 15 seconds` : 'Scanning for buyers…'}
+      </p>
       <div className="flex flex-wrap gap-2 px-4 pt-3">
         {RANGES.map((r) => <Chip key={r} active={range === r} onClick={() => setRange(r)}>{r} km</Chip>)}
       </div>
@@ -238,22 +257,22 @@ export default function Buyers() {
             {inRange.length === 0 ? (
               <p className="rounded-md border border-dashed border-line bg-card p-6 text-center text-sm text-ink-soft">
                 {lives.length === 0
-                  ? `No buyer is asking for ${c.species} right now. You will get a notification when one does.`
+                  ? `No buyer is asking for ${c.species} right now. Keep this page open, the radar scans again every 15 seconds.`
                   : `No buyer within ${range} km. Try a wider range.`}
               </p>
             ) : view === 'radar' && selectedLive ? (
               <>
-                <NeedRow key={`${selectedLive.need.id}:${c.id}`} live={selectedLive} c={c} selected />
+                <NeedRow key={`${selectedLive.need.id}:${c.id}`} live={selectedLive} c={c} offers={myOffers} onSent={reloadOffers} selected />
                 {inRange.length > 1 && (
                   <div className="flex flex-wrap gap-2">
                     {inRange.filter((l) => l.need.id !== selectedLive.need.id).map((l) => (
-                      <Chip key={l.need.id} active={false} onClick={() => setPickedNeed(l.need.id)}>{l.need.buyer ?? 'A buyer'} · {l.km.toFixed(1)} km</Chip>
+                      <Chip key={l.need.id} active={false} onClick={() => setPickedNeed(l.need.id)}>{buyerName(l.need)} · {l.km.toFixed(1)} km</Chip>
                     ))}
                   </div>
                 )}
               </>
             ) : (
-              inRange.map((l) => <NeedRow key={`${l.need.id}:${c.id}`} live={l} c={c} />)
+              inRange.map((l) => <NeedRow key={`${l.need.id}:${c.id}`} live={l} c={c} offers={myOffers} onSent={reloadOffers} />)
             )}
           </>
         ) : view === 'radar' && selected ? (

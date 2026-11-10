@@ -10,6 +10,8 @@ import { BASE_PRICE } from '../../lib/buyers'
 import { useUser } from '../../lib/auth'
 import { openListings, useMarket, type Need } from '../../lib/market'
 import { useBT } from '../../lib/buyerText'
+import { ApiError } from '../../lib/api'
+import { cancelNeed, postNeed, useMyNeeds } from '../../lib/marketApi'
 import { useT } from '../../lib/i18n'
 import { TOWNS, townOf } from '../../lib/geo'
 
@@ -133,7 +135,9 @@ export default function BuyerNeeds() {
   const [max, setMax] = useState(0)
   const [place, setPlace] = useState(townOf(user.barangay))
 
-  const mine = m.needs.filter((n) => n.buyerId === user.id)
+  const { needs: mine, reload } = useMyNeeds()
+  const [posting, setPosting] = useState(false)
+  const [postErr, setPostErr] = useState('')
   const open = openListings(m)
   const close = () => setParams({})
 
@@ -166,7 +170,7 @@ export default function BuyerNeeds() {
                 {n.open && (
                   <div className="flex flex-wrap gap-2">
                     {k > 0 && <Link to="/buyer/offers" className="inline-flex min-h-12 items-center rounded-full bg-coral px-4 text-sm font-semibold text-deep">{b('needs.view')}</Link>}
-                    <button type="button" onClick={() => m.closeNeed(n.id)} className="min-h-12 rounded-full border-2 border-line px-4 text-sm font-semibold">{b('needs.close')}</button>
+                    <button type="button" onClick={() => { cancelNeed(n.id).then(reload).catch(() => reload()) }} className="min-h-12 rounded-full border-2 border-line px-4 text-sm font-semibold">{b('needs.close')}</button>
                   </div>
                 )}
 
@@ -214,7 +218,20 @@ export default function BuyerNeeds() {
           <p className="font-semibold">{b('needs.max')}</p>
           <Stepper value={max} onChange={setMax} step={5} min={0} max={MAX_PRICE} prefix="₱" emptyLabel={b('needs.nomax')} label={b('needs.max')} />
         </div>
-        <Button className="min-h-14 w-full text-base" onClick={() => { m.addNeed({ buyerId: user.id, buyer: user.buyer?.businessName ?? user.shortName, place: place || user.barangay, species: fish, kg, when, maxPrice: max || undefined }); close() }}>{b('needs.post')}</Button>
+        <Button className="min-h-14 w-full text-base" disabled={posting} onClick={async () => {
+          setPosting(true)
+          setPostErr('')
+          try {
+            await postNeed({ fish, kg, when, maxPrice: max || undefined, place: place || user.barangay })
+            await reload()
+            close()
+          } catch (e) {
+            setPostErr(e instanceof ApiError ? e.message : 'Could not post your need')
+          } finally {
+            setPosting(false)
+          }
+        }}>{posting ? '…' : b('needs.post')}</Button>
+        {postErr && <p role="alert" className="text-sm font-semibold text-risk-critical">{postErr}</p>}
       </CenterModal>
     </div>
   )

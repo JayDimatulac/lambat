@@ -107,8 +107,15 @@ offersRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) 
       res.status(400).json({ error: "Invalid need" });
       return;
     }
-    const need = await prisma.buyerNeed.findUnique({ where: { id: needId } });
-    if (!need || need.buyerId !== buyerId || need.status !== "OPEN" || need.speciesId !== c.speciesId) {
+    // CHANGED: load the species too, so a need and a catch match when the species is the same
+    // OR they share a local name (the three scads are all "Galunggong")
+    const need = await prisma.buyerNeed.findUnique({ where: { id: needId }, include: { species: true } });
+    const catchSpecies = await prisma.species.findUnique({ where: { id: c.speciesId } });
+    const sameFish =
+      !!need &&
+      !!catchSpecies &&
+      (need.speciesId === c.speciesId || need.species.localNames.some((n) => catchSpecies.localNames.includes(n)));
+    if (!need || need.buyerId !== buyerId || need.status !== "OPEN" || !sameFish) {
       res.status(400).json({ error: "That need does not match this catch and buyer" });
       return;
     }

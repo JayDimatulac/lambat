@@ -8,5 +8,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src"]
+  "include": ["src", "../frontend/src/lib/smsCatch.ts", "../frontend/src/lib/offlineQueue.ts"]
 }

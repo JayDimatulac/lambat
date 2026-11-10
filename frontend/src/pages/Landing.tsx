@@ -82,6 +82,13 @@ export default function Landing() {
           hint={caps ? t('auth.caps') : undefined}
           autoComplete="current-password"
         />
+
+        <div className="-mt-2 text-right">
+          <Link to="/forgot-password" className="text-sm font-semibold text-teal hover:underline">
+            Forgot password?
+          </Link>
+        </div>
+
         {error && (
           <p key={tries} role="alert" className="anim-shake rounded-md bg-risk-critical-bg p-3 text-base font-semibold text-risk-critical">
             {t(error)}

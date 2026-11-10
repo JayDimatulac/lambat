@@ -74,12 +74,16 @@ needsRouter.get("/mine", requireAuth, requireRole("BUYER"), async (_req, res) =>
   res.json(needs);
 });
 
-// Open needs that match one of my active catches (same species, same barangay first)
+// Open needs that match one of my active catches (same species or same local name, same barangay first)
 needsRouter.get("/matches", requireAuth, requireRole("FISHERFOLK"), async (req, res) => {
   const { userId } = res.locals.auth as { userId: string };
   const catchId = typeof req.query.catchId === "string" ? req.query.catchId : "";
 
-  const found = await prisma.catchBatch.findUnique({ where: { id: catchId } });
+  // CHANGED: also load the species, so we can compare local names
+  const found = await prisma.catchBatch.findUnique({
+    where: { id: catchId },
+    include: { species: true },
+  });
   if (!found || found.userId !== userId) {
     res.status(404).json({ error: "Catch not found" });
     return;
@@ -93,7 +97,16 @@ needsRouter.get("/matches", requireAuth, requireRole("FISHERFOLK"), async (req, 
   const myArea = (me?.barangay ?? "").toLowerCase();
 
   const needs = await prisma.buyerNeed.findMany({
-    where: { speciesId: found.speciesId, status: "OPEN", buyer: { status: "ACTIVE" } },
+    // CHANGED: match the same species OR any species that shares a local name
+    // (the three scads are all "Galunggong", so a Galunggong need fits any of them)
+    where: {
+      status: "OPEN",
+      buyer: { status: "ACTIVE" },
+      OR: [
+        { speciesId: found.speciesId },
+        { species: { localNames: { hasSome: found.species.localNames } } },
+      ],
+    },
     orderBy: { createdAt: "desc" },
     include: {
       species: { select: speciesSelect },

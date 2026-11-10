@@ -1,11 +1,12 @@
 // If you already have an API helper with a base URL, use its URL instead of this constant.
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:4000'
-
+// after
+const BASE: string = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api'
 type Result<T> = { ok: true; data: T } | { ok: false; status: number; error: string }
 
 async function post<T>(path: string, body: unknown): Promise<Result<T>> {
   try {
-    const res = await fetch(`${BASE}/api/auth/otp${path}`, {
+    // after
+const res = await fetch(`${BASE}/auth/otp${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

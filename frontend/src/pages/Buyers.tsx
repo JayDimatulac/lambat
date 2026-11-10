@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 import NeedRadar, { type Blip } from '../components/buyer/NeedRadar'
+import OrdersToFinish from '../components/buyer/OrdersToFinish'
 import Radar from '../components/buyer/Radar'
 import PartyCard from '../components/buyer/PartyCard'
 import Button from '../components/ui/Button'
@@ -16,7 +17,7 @@ import { useUser } from '../lib/auth'
 import { between, locate, townOf } from '../lib/geo'
 import { useMarket, usualPrice } from '../lib/market'
 import { ApiError } from '../lib/api'
-import { buyerName, sendOffer, useMyOffers, useNeedMatches, whenFrom, type ApiOffer, type MatchedNeed, type When } from '../lib/marketApi'
+import { buyerName, sendOffer, useMyOffers, useMyOrders, useNeedMatches, whenFrom, type ApiOffer, type MatchedNeed, type When } from '../lib/marketApi'
 import { matchesFor, type Kind } from '../lib/buyers'
 import { countdownText, sellByText } from '../lib/time'
 import { useT } from '../lib/i18n'
@@ -99,7 +100,7 @@ function NeedRow({ live, c, offers, onSent, selected }: { live: Live; c: Catch; 
 export default function Buyers() {
   const t = useT()
   const { lang } = useSettings()
-  const { catches } = useCatches()
+  const { catches, resetDemo: reloadCatches } = useCatches() // resetDemo only reloads from the server
   const user = useUser()
   const { postListing } = useMarket()
   const [params, setParams] = useSearchParams()
@@ -110,7 +111,11 @@ export default function Buyers() {
   const [range, setRange] = useState(20)
   const [offered, setOffered] = useState<Set<string>>(new Set())
 
-  const active = catches.filter(isActive).sort(byUrgency)
+  // a catch with a confirmed order cannot take another offer: it is finished in "Orders to finish", not scanned
+  const { orders, reload: reloadOrders } = useMyOrders()
+  const selling = new Set(orders.filter((o) => o.status === 'CONFIRMED').map((o) => o.catchId))
+  const finish = <OrdersToFinish orders={orders} onChanged={() => { reloadOrders(); reloadCatches() }} />
+  const active = catches.filter(isActive).filter((x) => !selling.has(x.id)).sort(byUrgency)
   const c = active.find((x) => x.id === params.get('catch')) ?? active[0]
   const matches = useMemo(() => (c ? matchesFor(c, kind) : []), [c, kind])
 
@@ -133,6 +138,7 @@ export default function Buyers() {
     return (
       <div className="space-y-3">
         <h2 className="text-[28px]">{t('nav.buyers')}</h2>
+        {finish}
         <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('buyers.empty')}</p>
       </div>
     )
@@ -207,6 +213,7 @@ export default function Buyers() {
   return (
     <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
       <div className="space-y-4">
+        {finish}
         <div className="space-y-2">
           <p className="text-sm font-semibold text-ink-soft">{t('va.pick')}</p>
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">

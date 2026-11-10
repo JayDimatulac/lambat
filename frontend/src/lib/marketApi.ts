@@ -160,3 +160,30 @@ export function useMyNeeds() {
 }
 
 export const cancelNeed = (id: string) => api.patch(`/needs/${id}/cancel`)
+
+/* ---------- fisherfolk: orders from accepted offers ---------- */
+
+export type ApiOrder = {
+  id: string
+  catchId: string
+  kilos: number
+  pricePerKg: number
+  status: 'CONFIRMED' | 'COMPLETED' | 'CANCELLED'
+  createdAt: string
+  catch: { species: { englishName: string; localNames: string[] } }
+  buyer: { id: string; name: string; businessName: string | null; barangay: string }
+}
+
+/* My orders as a seller. Asks again every 20 seconds. */
+export function useMyOrders(everyMs = 20000) {
+  const [orders, setOrders] = useState<ApiOrder[]>([])
+  const reload = useCallback(async () => {
+    try { setOrders(await api.get<ApiOrder[]>('/orders/mine')) } catch { /* keep the old list */ }
+  }, [])
+  useEffect(() => {
+    reload()
+    const id = setInterval(() => { if (!document.hidden) reload() }, everyMs)
+    return () => clearInterval(id)
+  }, [reload, everyMs])
+  return { orders, reload }
+}

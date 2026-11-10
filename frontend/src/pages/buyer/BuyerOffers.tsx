@@ -1,59 +1,51 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import OfferCard from '../../components/buyer/OfferCard'
-import OfferSheet from '../../components/buyer/OfferSheet'
-import Chip from '../../components/ui/Chip'
+import { Link } from 'react-router-dom'
+import RopeTimeline from '../../components/buyer/RopeTimeline'
 import Segmented from '../../components/ui/Segmented'
-import Disclaimer from '../../components/ui/Disclaimer'
-import { useUser } from '../../lib/auth'
-import { openListings, useMarket, type Listing } from '../../lib/market'
+import { LifebuoyIcon } from '../../components/buyer/BuyerIcons'
+import { useBuyerInbox } from '../../lib/buyerInbox'
+import type { Order } from '../../lib/market'
 import { useBT } from '../../lib/buyerText'
-import { useT } from '../../lib/i18n'
 
-type Sort = 'urgent' | 'price' | 'size'
-
-export default function BuyerOffers() {
+export default function BuyerOrders() {
   const b = useBT()
-  const t = useT()
-  const user = useUser()
-  const navigate = useNavigate()
-  const m = useMarket()
-  const [fish, setFish] = useState('')
-  const [sort, setSort] = useState<Sort>('urgent')
-  const [pick, setPick] = useState<{ l: Listing; mode: 'buy' | 'offer' } | null>(null)
+  const { orders } = useBuyerInbox()
+  const [tab, setTab] = useState<'active' | 'done'>('active')
+  const list = orders.filter((o) => (tab === 'done' ? o.status === 'received' || o.status === 'declined' : o.status !== 'received' && o.status !== 'declined'))
 
-  const open = openListings(m)
-  const species = [...new Set(open.map((l) => l.species))]
-  const needs = m.needs.filter((n) => n.buyerId === user.id && n.open)
-  const list = open.filter((l) => !fish || l.species === fish).sort((x, y) => (sort === 'price' ? x.ask - y.ask : sort === 'size' ? y.kg - x.kg : x.deadline - y.deadline))
+  const card = (o: Order) => (
+    <article key={o.id} className="space-y-4 rounded-lg border border-line bg-card p-4 shadow-rest">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-numeral text-xl font-bold leading-tight">{o.species} · {o.kg} {b('unit.kg')}</h3>
+          <p className="text-sm text-ink-soft">{o.fisher} · {o.place}</p>
+        </div>
+        <div className="text-right">
+          <p className="font-numeral text-xl font-extrabold text-teal">₱{o.price}/kg</p>
+          <p className="text-xs font-semibold text-ink-soft">{b('order.total', { n: (o.price * o.kg).toLocaleString('en-US') })}</p>
+        </div>
+      </div>
+      {o.rescue && <p className="inline-flex items-center gap-1.5 rounded-full bg-seafoam px-3 py-1 text-xs font-bold text-teal"><LifebuoyIcon size={16} />{b('order.rescued')}</p>}
+
+      {o.status === 'offered' && <p role="status" className="anim-glow rounded-md bg-risk-moderate-bg p-3 text-sm font-semibold text-risk-moderate">{b('order.waiting')}</p>}
+      {o.status === 'declined' && (
+        <div className="space-y-2">
+          <p className="rounded-md bg-risk-critical-bg p-3 text-sm font-semibold text-risk-critical">{b('order.declined')}</p>
+          <Link to="/buyer/offers" className="inline-flex min-h-12 items-center rounded-full border-2 border-teal px-4 text-sm font-semibold text-teal">{b('order.tryother')}</Link>
+        </div>
+      )}
+      {(o.status === 'confirmed' || o.status === 'onway' || o.status === 'received') && <RopeTimeline status={o.status} />}
+      {o.status === 'confirmed' && (
+        <p className="rounded-md bg-seafoam p-3 text-sm font-semibold text-teal">Confirmed. {o.fisher} will mark this order done when you have received the fish.</p>
+      )}
+    </article>
+  )
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-[28px]">{b('offers.title')}</h1>
-        <p className="text-ink-soft">{b('offers.sub')}</p>
-      </div>
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
-        <Chip active={!fish} onClick={() => setFish('')} className="shrink-0">{b('offers.all')}</Chip>
-        {species.map((s) => <Chip key={s} active={fish === s} onClick={() => setFish(s)} className="shrink-0">{s}</Chip>)}
-      </div>
-      <Segmented<Sort> label={b('offers.sort')} value={sort} onChange={setSort} options={[{ value: 'urgent', label: b('sort.urgent') }, { value: 'price', label: b('sort.price') }, { value: 'size', label: b('sort.size') }]} />
-
-      {list.length === 0 ? (
-        <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{b('offers.empty')}</p>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {list.map((l) => (
-            <OfferCard key={l.id} l={l} now={m.now}
-              match={needs.some((n) => n.species === l.species && (!n.maxPrice || l.ask <= n.maxPrice))}
-              onBuy={() => setPick({ l, mode: 'buy' })} onOffer={() => setPick({ l, mode: 'offer' })} />
-          ))}
-        </div>
-      )}
-      <Disclaimer>{t('buyers.note')}</Disclaimer>
-
-      <OfferSheet key={pick ? `${pick.l.id}:${pick.mode}` : 'none'} l={pick?.l ?? null} mode={pick?.mode ?? 'buy'} onClose={() => setPick(null)}
-        onConfirm={(price) => { if (pick) { m.buy(pick.l.id, user.id, price); setPick(null); navigate('/buyer/orders') } }} />
+      <h1 className="text-[28px]">{b('orders.title')}</h1>
+      <Segmented<'active' | 'done'> label={b('orders.title')} value={tab} onChange={setTab} options={[{ value: 'active', label: b('orders.active') }, { value: 'done', label: b('orders.done') }]} />
+      {list.length === 0 ? <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{b('orders.empty')}</p> : <div className="grid gap-4 md:grid-cols-2">{list.map(card)}</div>}
     </div>
   )
 }

@@ -3,9 +3,10 @@ import { ArrowRight } from 'lucide-react'
 import PierScene from '../../components/buyer/PierScene'
 import OfferCard from '../../components/buyer/OfferCard'
 import RopeTimeline from '../../components/buyer/RopeTimeline'
-import { LifebuoyIcon } from '../../components/buyer/BuyerIcons'
+import { HornIcon, LifebuoyIcon } from '../../components/buyer/BuyerIcons'
 import { KnotPlusIcon } from '../../components/icons'
 import { useUser } from '../../lib/auth'
+import { useBuyerInbox } from '../../lib/buyerInbox'
 import { openListings, riskOf, useMarket } from '../../lib/market'
 import { localeOf } from '../../lib/time'
 import { useSettings } from '../../lib/settings'
@@ -17,12 +18,14 @@ export default function BuyerHome() {
   const { lang } = useSettings()
   const user = useUser()
   const m = useMarket()
+  const inbox = useBuyerInbox()
   const open = openListings(m)
-  const mine = m.orders.filter((o) => o.buyerId === user.id)
+  const mine = inbox.orders
+  const pending = inbox.offers.filter((o) => o.status === 'pending')
   const live = mine.filter((o) => o.status === 'confirmed' || o.status === 'onway')
   const rescuedKg = mine.filter((o) => o.status === 'received' && o.rescue).reduce((n, o) => n + o.kg, 0)
   const urgent = open.filter((l) => ['critical', 'high'].includes(riskOf(l, m.now))).slice(0, 2)
-  const needs = m.needs.filter((n) => n.buyerId === user.id && n.open)
+  const needs = inbox.needs.filter((n) => n.open)
   const date = new Date().toLocaleDateString(localeOf(lang), { weekday: 'long', month: 'long', day: 'numeric' })
   const matchOf = (species: string, maxPrice?: number) => open.filter((l) => l.species === species && (!maxPrice || l.ask <= maxPrice)).length
 
@@ -45,6 +48,16 @@ export default function BuyerHome() {
   return (
     <div className="space-y-6">
       <PierScene lots={open.map((l) => ({ id: l.id, risk: riskOf(l, m.now) }))} header={header} />
+
+      {pending.length > 0 && (
+        <Link to="/buyer/needs" className="flex items-center gap-3 rounded-lg border-2 border-coral bg-card p-4 shadow-raised">
+          <span className="grid size-12 shrink-0 place-items-center rounded-full bg-coral text-deep"><HornIcon size={28} /></span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-numeral text-lg font-bold">{pending.length} {pending.length === 1 ? 'offer' : 'offers'} waiting for you</span>
+            <span className="text-sm text-ink-soft">{pending[0].fisher} offers {pending[0].species}, {pending[0].kg} kg at ₱{pending[0].price}/kg. Tap to answer.</span>
+          </span>
+        </Link>
+      )}
 
       <div className="grid grid-cols-3 gap-3">
         {stat(open.length, b('home.stat.open'))}

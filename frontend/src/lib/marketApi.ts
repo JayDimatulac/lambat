@@ -25,6 +25,9 @@ export type MatchedNeed = {
 
 export const buyerName = (n: MatchedNeed) => n.buyer.businessName || 'A buyer'
 
+// The name a fisherfolk knows the fish by ("Galunggong"), or the English name if it has no local name we use
+export const fishName = (s: { englishName: string; localNames: string[] }) => s.localNames.find((x) => x in BASE_PRICE) ?? s.englishName
+
 /* Asks the server for the open buyer needs that fit one catch, and asks again every few seconds (the "scan"). */
 export function useNeedMatches(catchId: string | undefined, everyMs = 15000) {
   const [needs, setNeeds] = useState<MatchedNeed[]>([])
@@ -66,18 +69,24 @@ export type ApiOffer = {
   pricePerKg: number
   status: 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED' | 'WITHDRAWN'
   createdAt: string
+  respondedAt: string | null
+  catch?: { species: { englishName: string; localNames: string[] } }
 }
 
 export const sendOffer = (b: { catchId: string; buyerId: string; needId: string; kilos: number; pricePerKg: number }) =>
   api.post<ApiOffer>('/offers', b)
 
-/* The offers I sent (fisherfolk). Newest first. */
-export function useMyOffers() {
+/* The offers I sent (fisherfolk). Newest first. Asks again every 20 seconds so an answer from the buyer shows up. */
+export function useMyOffers(everyMs = 20000) {
   const [offers, setOffers] = useState<ApiOffer[]>([])
   const reload = useCallback(async () => {
     try { setOffers(await api.get<ApiOffer[]>('/offers/mine')) } catch { /* keep the old list */ }
   }, [])
-  useEffect(() => { reload() }, [reload])
+  useEffect(() => {
+    reload()
+    const id = setInterval(() => { if (!document.hidden) reload() }, everyMs)
+    return () => clearInterval(id)
+  }, [reload, everyMs])
   return { offers, reload }
 }
 
@@ -116,7 +125,7 @@ export async function postNeed(i: { fish: string; kg: number; when: When; maxPri
   return api.post('/needs', { speciesId, kilos: i.kg, pricePerKg: i.maxPrice, neededBy: neededByFor(i.when), barangay: i.place })
 }
 
-type MyNeed = {
+export type MyNeed = {
   id: string
   buyerId: string
   kilos: number
@@ -129,11 +138,11 @@ type MyNeed = {
 }
 
 // The server's need, shaped like the Need the buyer screens already use, so those screens barely change
-const toNeed = (n: MyNeed): Need => ({
+export const toNeed = (n: MyNeed): Need => ({
   id: n.id,
   buyerId: n.buyerId,
   place: n.barangay,
-  species: n.species.localNames.find((x) => x in BASE_PRICE) ?? n.species.englishName,
+  species: fishName(n.species),
   kg: n.kilos,
   when: whenFrom(n.neededBy),
   maxPrice: n.pricePerKg ?? undefined,

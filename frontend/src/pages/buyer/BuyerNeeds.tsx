@@ -11,7 +11,8 @@ import { useUser } from '../../lib/auth'
 import { openListings, useMarket, type Need } from '../../lib/market'
 import { useBT } from '../../lib/buyerText'
 import { ApiError } from '../../lib/api'
-import { cancelNeed, postNeed, useMyNeeds } from '../../lib/marketApi'
+import { cancelNeed, postNeed } from '../../lib/marketApi'
+import { answerOffer, refreshInbox, useBuyerInbox, type InboxOffer } from '../../lib/buyerInbox'
 import { useT } from '../../lib/i18n'
 import { TOWNS, townOf } from '../../lib/geo'
 
@@ -124,6 +125,23 @@ function CenterModal({ open, onClose, title, children }: { open: boolean; onClos
   )
 }
 
+/* One offer from a fisherfolk, with the freshness of the catch and the yes / no buttons */
+function OfferRow({ o, act }: { o: InboxOffer; act: (id: string, accept: boolean) => void }) {
+  const t = useT()
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-seafoam p-3">
+      <p className="text-sm font-semibold">
+        {o.species} · {o.kg} kg · ₱{o.price}/kg <span className="font-normal text-ink-soft">from {o.fisher}{o.place ? ` (${o.place})` : ''}</span>
+        {o.risk && <span className="block font-normal text-ink-soft">Freshness risk: {t(`risk.${o.risk}` as 'risk.low')}</span>}
+      </p>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => act(o.id, true)} className="min-h-11 rounded-full bg-coral px-4 text-sm font-semibold text-deep">Accept</button>
+        <button type="button" onClick={() => act(o.id, false)} className="min-h-11 rounded-full border-2 border-line px-4 text-sm font-semibold">Decline</button>
+      </div>
+    </div>
+  )
+}
+
 export default function BuyerNeeds() {
   const b = useBT()
   const user = useUser()
@@ -135,7 +153,16 @@ export default function BuyerNeeds() {
   const [max, setMax] = useState(0)
   const [place, setPlace] = useState(townOf(user.barangay))
 
-  const { needs: mine, reload } = useMyNeeds()
+  const inbox = useBuyerInbox()
+  const mine = inbox.needs
+  const reload = refreshInbox
+  const [actErr, setActErr] = useState('')
+  const act = (id: string, accept: boolean) => {
+    setActErr('')
+    answerOffer(id, accept).catch((e) => setActErr(e instanceof ApiError ? e.message : 'Could not answer the offer'))
+  }
+  const pending = inbox.offers.filter((o) => o.status === 'pending')
+  const orphans = pending.filter((o) => !mine.some((n) => n.id === o.needId)) // offers that are not about one of the needs below
   const [posting, setPosting] = useState(false)
   const [postErr, setPostErr] = useState('')
   const open = openListings(m)
@@ -151,12 +178,21 @@ export default function BuyerNeeds() {
         <button type="button" onClick={() => setParams({ new: '1' })} className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-coral px-4 text-sm font-semibold text-deep"><KnotPlusIcon size={20} />{b('needs.new')}</button>
       </div>
 
+      {actErr && <p role="alert" className="rounded-md bg-risk-critical-bg p-3 text-sm font-semibold text-risk-critical">{actErr}</p>}
+
+      {orphans.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-2xl">Offers waiting for you</h2>
+          {orphans.map((o) => <OfferRow key={o.id} o={o} act={act} />)}
+        </section>
+      )}
+
       {mine.length === 0 ? <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{b('needs.empty')}</p> : (
         <div className="grid gap-4 md:grid-cols-2">
           {mine.map((n) => {
             const k = open.filter((l) => l.species === n.species && (!n.maxPrice || l.ask <= n.maxPrice)).length
-            const waiting = m.offers.filter((o) => o.needId === n.id && o.status === 'pending')
-            const accepted = m.offers.find((o) => o.needId === n.id && o.status === 'accepted')
+            const waiting = pending.filter((o) => o.needId === n.id)
+            const accepted = inbox.offers.find((o) => o.needId === n.id && o.status === 'accepted')
             return (
               <article key={n.id} className={`space-y-3 rounded-lg border bg-card p-4 shadow-rest ${n.open || accepted ? 'border-line' : 'border-line opacity-60'}`}>
                 <div className="flex items-start justify-between gap-3">
@@ -175,17 +211,7 @@ export default function BuyerNeeds() {
                 )}
 
                 {/* Offers from fisherfolk who have this fish */}
-                {waiting.map((o) => (
-                  <div key={o.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-seafoam p-3">
-                    <p className="text-sm font-semibold">
-                      {o.fisher} · {o.kg} kg · ₱{o.price}/kg <span className="font-normal text-ink-soft">({o.place})</span>
-                    </p>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => m.answerOffer(o.id, true)} className="min-h-11 rounded-full bg-coral px-4 text-sm font-semibold text-deep">Accept</button>
-                      <button type="button" onClick={() => m.answerOffer(o.id, false)} className="min-h-11 rounded-full border-2 border-line px-4 text-sm font-semibold">Decline</button>
-                    </div>
-                  </div>
-                ))}
+                {waiting.map((o) => <OfferRow key={o.id} o={o} act={act} />)}
                 {accepted && (
                   <Link to="/buyer/orders" className="block rounded-md bg-seafoam p-3 text-sm font-semibold text-teal">
                     Offer accepted from {accepted.fisher}. See it in Orders.

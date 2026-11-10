@@ -1,8 +1,9 @@
 import { useCallback } from 'react'
 import { useUser } from './auth'
+import { useBuyerInbox } from './buyerInbox'
 import { openListings, useMarket, type Listing, type NeedOffer, type Order } from './market'
 
-// The buyer's alerts are worked out from the market, not stored: a lot that matches a need, a fisher's offer, and where each order stands.
+// The buyer's alerts are worked out from the server's news, not stored: a fisherfolk's offer, and where each order stands.
 // Only "when did I last look" is remembered, so we can say what is new.
 export type Alert =
   | { id: string; kind: 'match'; at: number; listing: Listing }
@@ -12,6 +13,7 @@ export type Alert =
 export function useBuyerAlerts() {
   const user = useUser()
   const m = useMarket()
+  const inbox = useBuyerInbox()
   const key = `lambat.alerts.seen.${user.id}`
 
   let seenAt = 0
@@ -20,18 +22,16 @@ export function useBuyerAlerts() {
     try { localStorage.setItem(key, String(Date.now())) } catch { /* storage can be blocked */ }
   }, [key])
 
-  const mineNeeds = m.needs.filter((n) => n.buyerId === user.id)
-  const needs = mineNeeds.filter((n) => n.open)
+  const needs = inbox.needs.filter((n) => n.open)
+  // lots a fisherfolk posted that fit a need. The built-in sample lots are not real news, so they are left out.
   const matches: Alert[] = openListings(m)
+    .filter((l) => !l.sample)
     .filter((l) => needs.some((n) => n.species === l.species && (!n.maxPrice || l.ask <= n.maxPrice)))
     .map((l) => ({ id: `m:${l.id}`, kind: 'match', at: l.postedAt, listing: l }))
-  const needIds = new Set(mineNeeds.map((n) => n.id))
-  const offers: Alert[] = m.offers
-    .filter((o) => needIds.has(o.needId) && o.status === 'pending')
+  const offers: Alert[] = inbox.offers
+    .filter((o) => o.status === 'pending')
     .map((o) => ({ id: `f:${o.id}`, kind: 'offer', at: o.createdAt, offer: o }))
-  const orders: Alert[] = m.orders
-    .filter((o) => o.buyerId === user.id)
-    .map((o) => ({ id: `o:${o.id}:${o.status}`, kind: 'order', at: o.updatedAt, order: o }))
+  const orders: Alert[] = inbox.orders.map((o) => ({ id: `o:${o.id}:${o.status}`, kind: 'order', at: o.updatedAt, order: o }))
 
   const alerts = [...matches, ...offers, ...orders].sort((a, b) => b.at - a.at)
   return { alerts, unread: alerts.filter((a) => a.at > seenAt).length, seenAt, markSeen }

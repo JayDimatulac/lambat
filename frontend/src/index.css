@@ -1,11 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap");
 @import "tailwindcss";
 
 /* LAMBAT design tokens (from the UI Design System PDF) */
 @theme {
   --font-display: "Fraunces", Georgia, serif;
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-numeral: "Bricolage Grotesque", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-numeral: "Plus Jakarta Sans", system-ui, sans-serif;
 
   --color-navy: #0a2f3c;      /* main text (remapped in night mode) */
   --color-deep: #0a2f3c;      /* always-dark ink, never remapped */

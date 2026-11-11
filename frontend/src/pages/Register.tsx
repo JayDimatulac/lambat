@@ -58,7 +58,6 @@ export default function Register() {
   const [showEmail, setShowEmail] = useState(false)
   // step 3, fisherfolk
   const [landing, setLanding] = useState<string | null>(null)
-  const [otherLanding, setOtherLanding] = useState('')
   const [boat, setBoat] = useState<Boat | null>(null)
   const [gear, setGear] = useState<Gear[]>([])
   const [ground, setGround] = useState<Ground | null>(null)
@@ -80,7 +79,7 @@ export default function Register() {
     return Object.keys(e).length === 0
   }
 
-  const landingValue = landing === '__other' ? otherLanding.trim() : landing
+  const landingValue = landing
   const checkStep3 = () => {
     const e: Errors = {}
     if (role === 'fisherfolk' && !landingValue) e.landing = 'reg.err.landing'
@@ -206,9 +205,7 @@ export default function Register() {
               <p className="text-sm text-ink-soft">{t('reg.landing.hint')}</p>
               <div role="radiogroup" aria-label={t('reg.landing')} className="space-y-2">
                 {LANDINGS.map((p) => <ChoiceTile key={p} selected={landing === p} onClick={() => setLanding(p)} icon={<PierIcon size={26} />} title={p} />)}
-                <ChoiceTile selected={landing === '__other'} onClick={() => setLanding('__other')} title={t('reg.landing.other')} />
               </div>
-              {landing === '__other' && <TextField label={t('reg.landing.other.ph')} value={otherLanding} onChange={(e) => setOtherLanding(e.target.value)} />}
               {errors.landing && <p role="alert" className="text-sm font-semibold text-risk-critical">{t(errors.landing)}</p>}
             </div>
 

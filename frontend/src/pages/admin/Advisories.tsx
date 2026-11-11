@@ -27,7 +27,7 @@ export default function Advisories() {
   const draft = (state as { draft?: Draft } | null)?.draft
   const [sev, setSev] = useState<Sev>(draft?.sev ?? 'watch')
   const [type, setType] = useState<AdvisoryType>(draft?.type ?? 'Weather / sea condition')
-  const [place, setPlace] = useState<Place>(draft?.place ?? 'Batangas Bay')
+  const [place, setPlace] = useState<Place>(draft?.place ?? 'Balayan Bay')
   const [text, setText] = useState(draft?.text ?? '')
   const [err, setErr] = useState(false)
   const [log, setLog] = useState<Sent[]>(SENT)

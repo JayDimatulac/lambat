@@ -5,16 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts",
-    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "build": "prisma generate && tsc",
     "start": "node dist/index.js",
     "test:api": "powershell -ExecutionPolicy Bypass -File scripts/regression.ps1",
-    "preflight": "powershell -ExecutionPolicy Bypass -File scripts/preflight.ps1",
-    "prod:setup": "powershell -ExecutionPolicy Bypass -File scripts/prod-setup.ps1",
-    "prod:cleanup": "powershell -ExecutionPolicy Bypass -File scripts/prod-setup.ps1 -Task cleanup",
-    "ship-check": "powershell -ExecutionPolicy Bypass -File scripts/ship-check.ps1",
-    "live-check": "powershell -ExecutionPolicy Bypass -File scripts/live-check.ps1",
-    "prod:pathways": "powershell -ExecutionPolicy Bypass -File scripts/prod-setup.ps1 -Task pathways",
-    "prod:seed": "powershell -ExecutionPolicy Bypass -File scripts/prod-setup.ps1 -Task seed"
+    "check:link": "powershell -ExecutionPolicy Bypass -File scripts/connection-check.ps1"
   },
   "keywords": [],
   "author": "",
@@ -24,8 +18,7 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@prisma/client": "^7.10.1",
-    "@supabase/supabase-js": "^2.119.0",
+    "@prisma/client": "^6.19.3",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -33,16 +26,15 @@
     "@types/node": "^26.6.3",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
-    "dotenv": "^18.0.10",
+    "dotenv": "^18.0.5",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.7.4",
+    "express-rate-limit": "^8.7.1",
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
-    "typescript": "^5.9.3",
-    "zod": "^4.6.7"
+    "prisma": "^6.19.3",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
-    "prisma": "^7.10.1",
     "ts-node-dev": "^2.0.0"
   }
 }

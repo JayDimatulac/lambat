@@ -14,8 +14,10 @@ export default function DayRibbon({ hours, nowHour }: { hours: Hour[]; nowHour: 
   const n = hours.length
   const pct = (i: number) => `${((i + 0.5) / n) * 100}%`
   const nowIdx = hours.findIndex((x) => x.h === nowHour)
-  const calm = calmWindow(hours)
-  const strong = windWindow(hours)
+  // hours that have already passed are no use for planning
+  const ahead = hours.filter((x) => x.h >= nowHour)
+  const calm = ahead.length ? calmWindow(ahead) : null
+  const strong = ahead.length ? windWindow(ahead) : null
 
   return (
     <section className="space-y-4 rounded-lg border border-line bg-card p-5 shadow-rest">
@@ -24,7 +26,7 @@ export default function DayRibbon({ hours, nowHour }: { hours: Hour[]; nowHour: 
       <div className="relative pt-6">
         <div className="flex h-4 gap-px overflow-hidden rounded-full" role="img" aria-label={t('wx.hourly')}>
           {hours.map((x) => (
-            <span key={x.h} className={`flex-1 ${TONE[sailLevel(x.wind, x.wind * 1.5, x.wave, x.rain)]}`} />
+            <span key={x.h} className={`flex-1 ${TONE[sailLevel(x.wind, x.gust ?? x.wind * 1.5, x.wave, x.rain)]} ${x.h < nowHour ? 'opacity-40' : ''}`} />
           ))}
         </div>
         {nowIdx >= 0 && (

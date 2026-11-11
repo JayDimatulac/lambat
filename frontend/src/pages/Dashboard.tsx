@@ -9,6 +9,7 @@ import { useUser } from '../lib/auth'
 import { localeOf } from '../lib/time'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
+import { hour12, useForecast, windOutlook } from '../lib/weather'
 
 export default function Dashboard() {
   const t = useT()
@@ -16,6 +17,7 @@ export default function Dashboard() {
   const { catches } = useCatches()
   const user = useUser()
   const place = user.fisher?.landing ?? user.barangay
+  const forecast = useForecast(user.fisher?.landing)
   const now = new Date()
   const hour = now.getHours()
   const greet = hour < 12 ? t('greet.morning') : hour < 18 ? t('greet.afternoon') : t('greet.evening')
@@ -31,6 +33,14 @@ export default function Dashboard() {
     return { n: base.n + closed.length, kg: base.kg + closed.reduce((total, c) => total + c.kg, 0) }
   }
 
+  // the wind chip comes from the real forecast, never from fixed text
+  const outlook = forecast.live ? windOutlook(forecast.hours, hour) : null
+  const windText =
+    !outlook || outlook.kind === 'none' ? t('nav.weather')
+    : outlook.kind === 'calm' ? t('home.wind.calm')
+    : outlook.kind === 'from' ? t('home.wind.from', { from: hour12(outlook.from) })
+    : t('home.wind', { to: hour12(outlook.to) })  
+
   const header = (
     <>
       <div className="flex items-start justify-between gap-2">
@@ -43,7 +53,7 @@ export default function Dashboard() {
         </div>
         <Link to="/weather" className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-deep/40 px-3.5 text-sm font-semibold text-white">
           <PennantIcon size={18} />
-          {t('home.wind')}
+          {windText}
         </Link>
       </div>
       <p className="mt-1 font-numeral text-[24px] font-bold leading-tight text-white">

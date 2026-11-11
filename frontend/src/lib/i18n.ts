@@ -37,7 +37,9 @@ const en = {
   'greet.morning': 'Good morning',
   'greet.afternoon': 'Good afternoon',
   'greet.evening': 'Good evening',
-  'home.wind': 'Wind until 6 PM',
+  'home.wind': 'Wind until {to}',
+  'home.wind.from': 'Wind from {from}',
+  'home.wind.calm': 'Calm winds today',
   'home.log': 'Log a catch',
   'home.log.sub': 'Pick the fish, kilos and ice',
   'home.actions': 'Needs action',
@@ -436,6 +438,8 @@ const en = {
   'adm.v.pause': 'Pause',
   'byr.nav.offers': 'Offers',
   'byr.role': 'Buyer',
+  'wx.loading': 'Loading the forecast…',
+  'wx.stat.gust': 'Gust',
 } as const
 
 export type Key = keyof typeof en
@@ -476,7 +480,9 @@ const fil: Record<Key, string> = {
   'greet.morning': 'Magandang umaga',
   'greet.afternoon': 'Magandang hapon',
   'greet.evening': 'Magandang gabi',
-  'home.wind': 'Hangin hanggang 6 PM',
+  'home.wind': 'Hangin hanggang {to}',
+  'home.wind.from': 'Hangin mula {from}',
+  'home.wind.calm': 'Banayad ang hangin ngayon',
   'home.log': 'Itala ang Huli',
   'home.log.sub': 'Pumili ng isda, kilo at yelo',
   'home.actions': 'Kailangan ng aksyon',
@@ -875,6 +881,8 @@ const fil: Record<Key, string> = {
   'adm.v.pause': 'I-pause',
   'byr.nav.offers': 'Mga Alok',
   'byr.role': 'Mamimili',
+  'wx.loading': 'Kinukuha ang forecast…',
+  'wx.stat.gust': 'Gust',
 }
 
 const dict: Record<'en' | 'fil', Record<Key, string>> = { en, fil }

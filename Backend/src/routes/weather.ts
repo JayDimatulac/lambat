@@ -41,7 +41,7 @@ weatherRouter.get("/", requireAuth, async (req, res) => {
       "https://api.open-meteo.com/v1/forecast" +
         `?latitude=${la}&longitude=${lo}` +
         "&current=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation" +
-        "&hourly=temperature_2m,precipitation_probability,wind_speed_10m,weather_code" +
+        "&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_gusts_10m,weather_code" +
         "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,wind_gusts_10m_max" +
         "&timezone=Asia%2FManila&forecast_days=7"
     );

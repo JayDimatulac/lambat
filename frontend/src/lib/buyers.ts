@@ -26,7 +26,7 @@ export const PARTIES: Party[] = [
   { id: 'b3', kind: 'buyer', name: 'Calatagan Pier Traders', type: 'trader', km: 7.5, bearing: 20, opens: 4, closes: 18, priceFactor: 1.08 },
   { id: 'b4', kind: 'buyer', name: 'Lemery Seafood Grill', type: 'restaurant', km: 11, bearing: 250, opens: 10, closes: 21, accepts: ['Alumahan', 'Tambakol', 'Gulyasan', 'Tulingang bilog', 'Galunggong'], priceFactor: 1.12 },
   { id: 'b5', kind: 'buyer', name: 'Tuy Tinapa Smokehouse', type: 'smokehouse', km: 14, bearing: 110, opens: 6, closes: 17, accepts: ['Alumahan', 'Tulingang bilog', 'Tambakol', 'Gulyasan'], priceFactor: 1 },
-  { id: 'b6', kind: 'buyer', name: 'Batangas City Market Trader', type: 'trader', km: 22, bearing: 300, opens: 3, closes: 15, priceFactor: 1.15 },
+  { id: 'b6', kind: 'buyer', name: 'Nasugbu Public Market Trader', type: 'trader', km: 18, bearing: 324, opens: 3, closes: 15, priceFactor: 1.15 },
   { id: 's1', kind: 'share', name: 'Barangay feeding program', type: 'barangay', km: 1.6, bearing: 200, opens: 7, closes: 17, capacityKg: 25 },
   { id: 's2', kind: 'share', name: 'Elementary school feeding', type: 'school', km: 3.9, bearing: 330, opens: 7, closes: 15, capacityKg: 20 },
   { id: 's3', kind: 'share', name: 'Parish outreach kitchen', type: 'parish', km: 5.2, bearing: 40, opens: 8, closes: 18, capacityKg: 30 },

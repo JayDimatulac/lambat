@@ -12,6 +12,8 @@ import { useT, type Key } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 import { useUser } from '../lib/auth'
 
+
+
 const SKY_WORD: Record<Sky, Key> = { sun: 'sky.sun', partly: 'sky.partly', cloud: 'sky.cloud', rain: 'sky.rain' }
 const LEVEL: Record<Level, { word: Key; why: Key; dot: string }> = {
   good: { word: 'level.good', why: 'wx.why.good', dot: 'bg-risk-low-line' },
@@ -23,16 +25,23 @@ export default function Weather() {
   const t = useT()
   const { lang, theme } = useSettings()
   const user = useUser()
-  const { week, hours, live } = useForecast(user.fisher?.landing)
+  const { week, hours, live, place, status } = useForecast(user.fisher?.landing)
   const [now] = useState(() => new Date())
   const [sel, setSel] = useState(0)
 
+
+  // no verdict until the real forecast is here: the sample must never say "safe to sail"
+  if (status === 'loading') {
+    return <p className="px-2 py-16 text-center text-ink-soft">{t('wx.loading')}</p>
+  } 
+
   const day = week[sel]
-  const level = sailLevel(day.wind, day.gust, day.wave, day.rain)
+  const level: Level = live ? sailLevel(day.wind, day.gust, day.wave, day.rain) : 'caution' // sample data never says it is safe
   const L = LEVEL[level]
   const hour = sel === 0 ? Math.min(23, Math.max(0, now.getHours())) : 12
-  const strong = sel === 0 ? windWindow(hours) : null
-  const calm = sel === 0 ? calmWindow(hours) : null
+  const upcoming = hours.filter((x) => x.h >= hour) // hours that have already passed are no use for planning
+  const strong = sel === 0 && upcoming.length ? windWindow(upcoming) : null
+  const calm = sel === 0 && upcoming.length ? calmWindow(upcoming) : null
   const score = dryScore(day)
   const best = week.reduce((b, d, i) => (dryScore(d) > dryScore(week[b]) ? i : b), 0)
   const dayName = (i: number) => week[i].date.toLocaleDateString(localeOf(lang), { weekday: 'long' })
@@ -47,6 +56,7 @@ export default function Weather() {
     { label: t('wx.stat.wind'), value: `${day.wind} km/h` },
     { label: t('wx.wave'), value: `${day.wave} m` },
     { label: t('wx.stat.rain'), value: `${day.rain}%` },
+    { label: t('wx.stat.gust'), value: `${day.gust} km/h` },
   ]
 
   return (
@@ -58,9 +68,11 @@ export default function Weather() {
         <CalmSky day={day} hour={hour} night={dark} />
         <div className={`relative z-10 flex h-full max-w-[17rem] flex-col justify-start gap-3 p-6 sm:max-w-md sm:p-8 ${ink}`}>
           <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
+            {sel !== 0 && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${glass}`}>{dayName(sel)}</span>}
             <span className="font-numeral text-lg font-bold">{day.tMax}°</span>
             <span aria-hidden="true">·</span>
             {t(SKY_WORD[day.sky])}
+            {live && place && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${glass}`}>{place}</span>}
             {!live && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${glass}`}>{t('ui.sample')}</span>}
           </p>
           <h2 className="flex items-center gap-3 font-display text-[34px] font-semibold leading-[1.1] sm:text-[42px]">

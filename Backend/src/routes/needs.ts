@@ -79,7 +79,6 @@ needsRouter.get("/matches", requireAuth, requireRole("FISHERFOLK"), async (req, 
   const { userId } = res.locals.auth as { userId: string };
   const catchId = typeof req.query.catchId === "string" ? req.query.catchId : "";
 
-  // CHANGED: also load the species, so we can compare local names
   const found = await prisma.catchBatch.findUnique({
     where: { id: catchId },
     include: { species: true },
@@ -92,12 +91,20 @@ needsRouter.get("/matches", requireAuth, requireRole("FISHERFOLK"), async (req, 
     res.status(409).json({ error: "This catch already has an outcome" });
     return;
   }
+  // a catch with a confirmed or completed order cannot take another offer, so there is nothing to scan for
+  const hasOrder = await prisma.order.findFirst({
+    where: { catchId, status: { in: ["CONFIRMED", "COMPLETED"] } },
+  });
+  if (hasOrder) {
+    res.status(409).json({ error: "This catch already has an order" });
+    return;
+  }
 
   const me = await prisma.user.findUnique({ where: { id: userId } });
   const myArea = (me?.barangay ?? "").toLowerCase();
 
   const needs = await prisma.buyerNeed.findMany({
-    // CHANGED: match the same species OR any species that shares a local name
+    // match the same species OR any species that shares a local name
     // (the three scads are all "Galunggong", so a Galunggong need fits any of them)
     where: {
       status: "OPEN",

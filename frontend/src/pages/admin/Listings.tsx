@@ -8,7 +8,10 @@ import { Chip, Empty, PageTitle, Pills, RiskBuoy, RiskTag, SearchBox } from './u
 const RISKS: [Risk, string][] = [['crit', 'Critical'], ['high', 'High'], ['mod', 'Moderate'], ['low', 'Low']]
 
 const placeOf = (town: string): Place =>
-  town === 'Batangas City' ? 'Batangas Bay' : town === 'Calatagan' ? 'Calatagan coast' : town === 'Taal Lake' ? 'Taal Lake' : 'All Batangas'
+  ['Balayan', 'Calaca', 'Lemery', 'Taal'].includes(town) ? 'Balayan Bay'
+  : town === 'Calatagan' ? 'Calatagan coast'
+  : ['Nasugbu', 'Lian', 'Tuy'].includes(town) ? 'Nasugbu coast'
+  : 'All 1st District'
 const statusTone = (s: string) => (s === 'Sold' || s.startsWith('Accepted') ? 'ok' : s === 'No response' ? 'wait' : 'info')
 
 export default function Listings() {

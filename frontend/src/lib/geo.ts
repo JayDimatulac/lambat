@@ -2,7 +2,8 @@
 // Town-level only: two people in the same town are shown about 0.5 km apart.
 type LL = [number, number]
 
-// Approximate town centers along the Batangas coast. Add your own towns or barangays here.
+
+//  Town centers: Batangas' 1st district, the western coast (1 city and 7 municipalities).
 const PLACES: Record<string, LL> = {
   Nasugbu: [14.0722, 120.6319],
   Lian: [14.0389, 120.6542],
@@ -12,13 +13,6 @@ const PLACES: Record<string, LL> = {
   Calaca: [13.9333, 120.8133],
   Lemery: [13.8833, 120.9167],
   Taal: [13.8761, 120.9239],
-  'San Luis': [13.8556, 120.9406],
-  Bauan: [13.7917, 121.0083],
-  'Batangas City': [13.7565, 121.0583],
-  Mabini: [13.7333, 120.9],
-  Lobo: [13.65, 121.2],
-  Rosario: [13.845, 121.205],
-  'San Juan': [13.8264, 121.3964],
 }
 export const TOWNS = Object.keys(PLACES)
 const BASE = PLACES.Balayan
@@ -27,6 +21,12 @@ const BASE = PLACES.Balayan
 export const townOf = (name?: string) => {
   const k = (name ?? '').toLowerCase()
   return TOWNS.find((t) => k.includes(t.toLowerCase())) ?? ''
+}
+
+/* Real coordinates of the known town in a place name, or null. Unlike locate(), this never makes up a spot. */
+export const knownCoords = (name?: string): LL | null => {
+  const town = townOf(name)
+  return town ? PLACES[town] : null
 }
 
 const hash = (s: string) => {

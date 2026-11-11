@@ -105,7 +105,9 @@ export default function NotificationsMenu() {
       })
 
     // Strong wind later today
-    const strong = windWindow(forecast.hours)
+    // only from the real forecast, and only the hours still ahead
+    const nowH = new Date().getHours()
+    const strong = forecast.live ? windWindow(forecast.hours.filter((x) => x.h >= nowH)) : null
     if (strong) {
       list.push({
         id: `wind:${forecast.week[0]?.date.toDateString() ?? 'today'}`,
@@ -116,7 +118,7 @@ export default function NotificationsMenu() {
       })
     }
     return list
-  }, [catches, needs, offers, user.id, forecast.hours, forecast.week, lang, t])
+  }, [catches, needs, offers, user.id, forecast.hours, forecast.week, forecast.live, lang, t])
 
   const unread = notes.filter((n) => !read.includes(n.id)).length
 

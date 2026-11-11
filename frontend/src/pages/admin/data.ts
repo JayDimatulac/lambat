@@ -1,7 +1,7 @@
 export type Risk = 'low' | 'mod' | 'high' | 'crit'
 export type ListingType = 'Find buyer' | 'Quick sale' | 'Redistribute'
 export type AdvisoryType = 'Weather / sea condition' | 'Spoilage alert' | 'Market update'
-export type Place = 'Batangas Bay' | 'Calatagan coast' | 'Taal Lake' | 'All Batangas'
+export type Place = 'Balayan Bay' | 'Calatagan coast' | 'Nasugbu coast' | 'All 1st District'
 export type Sev = 'calm' | 'watch' | 'warning'
 export type Draft = { text: string; type: AdvisoryType; place: Place; sev: Sev }
 export type Ctx = { toast: (msg: string) => void }
@@ -37,16 +37,16 @@ export const RISK_MIX: [Risk, number, string][] = [
   ['high', 11, 'var(--color-risk-high-line)'], ['crit', 3, 'var(--color-risk-critical-line)'],
 ]
 export const SPECIES: [string, number][] = [['Tamban', 420], ['Galunggong', 350], ['Alumahan', 270], ['Bangus', 190], ['Pusit', 120]]
-export const TOWNS: [string, number][] = [['Batangas City', 16], ['Lemery', 13], ['Calatagan', 9], ['Nasugbu', 7], ['Taal Lake', 4]]
+export const TOWNS: [string, number][] = [['Calaca', 16], ['Lemery', 13], ['Calatagan', 9], ['Nasugbu', 7], ['Taal', 4]]
 
 export type Listing = { id: number; fish: string; kg: number; fisher: string; town: string; left: string; risk: Risk; type: ListingType; status: string }
 export const LISTINGS: Listing[] = [
-  { id: 1, fish: 'Tamban', kg: 15, fisher: 'Mang Ramon', town: 'Batangas City', left: '3–5 hrs', risk: 'high', type: 'Quick sale', status: 'No response' },
+  { id: 1, fish: 'Tamban', kg: 15, fisher: 'Mang Ramon', town: 'Calaca City', left: '3–5 hrs', risk: 'high', type: 'Quick sale', status: 'No response' },
   { id: 2, fish: 'Galunggong', kg: 12, fisher: 'Mang Ramon', town: 'Lemery', left: '8–12 hrs', risk: 'mod', type: 'Find buyer', status: '2 offers' },
   { id: 3, fish: 'Alumahan', kg: 30, fisher: 'Ka Dado', town: 'Nasugbu', left: '< 1 hr', risk: 'crit', type: 'Redistribute', status: 'Waiting for an organization' },
   { id: 4, fish: 'Bangus', kg: 25, fisher: 'Mang Ramon', town: 'Calatagan', left: '18–24 hrs', risk: 'low', type: 'Find buyer', status: '1 offer' },
   { id: 5, fish: 'Tamban', kg: 60, fisher: 'Aling Nena', town: 'Lian', left: '2–4 hrs', risk: 'high', type: 'Redistribute', status: 'Accepted by an organization' },
-  { id: 6, fish: 'Pusit', kg: 8, fisher: 'Mang Ramon', town: 'Taal Lake', left: '—', risk: 'low', type: 'Find buyer', status: 'Sold' },
+  { id: 6, fish: 'Pusit', kg: 8, fisher: 'Mang Ramon', town: 'Taal', left: '—', risk: 'low', type: 'Find buyer', status: 'Sold' },
 ]
 export const LISTING_TYPES: ListingType[] = ['Find buyer', 'Quick sale', 'Redistribute']
 
@@ -60,8 +60,8 @@ export const SHELF_LIFE: { fish: string; full: number; light: number; none: numb
 ]
 
 export const ADVISORY_TYPES: AdvisoryType[] = ['Weather / sea condition', 'Spoilage alert', 'Market update']
-export const PLACES: Place[] = ['Batangas Bay', 'Calatagan coast', 'Taal Lake', 'All Batangas']
-export const REACH: Record<Place, number> = { 'Batangas Bay': 1246, 'Calatagan coast': 506, 'Taal Lake': 388, 'All Batangas': 2140 }
+export const PLACES: Place[] = ['Balayan Bay', 'Calatagan coast', 'Nasugbu coast', 'All 1st District']
+export const REACH: Record<Place, number> = { 'Balayan Bay': 1246, 'Calatagan coast': 506, 'Nasugbu coast': 388, 'All 1st District': 2140 }
 export const TEMPLATES: Record<AdvisoryType, string[]> = {
   'Weather / sea condition': ['Strong wind until 6:00 PM. Stay near shore. For planning only.', 'High waves expected this afternoon. Check the sea before you leave.'],
   'Spoilage alert': ['Hot day ahead. Add ice early to keep your catch fresh.', 'Catch is spoiling fast. Sell or hand over within the hour.'],
@@ -70,7 +70,7 @@ export const TEMPLATES: Record<AdvisoryType, string[]> = {
 
 export type Sent = { title: string; meta: string; reach: string; when: string; sev: Sev }
 export const SENT: Sent[] = [
-  { title: 'Strong wind warning for Batangas Bay', meta: 'Weather / sea condition · Batangas Bay', reach: '214 SMS · 1,032 app', when: 'Today, 6:00 AM', sev: 'warning' },
+  { title: 'Strong wind warning for Balayan Bay', meta: 'Weather / sea condition · Balayan Bay', reach: '214 SMS · 1,032 app', when: 'Today, 6:00 AM', sev: 'warning' },
   { title: 'High waves along the Calatagan coast', meta: 'Weather / sea condition · Calatagan coast', reach: '96 SMS · 410 app', when: 'Yesterday', sev: 'watch' },
-  { title: 'Tamban price dropped by ₱3/kg', meta: 'Market update · All Batangas', reach: '0 SMS · 880 app', when: '2 days ago', sev: 'calm' },
+  { title: 'Tamban price dropped by ₱3/kg', meta: 'Market update · All 1st District', reach: '0 SMS · 880 app', when: '2 days ago', sev: 'calm' },
 ]

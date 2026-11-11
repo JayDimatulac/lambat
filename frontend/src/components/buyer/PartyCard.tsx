@@ -17,7 +17,7 @@ function MatchRing({ score }: { score: number }) {
         <circle cx="24" cy="24" r="20" fill="none" strokeWidth="5" style={{ stroke: 'var(--color-line)' }} />
         <circle cx="24" cy="24" r="20" fill="none" strokeWidth="5" strokeLinecap="round" strokeDasharray={`${(len * score) / 100} ${len}`} style={{ stroke: 'var(--color-teal)' }} />
       </svg>
-      <span className="absolute inset-0 grid place-items-center font-numeral text-base font-extrabold">{score}</span>
+      <span className="absolute inset-0 grid place-items-center font-numeral text-base font-bold">{score}</span>
     </div>
   )
 }
@@ -57,9 +57,9 @@ export default function PartyCard({ m, kg, best, selected, offered, onOffer, onS
 
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           {m.price !== undefined ? (
-            <p className="font-numeral text-3xl font-extrabold leading-none text-teal">₱{m.price}<span className="text-base font-bold text-ink-soft">/kg</span></p>
+            <p className="font-numeral text-3xl font-bold leading-none text-teal">₱{m.price}<span className="text-base font-bold text-ink-soft">/kg</span></p>
           ) : (
-            <p className="font-numeral text-3xl font-extrabold leading-none text-coral">{t('buyers.free')}</p>
+            <p className="font-numeral text-3xl font-bold leading-none text-coral">{t('buyers.free')}</p>
           )}
           <p className="text-sm font-semibold">{t('buyers.eta', { n: m.travelMins })} · {p.km} km</p>
         </div>

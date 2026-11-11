@@ -137,7 +137,7 @@ export default function Buyers() {
   if (!c) {
     return (
       <div className="space-y-3">
-        <h2 className="text-[28px]">{t('nav.buyers')}</h2>
+        <h2 className="text-[26px]">{t('nav.buyers')}</h2>
         {finish}
         <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('buyers.empty')}</p>
       </div>
@@ -164,7 +164,7 @@ export default function Buyers() {
     <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
       <div className="flex items-center justify-between gap-2 px-4 pt-3 text-white">
         <h2 className="font-numeral text-lg font-bold text-white">{t('buyers.radar')}</h2>
-        <button type="button" onClick={scan} disabled={loading} className="min-h-9 rounded-full bg-coral px-3 text-xs font-bold text-deep disabled:opacity-60">
+        <button type="button" onClick={scan} disabled={loading} className="min-h-11 rounded-full bg-coral px-3 text-xs font-bold text-deep disabled:opacity-60">
           {loading ? 'Scanning…' : 'Scan again'}
         </button>
       </div>

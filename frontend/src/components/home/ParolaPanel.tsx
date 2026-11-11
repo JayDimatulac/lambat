@@ -138,7 +138,7 @@ export default function ParolaPanel({ urgent, next }: Props) {
           <div className="flex items-start justify-between gap-2">
             <h2 className={`font-numeral text-[22px] font-bold leading-tight ${night ? 'text-white' : 'text-deep'}`}>{t('home.actions')}</h2>
             {alert && (
-              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-coral font-numeral text-base font-extrabold text-deep">{urgent.length}</span>
+              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-coral font-numeral text-base font-bold text-deep">{urgent.length}</span>
             )}
           </div>
           <p className={`mt-1 text-sm leading-snug ${night ? 'text-white' : 'text-deep'}`}>{alert ? t('home.urgent') : t('home.calm')}</p>

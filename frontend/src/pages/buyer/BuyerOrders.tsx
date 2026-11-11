@@ -23,7 +23,7 @@ export default function BuyerOrders() {
           <p className="text-sm text-ink-soft">{o.fisher} · {o.place}</p>
         </div>
         <div className="text-right">
-          <p className="font-numeral text-xl font-extrabold text-teal">₱{o.price}/kg</p>
+          <p className="font-numeral text-xl font-bold text-teal">₱{o.price}/kg</p>
           <p className="text-xs font-semibold text-ink-soft">{b('order.total', { n: (o.price * o.kg).toLocaleString('en-US') })}</p>
         </div>
       </div>
@@ -47,7 +47,7 @@ export default function BuyerOrders() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-[28px]">{b('orders.title')}</h1>
+      <h1 className="text-[26px]">{b('orders.title')}</h1>
       <Segmented<'active' | 'done'> label={b('orders.title')} value={tab} onChange={setTab} options={[{ value: 'active', label: b('orders.active') }, { value: 'done', label: b('orders.done') }]} />
       {list.length === 0 ? <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{b('orders.empty')}</p> : <div className="grid gap-4 md:grid-cols-2">{list.map(card)}</div>}
     </div>

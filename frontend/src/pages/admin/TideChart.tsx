@@ -89,7 +89,7 @@ export default function TideChart() {
       <div className="relative mt-1 h-8">
         {weeks.map((w, i) => (
           <button key={w.label} type="button" aria-pressed={i === idx} onClick={() => setPick(w.label)} style={{ left: `${(x(i) / W) * 100}%` }}
-            className={`absolute top-0 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-1 text-[11px] transition ${i === idx ? 'bg-teal font-bold text-on-accent' : `text-ink-soft hover:bg-seafoam ${i % 2 && n > 4 ? 'max-sm:hidden' : ''}`}`}>
+            className={`absolute top-0 -translate-x-1/2 whitespace-nowrap rounded-full px-2 py-1 text-xs transition ${i === idx ? 'bg-teal font-bold text-on-accent' : `text-ink-soft hover:bg-seafoam ${i % 2 && n > 4 ? 'max-sm:hidden' : ''}`}`}>
             {w.label}
           </button>
         ))}

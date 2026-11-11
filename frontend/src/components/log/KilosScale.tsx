@@ -61,7 +61,7 @@ export function ScaleArt({ kg }: { kg: number }) {
   const needleAngle = angleOf(kg)
 
   return (
-    <svg viewBox="0 0 200 262" className="mx-auto h-[15.75rem] w-auto" role="img" aria-label={`${kg} kg`}>
+    <svg viewBox="0 0 200 262" className="mx-auto h-63 w-auto" role="img" aria-label={`${kg} kg`}>
       <defs>
         <clipPath id="bucket-clip">
           <polygon points="56,192 144,192 130,238 70,238" />
@@ -181,7 +181,7 @@ export default function KilosScaleStep({ draft, set }: { draft: Draft; set: (pat
           <Minus size={24} strokeWidth={2.2} />
         </button>
 
-        <p className="min-w-32 text-center font-serif text-5xl font-bold text-white" aria-live="polite">
+        <p className="min-w-32 text-center font-display text-5xl font-bold text-white" aria-live="polite">
           {kg} <span className="text-xl font-semibold text-[#86c5da]">kg</span>
         </p>
 

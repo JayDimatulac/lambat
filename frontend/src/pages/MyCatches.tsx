@@ -50,7 +50,7 @@ export default function MyCatches() {
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <h2 className="text-[28px]">{t('catches.title')}</h2>
+        <h2 className="text-[26px]">{t('catches.title')}</h2>
         <p className="simple-hide text-sm text-ink-soft">
           {t('catches.summary', { n: active.length, kg, risk: atRisk })}
         </p>

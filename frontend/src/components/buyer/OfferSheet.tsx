@@ -23,12 +23,12 @@ export default function OfferSheet({ l, mode, onClose, onConfirm }: Props) {
           <p className="text-sm font-semibold text-ink-soft">{b('sheet.yourprice')} (₱{l.ask}/kg {b('sheet.asked')})</p>
           <div className="flex items-center justify-between gap-3 rounded-md bg-mint p-3">
             <button type="button" aria-label="-5" onClick={() => step(-5)} className="grid size-14 place-items-center rounded-full border-2 border-teal text-teal"><Minus size={24} strokeWidth={2} aria-hidden /></button>
-            <p className="font-numeral text-4xl font-extrabold text-teal">₱{p}<span className="text-lg text-ink-soft">/kg</span></p>
+            <p className="font-numeral text-4xl font-bold text-teal">₱{p}<span className="text-lg text-ink-soft">/kg</span></p>
             <button type="button" aria-label="+5" onClick={() => step(5)} className="grid size-14 place-items-center rounded-full border-2 border-teal text-teal"><Plus size={24} strokeWidth={2} aria-hidden /></button>
           </div>
         </div>
       ) : (
-        <p className="font-numeral text-4xl font-extrabold text-teal">₱{l.ask}<span className="text-lg text-ink-soft">/kg</span></p>
+        <p className="font-numeral text-4xl font-bold text-teal">₱{l.ask}<span className="text-lg text-ink-soft">/kg</span></p>
       )}
       <p className="text-xl font-bold">{b('offer.total', { n: (p * l.kg).toLocaleString('en-US') })}</p>
       {mode === 'offer' && <Disclaimer>{b('sheet.demo')}</Disclaimer>}

@@ -67,7 +67,7 @@ export default function OfferCard({ l, now, match, onBuy, onOffer }: Props) {
         {match && <p className="inline-flex rounded-full bg-seafoam px-3 py-1 text-xs font-bold text-teal">{b('offer.match')}</p>}
         <IceMeter hours={hrs} fill={RISK[risk].fill} />
         <div className="flex flex-wrap items-baseline gap-x-4">
-          <p className="font-numeral text-3xl font-extrabold leading-none text-teal">₱{l.ask}<span className="text-base font-bold text-ink-soft">/kg</span></p>
+          <p className="font-numeral text-3xl font-bold leading-none text-teal">₱{l.ask}<span className="text-base font-bold text-ink-soft">/kg</span></p>
           <p className="text-sm font-semibold">{b('offer.total', { n: (l.ask * l.kg).toLocaleString('en-US') })}</p>
         </div>
         <Fairness ask={l.ask} usual={usual} />

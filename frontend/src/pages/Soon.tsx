@@ -11,7 +11,7 @@ export default function Soon() {
   return (
     <AuthLayout>
       <div className="space-y-5">
-        <h1 className="font-numeral text-[30px] font-bold leading-tight">{t('org.soon')}</h1>
+        <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('org.soon')}</h1>
         <button type="button" onClick={() => setAsk(true)} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-full border-2 border-teal text-lg font-semibold text-teal">
           <LogOut size={22} strokeWidth={1.8} aria-hidden />{t('auth.logout')}
         </button>

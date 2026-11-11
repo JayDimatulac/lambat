@@ -55,7 +55,7 @@ export default function Profile() {
             {user.initials}
           </span>
           <div className="min-w-0 flex-1">
-            <h2 className="font-numeral text-[28px] font-bold leading-tight text-white">{user.name}</h2>
+            <h2 className="font-numeral text-[26px] font-semibold leading-tight text-white">{user.name}</h2>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-white/85">
               <MapPin size={16} strokeWidth={1.8} aria-hidden />
               {f?.landing || user.barangay}

@@ -77,7 +77,7 @@ export default function NeedsBoard() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-[28px]">What buyers need</h1>
+        <h1 className="text-[26px]">What buyers need</h1>
         <p className="text-ink-soft">Offer your catch to a buyer who is looking for it.</p>
       </div>
       {open.length === 0 ? (

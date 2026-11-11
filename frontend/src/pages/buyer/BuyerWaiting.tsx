@@ -34,7 +34,7 @@ export default function BuyerWaiting() {
       <div className="space-y-5">
         <AnchorScene tone={rejected ? 'no' : 'wait'} />
         <div>
-          <h1 className="font-numeral text-[28px] font-bold leading-tight">{rejected ? b('wait.no.title') : b('wait.title')}</h1>
+          <h1 className="font-numeral text-[26px] font-semibold leading-tight">{rejected ? b('wait.no.title') : b('wait.title')}</h1>
           {!rejected && <p className="mt-2 text-lg">{b('wait.text')}</p>}
         </div>
 

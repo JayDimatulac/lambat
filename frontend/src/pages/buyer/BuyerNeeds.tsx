@@ -56,7 +56,7 @@ const Stepper = ({ value, onChange, step, min, max, prefix = '', suffix = '', em
         <Minus size={22} strokeWidth={2} aria-hidden />
       </button>
 
-      <label className="flex min-w-0 flex-1 items-center justify-center gap-1 font-numeral text-3xl font-extrabold text-teal">
+      <label className="flex min-w-0 flex-1 items-center justify-center gap-1 font-numeral text-3xl font-bold text-teal">
         {shown && prefix}
         <input
           type="text"
@@ -172,7 +172,7 @@ export default function BuyerNeeds() {
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 className="text-[28px]">{b('needs.title')}</h1>
+          <h1 className="text-[26px]">{b('needs.title')}</h1>
           <p className="text-ink-soft">{b('needs.sub')}</p>
         </div>
         <button type="button" onClick={() => setParams({ new: '1' })} className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-coral px-4 text-sm font-semibold text-deep"><KnotPlusIcon size={20} />{b('needs.new')}</button>

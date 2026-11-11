@@ -9,7 +9,7 @@ export const Card = ({ children, className = '' }: { children: ReactNode; classN
 
 export const PageTitle = ({ title, sub }: { title: string; sub: string }) => (
   <div className="mb-5">
-    <h1 className="font-numeral text-[30px] font-bold leading-tight">{title}</h1>
+    <h1 className="font-numeral text-[26px] font-semibold leading-tight">{title}</h1>
     <p className="mt-1 text-ink-soft">{sub}</p>
   </div>
 )

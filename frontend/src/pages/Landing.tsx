@@ -61,7 +61,7 @@ export default function Landing() {
       <form onSubmit={submit} className="space-y-5" noValidate>
         <div>
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-coral-dark">{t('auth.eyebrow')}</p>
-          <h1 className="font-numeral text-[32px] font-bold leading-tight">{t('auth.welcome')}</h1>
+          <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('auth.welcome')}</h1>
           <p className="mt-1 text-ink-soft">{t('auth.login.sub')}</p>
         </div>
         <TextField

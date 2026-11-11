@@ -1,3 +1,5 @@
+import SkyArc from '../components/catch/SkyArc'
+import { dayLabel } from '../lib/skyArc'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Waves, X } from 'lucide-react'

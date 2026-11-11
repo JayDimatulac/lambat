@@ -40,7 +40,7 @@ export default function BuyerHome() {
 
   const stat = (n: string | number, label: string, hot?: boolean) => (
     <div className={`rounded-lg border p-3 text-center ${hot ? 'border-coral bg-card' : 'border-line bg-card'}`}>
-      <p className={`font-numeral text-3xl font-extrabold leading-none ${hot ? 'text-coral-dark' : 'text-teal'}`}>{n}</p>
+      <p className={`font-numeral text-3xl font-bold leading-none ${hot ? 'text-coral-dark' : 'text-teal'}`}>{n}</p>
       <p className="mt-1 text-xs font-semibold text-ink-soft">{label}</p>
     </div>
   )

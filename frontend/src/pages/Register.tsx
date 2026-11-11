@@ -130,7 +130,7 @@ export default function Register() {
       <AuthLayout>
         <div className="space-y-5 text-center">
           <span className="mx-auto grid size-20 place-items-center rounded-full bg-seafoam text-teal"><Clock size={40} strokeWidth={1.8} aria-hidden /></span>
-          <h1 className="font-numeral text-[30px] font-bold leading-tight">{t('reg.done.title')}</h1>
+          <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('reg.done.title')}</h1>
           <p className="text-lg">{t('reg.done.text')}</p>
           <Link to="/" className="flex min-h-14 w-full items-center justify-center rounded-full bg-coral text-lg font-semibold text-deep shadow-raised">{t('reg.done.btn')}</Link>
         </div>
@@ -160,19 +160,19 @@ export default function Register() {
       <div key={step} className="anim-rise space-y-5">
         {step === 0 && (
           <>
-            <h1 className="font-numeral text-[30px] font-bold leading-tight">{t('reg.who')}</h1>
+            <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('reg.who')}</h1>
             <div role="radiogroup" aria-label={t('reg.who')} className="space-y-3">
               <button type="button" role="radio" aria-checked={role === 'fisherfolk'} onClick={() => setRole('fisherfolk')} className={card(role === 'fisherfolk')}>
                 <span className="grid size-16 shrink-0 place-items-center rounded-full bg-coral text-deep"><BangkaIcon size={44} /></span>
                 <span>
-                  <span className="block font-numeral text-[26px] font-bold leading-tight">{t('reg.fisher')}</span>
+                  <span className="block font-numeral text-[26px] font-semibold leading-tight">{t('reg.fisher')}</span>
                   <span className="block text-base leading-snug">{t('reg.fisher.sub')}</span>
                 </span>
               </button>
               <button type="button" role="radio" aria-checked={role === 'buyer'} onClick={() => setRole('buyer')} className={card(role === 'buyer')}>
                 <span className="grid size-16 shrink-0 place-items-center rounded-full bg-teal text-on-accent"><PierIcon size={40} /></span>
                 <span>
-                  <span className="block font-numeral text-[26px] font-bold leading-tight">{t('reg.buyer')}</span>
+                  <span className="block font-numeral text-[26px] font-semibold leading-tight">{t('reg.buyer')}</span>
                   <span className="block text-base leading-snug">{t('reg.buyer.sub')}</span>
                   <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-mint px-2.5 py-1 text-xs font-bold"><Clock size={14} strokeWidth={2} aria-hidden />{t('reg.buyer.tag')}</span>
                 </span>
@@ -185,7 +185,7 @@ export default function Register() {
 
         {step === 1 && (
           <>
-            <h1 className="font-numeral text-[30px] font-bold leading-tight">{t('reg.basics')}</h1>
+            <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('reg.basics')}</h1>
             <TextField label={t('reg.name')} value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" error={errors.name && t(errors.name)} />
             <TextField label={t('reg.mobile')} hint={t('reg.mobile.hint')} value={mobile} onChange={(e) => setMobile(e.target.value)} inputMode="tel" autoComplete="tel" placeholder={t('auth.id.ph')} error={errors.mobile && t(errors.mobile)} />
             <TextField label={t('reg.barangay')} value={barangay} onChange={(e) => setBarangay(e.target.value)} placeholder={t('reg.barangay.ph')} error={errors.barangay && t(errors.barangay)} />
@@ -200,7 +200,7 @@ export default function Register() {
 
         {step === 2 && role === 'fisherfolk' && (
           <>
-            <h1 className="font-numeral text-[30px] font-bold leading-tight">{t('reg.fisher.title')}</h1>
+            <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('reg.fisher.title')}</h1>
             <div className="space-y-2">
               <p className="text-lg font-semibold">{t('reg.landing')}</p>
               <p className="text-sm text-ink-soft">{t('reg.landing.hint')}</p>
@@ -239,7 +239,7 @@ export default function Register() {
 
         {step === 2 && role === 'buyer' && (
           <>
-            <h1 className="font-numeral text-[30px] font-bold leading-tight">{t('reg.buyer.title')}</h1>
+            <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('reg.buyer.title')}</h1>
             <TextField label={t('reg.biz')} value={biz} onChange={(e) => setBiz(e.target.value)} error={errors.biz && t(errors.biz)} />
             <div className="space-y-2">
               <p className="text-lg font-semibold">{t('reg.biztype')}</p>

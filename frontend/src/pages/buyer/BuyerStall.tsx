@@ -52,7 +52,7 @@ export default function BuyerStall() {
 
       <div className="grid grid-cols-3 gap-3 text-center">
         {[[done.length, b('stall.stats.orders')], [kg(done), b('stall.stats.kg')], [kg(rescued), b('stall.stats.rescued')]].map(([n, label]) => (
-          <div key={label as string} className="rounded-lg border border-line bg-card p-3"><p className="font-numeral text-3xl font-extrabold text-teal">{n}</p><p className="text-xs font-semibold text-ink-soft">{label}</p></div>
+          <div key={label as string} className="rounded-lg border border-line bg-card p-3"><p className="font-numeral text-3xl font-bold text-teal">{n}</p><p className="text-xs font-semibold text-ink-soft">{label}</p></div>
         ))}
       </div>
 

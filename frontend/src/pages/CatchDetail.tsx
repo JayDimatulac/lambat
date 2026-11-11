@@ -69,7 +69,7 @@ export default function CatchDetail() {
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h1 className="font-display text-[28px] font-semibold leading-tight text-white">{c.species}</h1>
+              <h1 className="font-display text-[26px] font-semibold leading-tight text-white">{c.species}</h1>
               <p className="text-sm text-white">{c.kg} kg · {c.place} · {agoText(c.hoursAgo, t)}</p>
             </div>
             <RiskBadge level={c.risk} />

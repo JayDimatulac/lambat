@@ -88,7 +88,7 @@ export default function ForgotPassword() {
       {step === 'mobile' && (
         <form onSubmit={sendCode} className="space-y-5" noValidate>
           <div>
-            <h1 className="font-numeral text-[32px] font-bold leading-tight">Forgot your password?</h1>
+            <h1 className="font-numeral text-[26px] font-semibold leading-tight">Forgot your password?</h1>
             <p className="mt-1 text-ink-soft">Enter your mobile number. We'll text you a 6-digit code.</p>
           </div>
           <TextField
@@ -112,7 +112,7 @@ export default function ForgotPassword() {
       {step === 'code' && (
         <form onSubmit={checkCode} className="space-y-5" noValidate>
           <div>
-            <h1 className="font-numeral text-[32px] font-bold leading-tight">Enter the code</h1>
+            <h1 className="font-numeral text-[26px] font-semibold leading-tight">Enter the code</h1>
             <p className="mt-1 text-ink-soft">
               If this number has an account, we sent a 6-digit code to it. It expires in 5 minutes.
             </p>
@@ -145,7 +145,7 @@ export default function ForgotPassword() {
       {step === 'password' && (
         <form onSubmit={savePassword} className="space-y-5" noValidate>
           <div>
-            <h1 className="font-numeral text-[32px] font-bold leading-tight">Choose a new password</h1>
+            <h1 className="font-numeral text-[26px] font-semibold leading-tight">Choose a new password</h1>
             <p className="mt-1 text-ink-soft">Use 8 or more characters.</p>
           </div>
           <PasswordField label="New password" value={pw} onChange={(e) => setPw(e.target.value)} autoComplete="new-password" />
@@ -166,7 +166,7 @@ export default function ForgotPassword() {
       {step === 'done' && (
         <div className="space-y-5 text-center">
           <CheckCircle2 size={56} strokeWidth={1.6} className="mx-auto text-teal" aria-hidden />
-          <h1 className="font-numeral text-[32px] font-bold leading-tight">Password changed</h1>
+          <h1 className="font-numeral text-[26px] font-semibold leading-tight">Password changed</h1>
           <p className="text-ink-soft">You can now log in with your new password. Other devices were logged out.</p>
           <Link to="/" className={BTN}>
             Go to login

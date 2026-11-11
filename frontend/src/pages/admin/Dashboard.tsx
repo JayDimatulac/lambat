@@ -93,7 +93,7 @@ export default function Dashboard() {
       {/* Hero: the harbor today */}
       <section className="bg-dawn relative overflow-hidden rounded-lg p-5 pb-36 text-white shadow-raised sm:pb-40">
         <p className="text-sm font-medium text-white/90">{date}</p>
-        <h1 className="mt-1 font-numeral text-[30px] font-bold leading-tight">{greet}, {user.shortName}</h1>
+        <h1 className="mt-1 font-numeral text-[26px] font-semibold leading-tight">{greet}, {user.shortName}</h1>
         <p className="mt-1 max-w-md text-white/90">Here is how the harbor looks today.</p>
         <HarborScene />
       </section>

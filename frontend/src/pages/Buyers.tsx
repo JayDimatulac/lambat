@@ -137,7 +137,7 @@ export default function Buyers() {
   if (!c) {
     return (
       <div className="space-y-3">
-        <h2 className="text-[28px]">{t('nav.buyers')}</h2>
+        <h2 className="text-[26px]">{t('nav.buyers')}</h2>
         {finish}
         <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('buyers.empty')}</p>
       </div>

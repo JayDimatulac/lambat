@@ -56,7 +56,7 @@ export default function NetTally({ sold, shared, lost }: { sold: Share; shared: 
     <section className="overflow-hidden rounded-lg border border-line bg-card p-5 shadow-rest">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">{t('home.week')}</p>
       <div className="mt-2 flex items-end gap-4">
-        <p className="font-numeral text-[72px] font-extrabold leading-[0.8] text-teal">
+        <p className="font-numeral text-[72px] font-bold leading-[0.8] text-teal">
           {pct}
           <span className="text-3xl">%</span>
         </p>
@@ -95,7 +95,7 @@ export default function NetTally({ sold, shared, lost }: { sold: Share; shared: 
             <div className="mt-1 flex items-center gap-2">
               <Icon size={30} className={color} />
               <div>
-                <p className="font-numeral text-3xl font-extrabold leading-none">{share.n}</p>
+                <p className="font-numeral text-3xl font-bold leading-none">{share.n}</p>
                 <p className="mt-0.5 text-xs font-medium text-ink-soft">{Math.round(share.kg)} kg</p>
               </div>
             </div>

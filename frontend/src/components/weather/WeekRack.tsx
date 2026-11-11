@@ -41,7 +41,7 @@ export default function WeekRack({ week, selected, onSelect }: { week: Day[]; se
                 <Icon size={24} strokeWidth={1.8} aria-hidden />
               </span>
               <span className="block space-y-1.5 px-3 py-2.5">
-                <span className="block font-numeral text-2xl font-extrabold leading-none">{d.tMax}°<span className="text-sm font-semibold text-ink-soft"> {d.tMin}°</span></span>
+                <span className="block font-numeral text-2xl font-bold leading-none">{d.tMax}°<span className="text-sm font-semibold text-ink-soft"> {d.tMin}°</span></span>
                 <span className="flex items-center gap-1 text-xs font-semibold"><Droplets size={14} strokeWidth={1.8} className="text-teal" aria-hidden />{d.rain}%</span>
                 <span className="flex items-center gap-1 text-xs font-semibold"><PennantIcon size={14} className="text-teal" />{d.wind} km/h</span>
                 <span className="flex items-center gap-1 text-xs font-semibold"><Waves size={14} strokeWidth={1.8} className="text-teal" aria-hidden />{d.wave} m</span>

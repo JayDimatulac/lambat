@@ -98,7 +98,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
               <span className="size-1.5 rounded-full bg-coral" aria-hidden />
               {c.eyebrow}
             </p>
-            <h2 className={`font-display text-[26px] font-semibold leading-tight lg:text-6xl lg:leading-[1.05] ${ink}`}>
+            <h2 className={`font-display text-[26px] font-semibold leading-tight lg:text-5xl lg:leading-[1.05] ${ink}`}>
               {c.head[0]} <br className="hidden lg:block" />
               {c.head[1]}
             </h2>

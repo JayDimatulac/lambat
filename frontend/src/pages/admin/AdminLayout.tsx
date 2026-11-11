@@ -116,7 +116,7 @@ export default function AdminLayout() {
             </span>
             <span className={`flex flex-col leading-none ${label}`}>
               <span className="font-display text-xl font-bold tracking-widest text-navy">LAMBAT</span>
-              <span className="mt-1 text-[11px] font-bold tracking-[0.25em] text-teal">ADMIN</span>
+              <span className="mt-1 text-xs font-bold tracking-[0.25em] text-teal">ADMIN</span>
             </span>
           </Link>
 

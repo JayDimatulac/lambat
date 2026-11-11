@@ -106,7 +106,7 @@ export default function BuyerNotificationsMenu() {
       >
         <Bell size={22} strokeWidth={1.8} aria-hidden className={unread ? 'anim-ring' : ''} />
         {unread > 0 && (
-          <span aria-hidden="true" className="absolute right-1 top-1 grid min-w-5 place-items-center rounded-full bg-coral px-1 text-[11px] font-bold leading-5 text-deep ring-2 ring-card">
+          <span aria-hidden="true" className="absolute right-1 top-1 grid min-w-5 place-items-center rounded-full bg-coral px-1 text-xs font-bold leading-5 text-deep ring-2 ring-card">
             {unread}
           </span>
         )}

@@ -9,6 +9,7 @@ import LangToggle from './LangToggle'
 import MenuSheet from './MenuSheet'
 import NotificationsMenu from './NotificationsMenu'
 import LogoutSheet from '../auth/LogoutSheet'
+import Logo from '../Logo'
 
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
@@ -76,7 +77,7 @@ function Rail() {
       >
         {/* Brand: the emblem in a coral ring, like the circle in the logo */}
         <Link to="/home" aria-label="LAMBAT" className="mb-5 flex h-12 shrink-0 items-center gap-3">
-          <img src="/lambat-logo.png" alt="" className="size-12 shrink-0 rounded-full bg-deep object-cover object-center ring-2 ring-coral/80 ring-offset-2 ring-offset-card" />
+          <Logo size={48} className="size-12" />
           <span className={`font-display text-lg font-bold tracking-wider text-navy ${label}`}>LAMBAT</span>
         </Link>
 
@@ -84,10 +85,12 @@ function Rail() {
         <Link
           to="/catches/new"
           aria-label={t('page.log')}
-          className="flex h-12 shrink-0 items-center gap-3 rounded-full bg-coral pl-3 pr-5 font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95"
+          className="flex h-12 w-full shrink-0 items-center overflow-hidden rounded-full bg-coral font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95"
         >
-          <KnotPlusIcon size={24} className="shrink-0" />
-          <span className={label}>{t('page.log')}</span>
+          <span className="grid size-12 shrink-0 place-items-center">
+            <KnotPlusIcon size={24} />
+          </span>
+          <span className={`pr-5 ${label}`}>{t('page.log')}</span>
         </Link>
 
         <div aria-hidden="true" className="my-4 h-px shrink-0 bg-line" />
@@ -295,7 +298,7 @@ export default function AppShell() {
             <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
               <Link to="/home" aria-label="LAMBAT" className="flex items-center gap-2.5 lg:hidden">
-                <img src="/lambat-logo.png" alt="" className="size-10 rounded-full bg-deep object-cover object-center ring-2 ring-coral/70" />
+                <Logo size={40} className="size-10" />
                 <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
               </Link>
               <div className="hidden items-center gap-3 lg:flex">

@@ -210,27 +210,71 @@ export default function Buyers() {
 
   const isLive = kind === 'buyer'
 
+  const radarPanel = view === 'radar' ? (isLive ? liveRadar : sampleRadar) : null
+
+  // the answer side: the buyer you can offer to, or the list of them
+  const results = isLive ? (
+    inRange.length === 0 ? (
+      <p className="rounded-lg border border-dashed border-line bg-card p-6 text-center text-sm font-semibold text-ink-soft">
+        {lives.length === 0
+          ? `No buyer is asking for ${c.species} right now. Keep this page open, the radar scans again every 15 seconds.`
+          : `No buyer within ${range} km. Try a wider range.`}
+      </p>
+    ) : view === 'radar' && selectedLive ? (
+      <>
+        <NeedRow key={`${selectedLive.need.id}:${c.id}`} live={selectedLive} c={c} offers={myOffers} onSent={reloadOffers} selected />
+        {inRange.length > 1 && (
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-ink-soft">Other buyers</p>
+            <div className="flex flex-wrap gap-2">
+              {inRange.filter((l) => l.need.id !== selectedLive.need.id).map((l) => (
+                <Chip key={l.need.id} active={false} onClick={() => setPickedNeed(l.need.id)}>{buyerName(l.need)} · {l.km.toFixed(1)} km</Chip>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    ) : (
+      inRange.map((l) => <NeedRow key={`${l.need.id}:${c.id}`} live={l} c={c} offers={myOffers} onSent={reloadOffers} />)
+    )
+  ) : view === 'radar' && selected ? (
+    <PartyCard m={selected} kg={c.kg} best={selected.party.id === matches.find((m) => m.reachable)?.party.id} selected offered={isOffered(selected.party.id)} onOffer={() => offer(selected.party.id)} />
+  ) : (
+    matches.map((m, i) => (
+      <PartyCard key={m.party.id} m={m} kg={c.kg} best={i === 0 && m.reachable} offered={isOffered(m.party.id)} onOffer={() => offer(m.party.id)} />
+    ))
+  )
+
   return (
-    <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
-      <div className="space-y-4">
-        {finish}
+    <div className="space-y-5">
+      {finish}
+
+      {/* 1. Pick the catch, and see its status, in one card */}
+      <section className="space-y-4 rounded-lg border border-line bg-card p-4 shadow-rest">
         <div className="space-y-2">
           <p className="text-sm font-semibold text-ink-soft">{t('va.pick')}</p>
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
             {active.map((x) => (
               <Chip key={x.id} active={x.id === c.id} onClick={() => { setParams({ catch: x.id }); setPickedNeed(null) }} className="shrink-0">{x.species} · {x.kg} kg</Chip>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center gap-3 rounded-lg bg-seafoam p-3">
+        <div className="flex flex-wrap items-center gap-3 rounded-md bg-seafoam p-3">
           <span className="grid size-11 shrink-0 place-items-center rounded-full bg-card text-teal"><BangkaIcon size={28} /></span>
           <div className="min-w-0 flex-1">
             <p className="font-numeral text-lg font-bold leading-tight">{c.species} · {c.kg} kg</p>
             <p className="text-sm">{c.minsMin > 0 ? `${t('detail.timeleft')}: ${countdownText(c.minsMin)} · ${sellByText(c.hoursMin, lang, t)}` : t('detail.timesup')}</p>
           </div>
+          <Link to={`/catches/${c.id}`} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border-2 border-teal bg-card px-4 text-sm font-semibold text-teal transition hover:bg-mint">
+            {t('va.see')}
+            <ArrowRight size={18} strokeWidth={1.8} aria-hidden />
+          </Link>
         </div>
+      </section>
 
+      {/* 2. How to look: who to sell to, and radar or list */}
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="flex flex-wrap gap-2">
           <Segmented<Kind>
             label={t('nav.buyers')}
@@ -251,52 +295,22 @@ export default function Buyers() {
             ]}
           />
         </div>
-
         <p className="text-sm font-semibold text-ink-soft">
           {isLive ? `${reachableLive} of ${inRange.length} buyers can be reached in time` : t('buyers.summary', { n: reachable })}
         </p>
-        {view === 'radar' && (isLive ? liveRadar : sampleRadar)}
       </div>
 
-      <div className="space-y-4">
-        {isLive ? (
-          <>
-            {inRange.length === 0 ? (
-              <p className="rounded-md border border-dashed border-line bg-card p-6 text-center text-sm text-ink-soft">
-                {lives.length === 0
-                  ? `No buyer is asking for ${c.species} right now. Keep this page open, the radar scans again every 15 seconds.`
-                  : `No buyer within ${range} km. Try a wider range.`}
-              </p>
-            ) : view === 'radar' && selectedLive ? (
-              <>
-                <NeedRow key={`${selectedLive.need.id}:${c.id}`} live={selectedLive} c={c} offers={myOffers} onSent={reloadOffers} selected />
-                {inRange.length > 1 && (
-                  <div className="flex flex-wrap gap-2">
-                    {inRange.filter((l) => l.need.id !== selectedLive.need.id).map((l) => (
-                      <Chip key={l.need.id} active={false} onClick={() => setPickedNeed(l.need.id)}>{buyerName(l.need)} · {l.km.toFixed(1)} km</Chip>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              inRange.map((l) => <NeedRow key={`${l.need.id}:${c.id}`} live={l} c={c} offers={myOffers} onSent={reloadOffers} />)
-            )}
-          </>
-        ) : view === 'radar' && selected ? (
-          <PartyCard m={selected} kg={c.kg} best={selected.party.id === matches.find((m) => m.reachable)?.party.id} selected offered={isOffered(selected.party.id)} onOffer={() => offer(selected.party.id)} />
-        ) : (
-          matches.map((m, i) => (
-            <PartyCard key={m.party.id} m={m} kg={c.kg} best={i === 0 && m.reachable} offered={isOffered(m.party.id)} onOffer={() => offer(m.party.id)} />
-          ))
-        )}
-        {view === 'radar' && (
-          <Link to={`/catches/${c.id}`} className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-teal px-4 text-sm font-semibold text-teal">
-            {t('va.see')}
-            <ArrowRight size={18} strokeWidth={1.8} aria-hidden />
-          </Link>
-        )}
-        {!isLive && <Disclaimer>{t('buyers.note')}</Disclaimer>}
-      </div>
+      {/* 3. The radar beside the answer. In list view the answers sit in a grid. */}
+      {radarPanel ? (
+        <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
+          {radarPanel}
+          <div className="space-y-4">{results}</div>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 md:items-start">{results}</div>
+      )}
+
+      {!isLive && <Disclaimer>{t('buyers.note')}</Disclaimer>}
     </div>
   )
 }

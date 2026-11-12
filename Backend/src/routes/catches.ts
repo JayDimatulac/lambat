@@ -465,8 +465,10 @@ if (!r.ok) {
   const cacheKey = `${found.id}:${ref.id}:${lang}:${a.risk}`;
   let hit = introCache.get(cacheKey);
   if (!hit || Date.now() - hit.at > INTRO_TTL) {
-    hit = { at: Date.now(), value: await explainGuide(ctx) };
-    introCache.set(cacheKey, hit);
+    const value = await explainGuide(ctx);
+    hit = { at: Date.now(), value };
+    // only remember real AI answers, so a busy moment is not stuck for an hour
+    if (value.source === "ai") introCache.set(cacheKey, hit);
   }
 
   res.json({

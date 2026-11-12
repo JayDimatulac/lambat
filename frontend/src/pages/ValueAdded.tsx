@@ -1,6 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { ArrowRight, Lock } from 'lucide-react'
 import PathwayCard from '../components/detail/PathwayCard'
+import ProcessGuide from '../components/detail/ProcessGuide'
 import Chip from '../components/ui/Chip'
 import Disclaimer from '../components/ui/Disclaimer'
 import RiskBadge from '../components/ui/RiskBadge'
@@ -56,7 +57,13 @@ export default function ValueAdded() {
             <>
               {lang === 'fil' && <p className="text-sm text-ink-soft">{t('va.englishnote')}</p>}
               <div className="space-y-4">
-                {result.available.map((p) => <PathwayCard key={`${chosen.id}-${p.id}`} p={p} c={chosen} />)}
+                {result.available.map((p) => (
+                  <div key={`${chosen.id}-${p.id}`} className="space-y-3">
+                    <PathwayCard p={p} c={chosen} />
+                    {/* the server re-checks suitability and sends the verified guide */}
+                    <ProcessGuide catchId={chosen.id} product={p.name} />
+                  </div>
+                ))}
               </div>
             </>
           ) : (

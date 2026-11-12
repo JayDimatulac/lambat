@@ -6,6 +6,10 @@ import type { CatchStatus, RiskLevel } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { assess } from "../lib/engine";
+import {
+  askGuide, buildProcessingContext, checkSuitability, explainGuide, stepText,
+  suitabilityMessage, DISCLAIMER, type GuideIntro, type ProcessingReference,
+} from "../lib/processingGuide";
 
 export const catchesRouter = Router();
 
@@ -378,3 +382,138 @@ catchesRouter.post(
     });
   }
 );
+
+// ---------- Value-Added Processing Guide ----------
+const processingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 30,
+  keyGenerator: (_req, res) => (res.locals.auth as { userId: string }).userId,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Too many questions for now. Please try again later." },
+});
+
+const introCache = new Map<string, { at: number; value: GuideIntro }>();
+const INTRO_TTL = 60 * 60 * 1000;
+
+// loads the catch + verified reference + suitability; shared by the GET and the ask route
+async function loadProcessing(userId: string, catchId: string, product: string) {
+  const found = await prisma.catchBatch.findUnique({ where: { id: catchId }, include: catchInclude });
+if (!found || found.userId !== userId) return { ok: false as const, status: 404 as const };
+if (found.status !== "ACTIVE") return { ok: false as const, status: 409 as const };
+
+  const a = assess(found, found.iceEvents, found.species);
+  const row = await prisma.processingGuide.findFirst({
+    where: { speciesId: found.speciesId, active: true, product: { equals: product, mode: "insensitive" } },
+  });
+  const ref: ProcessingReference | null = row
+    ? {
+        id: row.id,
+        product: row.product,
+        description: row.description,
+        requiresIce: row.requiresIce,
+        allowedRisks: row.allowedRisks.filter((r): r is "LOW" | "MEDIUM" => r !== "HIGH"),
+        equipment: row.equipment,
+        ingredients: row.ingredients,
+        preparation: row.preparation,
+        steps: Array.isArray(row.steps) ? (row.steps as { en: string; fil?: string }[]) : [],
+        safety: row.safety,
+        source: { title: row.sourceTitle, issuer: row.sourceIssuer, version: row.sourceVersion, url: row.sourceUrl },
+        verified: row.verified,
+      }
+    : null;
+    return { ok: true as const, found, a, ref, suitability: checkSuitability(a, ref) };
+}
+
+// View Process: suitability + verified guide (straight from the knowledge base) + AI intro
+catchesRouter.get("/:id/processing", requireAuth, requireRole("FISHERFOLK"), processingLimiter, async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+  const lang = req.query.lang === "fil" ? "fil" : "en";
+  const product = String(req.query.product ?? "").trim().slice(0, 80);
+  if (!product) {
+    res.status(400).json({ error: "product is required" });
+    return;
+  }
+
+  const r = await loadProcessing(userId, String(req.params.id), product);
+if (!r.ok) {
+    res.status(r.status).json({ error: r.status === 404 ? "Catch not found" : "This catch already has an outcome" });
+    return;
+  }
+  const { found, a, ref, suitability } = r;
+  const base = { product, suitability, message: suitabilityMessage(suitability, lang), disclaimer: DISCLAIMER[lang] };
+
+  // not suitable or not verified: no steps, no AI call
+  if (suitability.status !== "SUITABLE" || !ref) {
+    res.json({ ...base, guide: null, ai: null });
+    return;
+  }
+
+  const pathway = await prisma.pathway.findFirst({
+    where: { speciesId: found.speciesId, active: true, name: { equals: product, mode: "insensitive" } },
+    select: { recommendation: true },
+  });
+  const ctx = buildProcessingContext({
+    lang,
+    species: found.species.englishName,
+    kilos: found.kilos,
+    a,
+    ref,
+    recommendation: pathway?.recommendation ?? null,
+  });
+
+  const cacheKey = `${found.id}:${ref.id}:${lang}:${a.risk}`;
+  let hit = introCache.get(cacheKey);
+  if (!hit || Date.now() - hit.at > INTRO_TTL) {
+    hit = { at: Date.now(), value: await explainGuide(ctx) };
+    introCache.set(cacheKey, hit);
+  }
+
+  res.json({
+    ...base,
+    guide: {
+      product: ref.product,
+      equipment: ref.equipment,
+      ingredients: ref.ingredients,
+      preparation: ref.preparation,
+      steps: ref.steps.map((s) => stepText(s, lang)), // straight from the knowledge base, never from the AI
+      safety: ref.safety,
+      source: ref.source,
+    },
+    ai: hit.value,
+  });
+});
+
+// Follow-up question about a guide: answered only from the verified reference
+catchesRouter.post("/:id/processing/ask", requireAuth, requireRole("FISHERFOLK"), processingLimiter, async (req, res) => {
+  const { userId } = res.locals.auth as { userId: string };
+  const lang = req.body?.lang === "fil" ? "fil" : "en";
+  const product = String(req.body?.product ?? "").trim().slice(0, 80);
+  const question = String(req.body?.question ?? "").trim();
+  if (!product || question.length < 3) {
+    res.status(400).json({ error: "product and question are required" });
+    return;
+  }
+
+  const r = await loadProcessing(userId, String(req.params.id), product);
+  if (!r.ok) {
+    res.status(r.status).json({ error: r.status === 404 ? "Catch not found" : "This catch already has an outcome" });
+    return;
+  }
+  const { found, a, ref, suitability } = r;
+  if (suitability.status !== "SUITABLE" || !ref) {
+    res.status(409).json({ error: suitabilityMessage(suitability, lang), suitability });
+    return;
+  }
+
+  const ctx = buildProcessingContext({
+    lang,
+    species: found.species.englishName,
+    kilos: found.kilos,
+    a,
+    ref,
+    recommendation: null,
+  });
+  const out = await askGuide(ctx, question);
+  res.json({ ...out, disclaimer: DISCLAIMER[lang] });
+});

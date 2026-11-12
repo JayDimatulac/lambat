@@ -40,7 +40,7 @@ export function template(ctx: ExplainContext): Sections {
 }
 
 // every number the AI writes must be one we gave it
-function numbersAreGrounded(text: string, ctx: ExplainContext): boolean {
+export function numbersAreGrounded(text: string, ctx: unknown): boolean {
   const norm = (s: string) => String(Number(s.replace(",", ".")));
   const allowed = new Set((JSON.stringify(ctx).match(/\d+(?:\.\d+)?/g) ?? []).map(norm));
   const used = text.match(/\d+(?:[.,]\d+)?/g) ?? [];

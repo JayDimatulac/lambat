@@ -113,6 +113,7 @@ model Species {
   histamine      Boolean      @default(false)
   catches        CatchBatch[]
   pathways       Pathway[]
+  processingGuides ProcessingGuide[]
   needs          BuyerNeed[]
 }
 
@@ -313,4 +314,30 @@ model SmsLog {
   status            String
   createdAt         DateTime @default(now()) @map("created_at")
   @@map("sms_logs")
+}
+
+// new model: the verified Processing Knowledge Base
+model ProcessingGuide {
+  id            String      @id @default(cuid())
+  speciesId     String
+  product       String      // must match Pathway.name, e.g. "Tinapa"
+  description   String
+  requiresIce   Boolean     @default(false)
+  allowedRisks  RiskLevel[]
+  equipment     String[]
+  ingredients   String[]
+  preparation   String[]
+  steps         Json        // [{ "en": "...", "fil": "..." }] in the correct order
+  safety        String[]
+  sourceTitle   String
+  sourceIssuer  String
+  sourceVersion String?
+  sourceUrl     String?
+  verified      Boolean     @default(false) // only true after the team checks it against the source
+  active        Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+
+  species Species @relation(fields: [speciesId], references: [id], onDelete: Cascade)
+
+  @@unique([speciesId, product])
 }

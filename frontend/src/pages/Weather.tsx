@@ -82,12 +82,12 @@ export default function Weather() {
       {/* THE WEEK: tap a day to see it above */}
       <WeekStrip week={week} selected={sel} onSelect={setSel} />
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
         {/* TODAY, HOUR BY HOUR */}
         {sel === 0 ? (
           <DayRibbon hours={hours} nowHour={hour} />
         ) : (
-          <section className="space-y-3 rounded-lg border border-dashed border-line bg-card p-5">
+          <section className="min-w-0 space-y-3 rounded-lg border border-dashed border-line bg-card p-5">
             <h2 className="text-xl">{dayName(sel)}</h2>
             <p className="text-ink-soft">{t('wx.hourly.today')}</p>
             <button type="button" onClick={() => setSel(0)} className="inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-teal px-4 text-sm font-semibold text-teal">
@@ -97,7 +97,7 @@ export default function Weather() {
           </section>
         )}
 
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* THE NUMBERS, tucked away until you want them */}
           <details className="group rounded-lg border border-line bg-card shadow-rest">
             <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 px-5 py-3 text-xl font-semibold [&::-webkit-details-marker]:hidden">

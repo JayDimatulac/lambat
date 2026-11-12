@@ -18,7 +18,7 @@ export default function DayRibbon({ hours, nowHour }: { hours: Hour[]; nowHour: 
   const strong = windWindow(hours)
 
   return (
-    <section className="space-y-4 rounded-lg border border-line bg-card p-5 shadow-rest">
+    <section className="min-w-0 space-y-4 rounded-lg border border-line bg-card p-5 shadow-rest">
       <h2 className="text-xl">{t('wx.hourly')}</h2>
 
       <div className="relative pt-6">

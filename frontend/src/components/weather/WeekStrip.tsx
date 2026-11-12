@@ -16,12 +16,12 @@ export default function WeekStrip({ week, selected, onSelect }: { week: Day[]; s
   return (
     <section className="space-y-3">
       <h2 className="text-xl">{t('wx.week')}</h2>
-      <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0">
+      <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 [contain:inline-size] lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0 lg:[contain:none]">
         {week.map((d, i) => {
           const Icon = SKY_ICON[d.sky]
           const level = sailLevel(d.wind, d.gust, d.wave, d.rain)
           const on = i === selected
-          return (
+          return (     
             <button
               key={i}
               type="button"

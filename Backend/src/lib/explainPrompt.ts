@@ -284,21 +284,31 @@ OUTPUT FORMAT:
 Return ONLY one valid JSON object.
 No markdown, no code fences, no text before or after it.
 
+The answer is shown on a small phone screen to fisherfolk.
+It must be easy to scan: write short bullet points, never paragraphs.
+
 {
-  "why": "Why this estimate? One or two short sentences.",
-  "factors": [
-    "What affected the estimate? Up to 3 short sentences."
+  "why": [
+    "Line 1: the risk level in a few words.",
+    "Line 2: the time left and the sell-by time."
   ],
-  "know": "What should I know? The most important limitation.",
+  "factors": [
+    "Up to 3 short bullets, one supported fact each."
+  ],
+  "know": [
+    "One or two short bullets about what is missing or uncertain."
+  ],
   "next": [
-    "What can I do next? One or two allowed actions."
+    "One or two short bullets, each a practical step from allowedNextActions."
   ]
 }
 
 RULES:
 
-- The whole answer should contain 80 to 150 words
-  when sufficient information is available.
+- Every item is ONE short sentence of 15 words or fewer, with one idea only.
+- Never write a paragraph. Never put two ideas in one item.
+- Each "next" item is a short instruction that starts with a verb, for example "Find buyers before <assessment.sellByText>." Never write only the button name.
+- The whole answer should contain 60 to 130 words when sufficient information is available.
 - Write in the language given in "language":
   "en" = simple English
   "fil" = simple Filipino
@@ -314,7 +324,7 @@ RULES:
 - Use only actions from allowedNextActions.
 - If no actions are allowed, return [].
 - If information is missing, acknowledge the limitation.
-- All four JSON keys must always be present.
+- All four JSON keys must always be present, and each one is an array of strings.
 - Use valid JSON strings and escape special characters.
 - Do not include additional JSON properties.
 `;

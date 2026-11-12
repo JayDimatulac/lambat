@@ -289,17 +289,17 @@ export default function AppShell() {
   const current = pageTitles.find((p) => pathname.startsWith(p.to))
   const place = user.fisher?.landing || user.barangay
   return (
-    <div className="min-h-dvh lg:flex">
+    <div className="min-h-dvh overflow-x-clip lg:flex">
       <Rail />
       <div className="min-w-0 flex-1">
         {/* Top bar: a floating glass bar that lines up with the page content */}
         <header className="sticky top-0 z-30 pt-3">
           <div className="mx-auto max-w-5xl px-4 lg:px-8">
-            <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
+            <div className="flex h-16 items-center justify-between gap-2 rounded-3xl border border-line bg-card/80 pl-3 pr-2 shadow-rest backdrop-blur-md sm:gap-3 sm:pl-4">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
-              <Link to="/home" aria-label="LAMBAT" className="flex items-center gap-2.5 lg:hidden">
+              <Link to="/home" aria-label="LAMBAT" className="flex shrink-0 items-center gap-2 lg:hidden">
                 <Logo size={40} className="size-10" />
-                <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
+                <span className="hidden font-display text-xl font-bold tracking-wider min-[420px]:inline">LAMBAT</span>
               </Link>
               <div className="hidden items-center gap-3 lg:flex">
                 <span aria-hidden="true" className="h-9 w-1 rounded-full bg-coral" />

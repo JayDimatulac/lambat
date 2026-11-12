@@ -4,9 +4,9 @@ import { ACTION_LABEL, REMINDER, RISK_LABEL, TEMPLATE_TEXT, type ExplainContext,
 export type { Lang };
 
 export type Sections = {
-  why: string; // Why this estimate?
+  why: string[]; // Why this estimate? (1-2 short lines)
   factors: string[]; // What affected the estimate?
-  know: string; // What should I know?
+  know: string[]; // What should I know?
   next: string[]; // What can I do next?
 };
 
@@ -19,7 +19,7 @@ export type Explanation = {
 
 function finish(sections: Sections, lang: Lang, source: Explanation["source"]): Explanation {
   const reminder = REMINDER[lang];
-  const text = [sections.why, ...sections.factors, sections.know, ...sections.next, reminder].filter(Boolean).join(" ");
+  const text = [...sections.why, ...sections.factors, ...sections.know, ...sections.next, reminder].filter(Boolean).join(" ");
   return { sections, reminder, text, source };
 }
 
@@ -30,12 +30,15 @@ export function template(ctx: ExplainContext): Sections {
   const t = TEMPLATE_TEXT[lang];
   const a = ctx.assessment;
   const urgent = a.riskLevel === "high" || a.riskLevel === "critical";
-  const actions = ctx.allowedNextActions.slice(0, 2).map((x) => ACTION_LABEL[lang][x] ?? x);
   return {
-    why: t.why(RISK_LABEL[lang][a.riskLevel] ?? a.riskLevel, a.remainingText, a.sellByText),
+    why: [
+      t.risk(RISK_LABEL[lang][a.riskLevel] ?? a.riskLevel),
+      t.time(a.remainingText, a.sellByText),
+      ...(urgent ? [t.urgent] : []),
+    ],
     factors: a.supportingFactors.slice(0, 3).map((f) => f.explanation),
-    know: a.missingInformation[0] ?? "",
-    next: [t.next(actions.join(t.or), a.sellByText, urgent)],
+    know: a.missingInformation.slice(0, 2),
+    next: ctx.allowedNextActions.slice(0, 2).map((x) => t.step(ACTION_LABEL[lang][x] ?? x, a.sellByText)),
   };
 }
 
@@ -60,8 +63,16 @@ function parseSections(raw: string): Sections | null {
   }
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
   const list = (v: unknown, max: number) => (Array.isArray(v) ? v.map(str).filter(Boolean).slice(0, max) : []);
-  const out: Sections = { why: str(obj.why), factors: list(obj.factors, 3), know: str(obj.know), next: list(obj.next, 2) };
-  if (!out.why || !out.know || out.factors.length === 0 || out.next.length === 0) return null;
+  // every part should be a short list, but accept a single sentence too
+  const lines = (v: unknown, max: number) => (Array.isArray(v) ? list(v, max) : str(v) ? [str(v)] : []);
+  const out: Sections = {
+    why: lines(obj.why, 3),
+    factors: lines(obj.factors, 3),
+    know: lines(obj.know, 2),
+    next: lines(obj.next, 2),
+  };
+  // an empty list is allowed (the rules say so), but there must be a "why" and something besides it
+  if (out.why.length === 0 || out.factors.length + out.know.length + out.next.length === 0) return null;
   return out;
 }
 
@@ -117,7 +128,7 @@ export async function explain(ctx: ExplainContext): Promise<Explanation> {
       console.error("LLM raw answer (first 600 characters):", raw ? raw.slice(0, 600) : "(empty)");
       return fallback;
     }
-    const all = [sections.why, ...sections.factors, sections.know, ...sections.next].join(" ");
+    const all = [...sections.why, ...sections.factors, ...sections.know, ...sections.next].join(" ");
     const words = all.split(/\s+/).length;
     if (words > 220 || !numbersAreGrounded(all, ctx)) {
       console.error("LLM answer rejected (too long or a number we did not give it)");

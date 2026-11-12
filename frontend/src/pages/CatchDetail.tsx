@@ -119,7 +119,7 @@ export default function CatchDetail() {
         {!closed && (
           <div className="space-y-4 lg:col-start-1">
             <WhyList c={c} />
-            <ExplainCard id={c.id} />
+            <ExplainCard id={c.id} species={c.species} kg={c.kg} risk={c.risk} />
           </div>
         )}
         <div className="lg:col-start-1"><Story c={c} /></div>

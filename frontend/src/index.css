@@ -98,7 +98,7 @@
 }
 
 @layer base {
-  html { font-size: 16px; }
+  html { font-size: 16px; overflow-x: clip; }
   body {
     @apply bg-mint font-sans text-navy antialiased;
   }

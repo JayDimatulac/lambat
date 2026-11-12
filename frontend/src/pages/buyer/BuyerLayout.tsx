@@ -125,9 +125,7 @@ export default function BuyerLayout() {
         >
           {/* Brand */}
           <Link to="/buyer" aria-label="LAMBAT" className="mb-5 flex h-12 shrink-0 items-center gap-3">
-            <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-full bg-deep ring-2 ring-coral/80 ring-offset-2 ring-offset-card">
-              <Logo size={48} />
-            </span>
+            <Logo size={48} className="size-12" />
             <span className={`flex flex-col leading-none ${label}`}>
               <span className="font-display text-xl font-bold tracking-widest text-navy">LAMBAT</span>
               <span className="mt-1 text-xs font-bold tracking-[0.25em] text-teal">{t('byr.role').toUpperCase()}</span>
@@ -183,9 +181,7 @@ export default function BuyerLayout() {
             <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
               <Link to="/buyer" aria-label="LAMBAT" className="flex items-center gap-2.5 lg:hidden">
-                <span className="grid size-10 place-items-center overflow-hidden rounded-full bg-deep ring-2 ring-coral/70">
-                  <Logo size={40} />
-                </span>
+                <Logo size={40} className="size-10" />
                 <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
               </Link>
               <div className="hidden items-center gap-3 lg:flex">

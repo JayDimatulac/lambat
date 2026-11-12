@@ -119,7 +119,7 @@ export default function LogCatch() {
     if (saving) return
     const sp = SPECIES[draft.variant ?? draft.speciesId ?? 'other']
     const tile = TILES.find((x) => x.id === draft.tileId)
-    const caughtAt = Date.now() - draft.hoursAgo * 3_600_000
+    const caughtAt = new Date(Date.now() - draft.hoursAgo * 3600_000)
     const iceKg = iceKgOf(draft)
     setSaving(true)
     setSaveError(null)
@@ -161,7 +161,7 @@ export default function LogCatch() {
       </header>
 
       <div key={step} className="anim-rise mt-6 flex-1 space-y-6">
-        {!reveal && <h1 className="text-center text-[26px] leading-tight">{t(questions[step])}</h1>}
+        {!reveal && <h1 className="text-center text-[28px] leading-tight">{t(questions[step])}</h1>}
         {step === 0 && <SpeciesStep draft={draft} set={set} lastTileId={lastTileId} />}
         {step === 1 && <KilosScaleStep draft={draft} set={set} />}
         {step === 2 && <WhenStep draft={draft} set={set} />}

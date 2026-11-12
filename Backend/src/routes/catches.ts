@@ -1,5 +1,6 @@
 import { rateLimit } from "express-rate-limit";
 import { explain } from "../lib/llm";
+import { buildExplainContext } from "../lib/explainContext";
 import { Router } from "express";
 import type { CatchStatus, RiskLevel } from "@prisma/client";
 import { prisma } from "../db";
@@ -314,6 +315,7 @@ catchesRouter.get("/:id/pathways", requireAuth, requireRole("FISHERFOLK"), async
     placeholder: a.placeholder,
   });
 });
+
 // 20 questions per hour per person, so the AI bill can't run away
 const explainLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
@@ -347,26 +349,26 @@ catchesRouter.post(
       return;
     }
 
+    // the backend works out every fact; the AI only gets to explain them
     const a = assess(found, found.iceEvents, found.species);
-    if (!a.risk || !a.iceLevel || a.hoursMin === null || a.hoursMax === null) {
-      res.status(409).json({ error: "Not enough shelf-life data for this species yet" });
+    const ctx = buildExplainContext({
+      id: found.id,
+      species: found.species.englishName,
+      localNames: found.species.localNames,
+      histamine: found.species.histamine,
+      kilos: found.kilos,
+      place: found.place,
+      caughtAt: found.caughtAt,
+      iceEventCount: found.iceEvents.length,
+      a,
+      lang,
+    });
+    if (!ctx) {
+      res.status(409).json({ error: "Not enough shelf-life data for this species yet", unavailable: true });
       return;
     }
 
-    const out = await explain(
-      {
-        species: found.species.englishName,
-        localNames: found.species.localNames,
-        kilos: found.kilos,
-        hoursElapsed: a.hoursElapsed,
-        iceLevel: a.iceLevel,
-        risk: a.risk,
-        hoursMin: a.hoursMin,
-        hoursMax: a.hoursMax,
-        histamine: found.species.histamine,
-      },
-      lang
-    );
+    const out = await explain(ctx);
 
     res.json({
       ...out,

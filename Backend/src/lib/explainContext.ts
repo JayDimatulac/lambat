@@ -3,6 +3,7 @@ import type { IceLevel } from "../config/shelfLife";
 
 export type Lang = "en" | "fil";
 
+// The app always adds this itself, so the AI can never leave it out or reword it
 export const REMINDER: Record<Lang, string> = {
   en: "This is an AI-assisted estimate, not a food-safety certification.",
   fil: "Ito ay tantiyang tinulungan ng AI, hindi sertipikasyon ng kaligtasan ng pagkain.",
@@ -28,28 +29,29 @@ export const ACTION_LABEL: Record<Lang, Record<string, string>> = {
   },
 };
 
+// short lines on purpose: they are shown as bullet points on a small screen
 const TEXT = {
   en: {
     level: { none: "none", low: "low", fair: "fair", good: "good", plenty: "plenty" } as Record<IceLevel, string>,
-    time: (t: string) => `It has been about ${t} since the catch was recorded.`,
-    species: (n: string) => `Each kind of fish keeps for a different length of time, so the estimate uses the shelf-life data for ${n}.`,
-    careful: (n: string) => `${n} is handled with extra caution, so the shorter, more careful time is used.`,
-    ice: (l: string) => `The ice on your catch is compared with its weight. The ice level right now is "${l}".`,
-    noIce: "No ice was recorded for this catch, so the estimate assumes it is not iced.",
-    iceAdded: "Ice you added after the catch was counted from the time you added it.",
-    noTemp: "Storage temperature was not recorded, so the estimate uses the amount of ice instead.",
-    selfReported: "The amount of ice is what you reported. It was not measured.",
+    time: (t: string) => `About ${t} have passed since the catch was recorded.`,
+    species: (n: string) => `The estimate uses the shelf-life data for ${n}.`,
+    careful: (n: string) => `${n} needs extra care, so the shorter time is used.`,
+    ice: (l: string) => `The ice level is "${l}", compared with the weight of your catch.`,
+    noIce: "No ice was recorded, so the estimate assumes no ice.",
+    iceAdded: "Ice you added later is counted from the time you added it.",
+    noTemp: "Storage temperature was not recorded, so the amount of ice is used instead.",
+    selfReported: "The amount of ice is as you reported, not measured.",
   },
   fil: {
     level: { none: "walang yelo", low: "kaunti", fair: "katamtaman", good: "sapat", plenty: "marami" } as Record<IceLevel, string>,
     time: (t: string) => `Humigit-kumulang ${t} na ang lumipas mula nang itala ang huli.`,
-    species: (n: string) => `Magkakaiba ang tagal ng bawat uri ng isda, kaya ginamit ang datos sa tagal bago masira ng ${n}.`,
-    careful: (n: string) => `Mas maingat ang pagtrato sa ${n}, kaya ang mas maikli at mas maingat na tantiya ng oras ang ginamit.`,
-    ice: (l: string) => `Ikinukumpara ang yelo sa bigat ng huli mo. Ang yelo ngayon ay: ${l}.`,
-    noIce: "Walang naitalang yelo para sa huling ito, kaya ipinagpalagay na walang yelo.",
-    iceAdded: "Ang yelong idinagdag mo pagkatapos ng huli ay binilang mula sa oras ng pagdagdag.",
-    noTemp: "Hindi naitala ang temperatura ng imbakan, kaya ang dami ng yelo ang ginamit sa halip.",
-    selfReported: "Ang dami ng yelo ay ayon sa iniulat mo at hindi sinukat.",
+    species: (n: string) => `Ginamit ang datos sa tagal bago masira ng ${n}.`,
+    careful: (n: string) => `Kailangan ng ${n} ng dagdag na ingat, kaya ang mas maikling oras ang ginamit.`,
+    ice: (l: string) => `Yelo ngayon: ${l} (kumpara sa bigat ng huli mo).`,
+    noIce: "Walang naitalang yelo, kaya ipinagpalagay na walang yelo.",
+    iceAdded: "Binilang ang idinagdag mong yelo mula sa oras ng pagdagdag.",
+    noTemp: "Hindi naitala ang temperatura, kaya ang dami ng yelo ang ginamit.",
+    selfReported: "Ang dami ng yelo ay ayon sa iniulat mo, hindi sinukat.",
   },
 };
 
@@ -78,7 +80,7 @@ export type ExplainContext = {
   allowedNextActions: string[];
 };
 
-// 409 minutes -> "6 hours 49 minutes". The AI is given finished words so it never converts time itself.
+// 409 minutes -> "6 hours 49 minutes". The AI is given the finished words so it never converts time itself.
 function duration(totalMins: number, lang: Lang): string {
   const mins = Math.max(0, Math.round(totalMins));
   const h = Math.floor(mins / 60);
@@ -125,8 +127,14 @@ export function buildExplainContext(i: {
   // every factor below is something assess() really uses, so none of them is invented
   const supportingFactors = [
     { factor: "Time since catch", explanation: s.time(duration(a.hoursElapsed * 60, lang)) },
-    { factor: "Ice on the catch", explanation: a.iceLevel === "none" ? s.noIce : s.ice(level) },
-    {factor: "Species",explanation: i.histamine ? `${s.species(name)} ${s.careful(name)}` : s.species(name),},
+    {
+      factor: "Ice on the catch",
+      explanation: a.iceLevel === "none" ? s.noIce : s.ice(level),
+    },
+    {
+      factor: "Species",
+      explanation: i.histamine ? `${s.species(name)} ${s.careful(name)}` : s.species(name),
+    },
   ];
   if (i.iceEventCount > 1) supportingFactors.push({ factor: "Ice added later", explanation: s.iceAdded });
 
@@ -161,20 +169,20 @@ export function buildExplainContext(i: {
   };
 }
 
-// the fixed sentences the template needs, kept here so llm.ts stays short
+// the fixed short lines the fallback needs, kept here so llm.ts stays short
+const cap = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
+
 export const TEMPLATE_TEXT = {
   en: {
-    why: (risk: string, rem: string, by: string) =>
-      `LAMBAT estimates a ${risk} spoilage risk, with about ${rem} of marketable time left (sell before ${by}). This is an estimate from your recorded catch details, not a guarantee of freshness.`,
-    next: (list: string, by: string, urgent: boolean) =>
-      `${urgent ? "Time is short. " : ""}Before ${by}, you can ${list}.`,
-    or: " or ",
+    risk: (risk: string) => `LAMBAT estimates a ${risk} spoilage risk.`,
+    time: (rem: string, by: string) => `About ${rem} left to sell, before ${by}.`,
+    urgent: "Time is short.",
+    step: (action: string, by: string) => `${cap(action)} before ${by}.`,
   },
   fil: {
-    why: (risk: string, rem: string, by: string) =>
-      `Tinataya ng LAMBAT na ${risk} ang panganib na masira. May natitirang humigit-kumulang ${rem} para ibenta ito (bago ang ${by}). Tantiya lang ito mula sa mga detalyeng naitala mo, hindi garantiya ng pagiging sariwa.`,
-    next: (list: string, by: string, urgent: boolean) =>
-      `${urgent ? "Kaunti na lang ang oras. " : ""}Bago ang ${by}, puwede mong ${list}.`,
-    or: " o ",
+    risk: (risk: string) => `Tinataya ng LAMBAT na ${risk} ang panganib na masira.`,
+    time: (rem: string, by: string) => `May natitirang humigit-kumulang ${rem} para ibenta, bago ang ${by}.`,
+    urgent: "Kaunti na lang ang oras.",
+    step: (action: string, by: string) => `${cap(action)} bago ang ${by}.`,
   },
 };

@@ -4,6 +4,7 @@ import Chip from '../ui/Chip'
 import Segmented from '../ui/Segmented'
 import Dial from './Dial'
 import DayBar from './DayBar'
+import CustomHours from './CustomHours'
 import { IceBlockIcon, IceSackIcon } from '../icons'
 import { ICE_KG, ICE_LEVELS, iceLevel, type IceUnit } from '../../lib/estimator'
 import { SPECIES, TILES, defaultMember } from '../../lib/species'
@@ -104,7 +105,7 @@ export function KilosStep({ draft, set }: StepProps) {
   )
 }
 
-/* 3. WHEN: slide along the day. Quick picks for the common answers. */
+/* 3. WHEN: slide along the day. Quick picks for the common answers, plus a custom number of hours. */
 export function WhenStep({ draft, set }: StepProps) {
   const t = useT()
   const { lang } = useSettings()
@@ -143,6 +144,11 @@ export function WhenStep({ draft, set }: StepProps) {
         {quick.map((q) => (
           <Chip key={q.h} active={draft.hoursAgo === q.h} onClick={() => set({ hoursAgo: q.h })}>{q.label}</Chip>
         ))}
+        <CustomHours
+          hoursAgo={draft.hoursAgo}
+          presetHours={quick.map((q) => q.h)}
+          onPick={(h) => set({ hoursAgo: h })}
+        />
       </div>
     </div>
   )

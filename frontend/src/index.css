@@ -209,3 +209,41 @@ html[data-simple='true'] .simple-hide { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .anim-drift { animation: none; }
 }
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-canvas: #EAF5F3;
+  --color-surface: #FFFFFF;
+  --color-elevated: #F1FAF9;
+  --color-brand: #0E7583;
+  --color-text: #092F40;
+  --color-text-muted: #536E78;
+  --color-border: #CFE5E2;
+  --color-action: #F2765B;
+}
+.dark {
+  --color-canvas: #061C29;
+  --color-surface: #0B3543;
+  --color-elevated: #104555;
+  --color-brand: #20A6B5;
+  --color-text: #EAF7F7;
+  --color-text-muted: #A5C5CC;
+  --color-border: #1B5967;
+}
+
+@keyframes beam-sweep {
+  0%, 100% { transform: rotate(-4deg); opacity: .25; }
+  50%      { transform: rotate(4deg);  opacity: .6; }
+}
+@keyframes wave-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes boat-bob {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-4px) rotate(1deg); }
+}
+.anim-beam { transform-origin: left center; animation: beam-sweep 6s ease-in-out infinite; }
+.anim-wave { animation: wave-drift 18s linear infinite; }
+.anim-boat { animation: boat-bob 5s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-beam, .anim-wave, .anim-boat { animation: none; }
+}

@@ -1,3 +1,4 @@
+import QuickActions from '../components/home/QuickActions'
 import { Link } from 'react-router-dom'
 import TideScene from '../components/tide/TideScene'
 import NetTally from '../components/home/NetTally'
@@ -81,6 +82,9 @@ export default function Dashboard() {
           </span>
           <WaveArrow size={24} />
         </Link>
+
+        {/* Three shortcuts only: Log a catch is the bar above, so it is not repeated */}
+        <QuickActions />
       </div>
 
       {/* 2. THE PAROLA: needs action */}

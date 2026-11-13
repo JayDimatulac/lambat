@@ -1,3 +1,5 @@
+import { Clock } from 'lucide-react'
+import Boat from '../buyer/Boat'
 import { Link } from 'react-router-dom'
 import RiskBadge from '../ui/RiskBadge'
 import LifebuoyTimer from './LifebuoyTimer'
@@ -24,6 +26,9 @@ const CLOUDS: [number, number, number, number][] = [[205, 22, 1, 0.95], [318, 64
 const BG_DAY = 'linear-gradient(180deg, #247a89 0%, #0f6e7a 50%, #0a4f5c 100%)'
 const BG_NIGHT = 'linear-gradient(180deg, var(--tide-sky-0) 0%, #0f4a5c 55%, var(--tide-sea-2) 100%)'
 
+/* Two gulls gliding over the water (day only) */
+const GULLS: [number, number, number][] = [[238, 40, 1], [262, 52, 0.7]]
+
 /* A puffy cloud built from circles. The outer <g> positions it, the inner <g> drifts. */
 function Cloud({ x, y, s, o, i }: { x: number; y: number; s: number; o: number; i: number }) {
   return (
@@ -40,7 +45,7 @@ function Cloud({ x, y, s, o, i }: { x: number; y: number; s: number; o: number; 
 
 /* By night: lamp glows, beam sweeps, stars. By day: sun and drifting clouds.
    The lamp still turns coral when something needs you, day or night. */
-export function ParolaScene({ alert, night, bare = false, className = 'block w-full' }: { alert: boolean; night: boolean; bare?: boolean; className?: string }) {
+export function ParolaScene({ alert, night, bare = false, boat = false, className = 'block w-full' }: { alert: boolean; night: boolean; bare?: boolean; boat?: boolean; className?: string }) {
   const glow = alert ? 'var(--color-coral)' : night ? 'var(--color-cream)' : '#cfe9ee'
   return (
     <svg viewBox="0 0 360 150" className={className} aria-hidden="true">
@@ -80,6 +85,12 @@ export function ParolaScene({ alert, night, bare = false, className = 'block w-f
           <circle cx="322" cy="28" r="34" fill="url(#parola-sun-glow)" className="anim-glow" />
           <circle cx="322" cy="28" r="15" fill="#ffd98a" />
           {CLOUDS.map(([x, y, s, o], i) => <Cloud key={i} x={x} y={y} s={s} o={o} i={i} />)}
+                    {GULLS.map(([x, y, k], i) => (
+            <g key={i} transform={`translate(${x} ${y}) scale(${k})`}>
+              <path className="anim-cloud" d="M-7 0Q-3.5 -5 0 0Q3.5 -5 7 0" fill="none" stroke="var(--color-deep)" strokeWidth="1.4" strokeLinecap="round" style={{ animationDelay: `${i * -1.7}s` }} />
+            </g>
+          ))}
+
         </>
       )}
       {(night || alert) && <circle cx="64" cy="47" r="30" fill="url(#parola-glow)" className="anim-glow" />}
@@ -96,6 +107,14 @@ export function ParolaScene({ alert, night, bare = false, className = 'block w-f
       <path d="M51 38L64 26L77 38Z" stroke="var(--color-deep)" strokeWidth="2" strokeLinejoin="round" style={{ fill: 'var(--color-coral)' }} />
       <circle cx="64" cy="24" r="2.4" style={{ fill: 'var(--color-deep)' }} />
       <rect x="60" y="116" width="8" height="12" rx="4" style={{ fill: 'var(--color-deep)' }} />
+
+      {boat && (
+        <g transform="translate(292 134) scale(0.4)">
+          <g className="anim-rock" style={{ transformBox: 'fill-box', transformOrigin: '50% 100%', '--rock': '3deg' } as React.CSSProperties}>
+            <Boat lamp={alert ? 'var(--color-coral)' : night ? 'var(--color-cream)' : undefined} />
+          </g>
+        </g>
+      )}
 
       <g className="anim-drift"><path d={WAVES} fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth="2" /></g>
       <g className="anim-drift-rev" transform="translate(0 6)"><path d={WAVES} fill="none" stroke="#fff" strokeOpacity="0.16" strokeWidth="2" /></g>
@@ -127,13 +146,13 @@ export default function ParolaPanel({ urgent, next }: Props) {
   return (
     <section
       aria-label={t('home.actions')}
-      className="relative flex h-full flex-col overflow-hidden rounded-lg text-white shadow-raised"
+      className="relative flex h-full flex-col overflow-hidden rounded-lg border border-white/10 text-white shadow-raised"
       style={{ background: night ? BG_NIGHT : BG_DAY }}
     >
       <div className="h-1.5 w-full shrink-0" style={{ background: alert ? HAZARD : 'var(--color-teal)' }} aria-hidden="true" />
 
       <div className="relative">
-        <ParolaScene alert={alert} night={night} />
+        <ParolaScene alert={alert} night={night} boat />
         <div className="absolute right-0 top-[30%] left-[40%] pr-4">
           <div className="flex items-start justify-between gap-2">
             <h2 className={`font-numeral text-[22px] font-bold leading-tight ${night ? 'text-white' : 'text-deep'}`}>{t('home.actions')}</h2>
@@ -147,7 +166,7 @@ export default function ParolaPanel({ urgent, next }: Props) {
 
       <ul className="space-y-3 px-4 pb-4">
         {urgent.map((c) => (
-          <li key={c.id} className="relative rounded-md border border-white/20 bg-white/10 p-3 backdrop-blur-sm">
+          <li key={c.id} className="relative rounded-md border border-white/15 bg-deep/45 p-3">
             <div className="flex items-center gap-3">
               <LifebuoyTimer leftMins={c.minsMin} hoursLabel={t('home.hours')} />
               <div className="min-w-0 flex-1">
@@ -173,14 +192,23 @@ export default function ParolaPanel({ urgent, next }: Props) {
 
         {!alert && next && (
           <li>
-          <Link to={`/catches/${next.id}`} className="flex items-center gap-3 rounded-md border border-white/20 bg-white/10 p-3 backdrop-blur-sm">
-            <LifebuoyTimer leftMins={next.minsMin} hoursLabel={t('home.hours')} size={72} />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold uppercase tracking-wider text-white">{t('home.next')}</p>
-              <p className="font-numeral text-xl font-bold leading-tight text-white">{next.species} · {next.kg} kg</p>
-              <p className="text-sm text-white">{sellByText(next.hoursMin, lang, t)}</p>
-            </div>
-          </Link>
+            <Link
+              to={`/catches/${next.id}`}
+              className="flex items-center gap-3 rounded-md border border-white/15 bg-deep/45 p-3 transition active:scale-[0.99]"
+            >
+              <LifebuoyTimer leftMins={next.minsMin} hoursLabel={t('home.hours')} size={76} />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-white/90">{t('home.next')}</p>
+                <p className="truncate font-numeral text-xl font-bold leading-tight text-white">{next.species} · {next.kg} kg</p>
+                <p className="mt-0.5 flex items-center gap-1.5 text-sm text-white">
+                  <Clock size={16} className="shrink-0" aria-hidden="true" />
+                  <span className="min-w-0">{sellByText(next.hoursMin, lang, t)}</span>
+                </p>
+              </div>
+              <span className="grid size-11 shrink-0 place-items-center rounded-full bg-teal text-on-accent" aria-hidden="true">
+                <WaveArrow size={22} />
+              </span>
+            </Link>
           </li>
         )}
       </ul>

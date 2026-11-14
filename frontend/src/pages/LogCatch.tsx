@@ -42,12 +42,14 @@ function Reveal({ draft, level, savedId, onAgain }: { draft: Draft; level: IceLe
   const { catches } = useCatches()
   const saved = catches.find((c) => c.id === savedId)
   const [shown, setShown] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-  // wait for the buoy to settle (skipped when the phone asks for reduced motion)
+
+  // Wait for the buoy to settle, unless the user prefers reduced motion.
   useEffect(() => {
     if (shown) return
     const id = window.setTimeout(() => setShown(true), 1900)
     return () => window.clearTimeout(id)
   }, [shown])
+
   if (!saved) return null
 
   const sp = SPECIES[draft.variant ?? draft.speciesId ?? 'other']
@@ -93,7 +95,9 @@ function Reveal({ draft, level, savedId, onAgain }: { draft: Draft; level: IceLe
               {urgent ? t('home.findbuyer') : t('reveal.mine')}
               <ArrowRight size={20} strokeWidth={1.8} aria-hidden />
             </Link>
-            <Button variant="secondary" onClick={onAgain} className="min-h-14 w-full">{t('reveal.another')}</Button>
+            <Button variant="secondary" onClick={onAgain} className="min-h-14 w-full">
+              {t('reveal.another')}
+            </Button>
           </div>
         </div>
       )}
@@ -117,12 +121,15 @@ export default function LogCatch() {
 
   const save = async () => {
     if (saving) return
+
     const sp = SPECIES[draft.variant ?? draft.speciesId ?? 'other']
     const tile = TILES.find((x) => x.id === draft.tileId)
-    const caughtAt = new Date(Date.now() - draft.hoursAgo * 3600_000)
+    const caughtAt = Date.now() - draft.hoursAgo * 3_600_000
     const iceKg = iceKgOf(draft)
+
     setSaving(true)
     setSaveError(null)
+
     const res = await addCatch({
       species: tile ? tile.name : t('species.other'),
       speciesId: draft.tileId === 'other' ? undefined : (draft.variant ?? draft.speciesId ?? undefined),
@@ -130,14 +137,29 @@ export default function LogCatch() {
       kg: draft.kg,
       place: user.fisher?.landing ?? user.barangay,
       caughtAt,
-      model: { l0Min: sp.l0Min, l0Max: sp.l0Max, histamine: !!sp.histamine, kg: draft.kg, events: [{ at: caughtAt, iceKg }] },
+      model: {
+        l0Min: sp.l0Min,
+        l0Max: sp.l0Max,
+        histamine: !!sp.histamine,
+        kg: draft.kg,
+        events: [{ at: caughtAt, iceKg }],
+      },
     })
+
     setSaving(false)
     if (!res.ok) {
       setSaveError(res.message)
       return
     }
-    try { if (draft.tileId && draft.tileId !== 'other') localStorage.setItem(LAST_KEY, draft.tileId) } catch { /* storage can be blocked */ }
+
+    try {
+      if (draft.tileId && draft.tileId !== 'other') {
+        localStorage.setItem(LAST_KEY, draft.tileId)
+      }
+    } catch {
+      /* Storage can be blocked. */
+    }
+
     setSaved({ id: res.id, level: iceLevel(iceKg, draft.kg) })
     setStep(STEPS)
   }
@@ -157,7 +179,9 @@ export default function LogCatch() {
           <X size={24} strokeWidth={1.8} aria-hidden />
         </Link>
         <Knots step={step} />
-        <span className="w-20 shrink-0 text-right text-sm text-ink-soft">{reveal ? '' : t('log.step', { n: step + 1, total: STEPS })}</span>
+        <span className="w-20 shrink-0 text-right text-sm text-ink-soft">
+          {reveal ? '' : t('log.step', { n: step + 1, total: STEPS })}
+        </span>
       </header>
 
       <div key={step} className="anim-rise mt-6 flex-1 space-y-6">
@@ -171,7 +195,11 @@ export default function LogCatch() {
 
       {!reveal && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 px-4 py-3 backdrop-blur">
-          {saveError && <p role="alert" className="mx-auto mb-2 max-w-md text-center text-sm font-semibold text-risk-high">{saveError}</p>}
+          {saveError && (
+            <p role="alert" className="mx-auto mb-2 max-w-md text-center text-sm font-semibold text-risk-high">
+              {saveError}
+            </p>
+          )}
           <div className="mx-auto flex max-w-md gap-3">
             {step > 0 && (
               <Button variant="secondary" className="min-h-14" onClick={() => setStep(step - 1)}>

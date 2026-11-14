@@ -5,6 +5,7 @@ import { useT, type TFn } from '../../lib/i18n'
 import { useSettings } from '../../lib/settings'
 
 type Tab = 'req' | 'proc' | 'safe'
+
 type Guide = {
   product: string
   equipment: string[]
@@ -12,43 +13,72 @@ type Guide = {
   preparation: string[]
   steps: string[]
   safety: string[]
-  source: { title: string; issuer: string; version: string | null; url: string | null }
+  source: {
+    title: string
+    issuer: string
+    version: string | null
+    url: string | null
+  }
 }
-type Ai = { about: string; terms: { term: string; meaning: string }[]; source: 'ai' | 'template' }
+
+type Ai = {
+  about: string
+  terms: { term: string; meaning: string }[]
+  source: 'ai' | 'template'
+}
+
 type Processing = {
   product: string
-  suitability: { status: 'SUITABLE' | 'NOT_SUITABLE' | 'UNVERIFIED'; reason: string | null }
+  suitability: {
+    status: 'SUITABLE' | 'NOT_SUITABLE' | 'UNVERIFIED'
+    reason: string | null
+  }
   message: string
   disclaimer: string
   guide: Guide | null
   ai: Ai | null
 }
 
+type ProcessGuideProps = {
+  catchId: string
+  product: string
+  defaultOpen?: boolean
+}
+
 function errText(e: unknown, t: TFn): string {
   const status = e instanceof ApiError ? e.status : -1
-  return status === 0 ? t('auth.err.network') : status === 429 ? t('auth.err.busy') : t('pg.err')
+  return status === 0
+    ? t('auth.err.network')
+    : status === 429
+      ? t('auth.err.busy')
+      : t('pg.err')
 }
 
 function Block({ title, items }: { title: string; items: string[] }) {
   if (items.length === 0) return null
+
   return (
     <div className="space-y-2">
       <h5 className="text-lg font-semibold">{title}</h5>
       <ul className="list-disc space-y-1 pl-5">
-        {items.map((x) => <li key={x}>{x}</li>)}
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
       </ul>
     </div>
   )
 }
 
-/* "View Process" for one pathway. The server decides if processing is suitable and sends the verified guide.
-   The steps are shown exactly as stored; the AI only adds a short intro and explains words. */
-export default function ProcessGuide({ catchId, product }: { catchId: string; product: string }) {
+export default function ProcessGuide({
+  catchId,
+  product,
+  defaultOpen = false,
+}: ProcessGuideProps) {
   const t = useT()
   const { lang } = useSettings()
-  const l = lang === 'en' ? 'en' : 'fil'
+  const requestLang = lang === 'en' ? 'en' : 'fil'
 
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const [busy, setBusy] = useState(false)
   const [data, setData] = useState<Processing | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -57,25 +87,40 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
 
   useEffect(() => {
     if (!open) return
+
     let cancelled = false
     setBusy(true)
+    setData(null)
     setError(null)
     setTicked(new Set())
-    api
-      .get<Processing>(`/catches/${catchId}/processing?product=${encodeURIComponent(product)}&lang=${l}`)
-      .then((d) => { if (!cancelled) setData(d) })
-      .catch((e) => { if (!cancelled) setError(errText(e, t)) })
-      .finally(() => { if (!cancelled) setBusy(false) })
-    return () => { cancelled = true }
-  }, [open, catchId, product, l, t])
 
-  const toggle = (i: number) =>
-    setTicked((prev) => {
-      const next = new Set(prev)
-      if (next.has(i)) next.delete(i)
-      else next.add(i)
+    api
+      .get<Processing>(
+        `/catches/${catchId}/processing?product=${encodeURIComponent(product)}&lang=${requestLang}`,
+      )
+      .then((response) => {
+        if (!cancelled) setData(response)
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(errText(e, t))
+      })
+      .finally(() => {
+        if (!cancelled) setBusy(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [open, catchId, product, requestLang, t])
+
+  const toggle = (index: number) => {
+    setTicked((previous) => {
+      const next = new Set(previous)
+      if (next.has(index)) next.delete(index)
+      else next.add(index)
       return next
     })
+  }
 
   const guide = data?.guide ?? null
   const tabs: { id: Tab; label: string }[] = [
@@ -88,7 +133,7 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
     <section className="space-y-4 rounded-lg border border-line bg-card p-5 shadow-rest">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen((previous) => !previous)}
         aria-expanded={open}
         className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-teal px-5 text-base font-semibold text-teal"
       >
@@ -102,21 +147,31 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
           {t('pg.loading')}
         </p>
       )}
-      {open && error && <p role="alert" className="text-sm font-semibold text-risk-critical">{error}</p>}
+
+      {open && error && (
+        <p role="alert" className="text-sm font-semibold text-risk-critical">
+          {error}
+        </p>
+      )}
 
       {open && data && !busy && (
         <div className="space-y-4">
-          {/* not suitable or no verified guide: no steps, only the server's plain sentence */}
           {!guide && (
             <div className="space-y-2 rounded-md border border-dashed border-line bg-mint p-4">
               <span
                 className={`inline-block rounded-full px-3 py-1 text-xs font-bold ${
-                  data.suitability.status === 'NOT_SUITABLE' ? 'bg-risk-critical-bg text-risk-critical' : 'bg-seafoam text-teal'
+                  data.suitability.status === 'NOT_SUITABLE'
+                    ? 'bg-risk-critical-bg text-risk-critical'
+                    : 'bg-seafoam text-teal'
                 }`}
               >
-                {data.suitability.status === 'NOT_SUITABLE' ? t('pg.notsuitable') : t('pg.unverified')}
+                {data.suitability.status === 'NOT_SUITABLE'
+                  ? t('pg.notsuitable')
+                  : t('pg.unverified')}
               </span>
-              {data.suitability.reason === 'no_verified_guide' && <h4 className="text-lg">{t('pg.verified')}</h4>}
+              {data.suitability.reason === 'no_verified_guide' && (
+                <h4 className="text-lg">{t('pg.verified')}</h4>
+              )}
               <p>{data.message}</p>
             </div>
           )}
@@ -127,33 +182,46 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
                 <div className="space-y-2">
                   <h4 className="text-lg">{t('pg.about')}</h4>
                   <p>{data.ai.about}</p>
+
                   {data.ai.terms.length > 0 && (
                     <div className="space-y-1">
-                      <p className="text-sm font-semibold text-ink-soft">{t('pg.terms')}</p>
+                      <p className="text-sm font-semibold text-ink-soft">
+                        {t('pg.terms')}
+                      </p>
                       <ul className="space-y-1">
-                        {data.ai.terms.map((x) => (
-                          <li key={x.term}><span className="font-semibold">{x.term}:</span> {x.meaning}</li>
+                        {data.ai.terms.map(({ term, meaning }) => (
+                          <li key={term}>
+                            <span className="font-semibold">{term}:</span> {meaning}
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
-                  <p className="text-sm text-ink-soft">{data.ai.source === 'ai' ? t('explain.ai') : t('explain.plain')}</p>
+
+                  <p className="text-sm text-ink-soft">
+                    {data.ai.source === 'ai' ? t('explain.ai') : t('explain.plain')}
+                  </p>
                 </div>
               )}
 
-              <div role="tablist" className="inline-flex rounded-full border border-line bg-seafoam/50 p-1">
-                {tabs.map((x) => (
+              <div
+                role="tablist"
+                className="inline-flex rounded-full border border-line bg-seafoam/50 p-1"
+              >
+                {tabs.map(({ id, label }) => (
                   <button
-                    key={x.id}
+                    key={id}
                     type="button"
                     role="tab"
-                    aria-selected={tab === x.id}
-                    onClick={() => setTab(x.id)}
+                    aria-selected={tab === id}
+                    onClick={() => setTab(id)}
                     className={`min-h-10 rounded-full px-4 text-sm font-semibold transition ${
-                      tab === x.id ? 'bg-teal text-on-accent shadow-rest' : 'text-navy hover:bg-seafoam'
+                      tab === id
+                        ? 'bg-teal text-on-accent shadow-rest'
+                        : 'text-navy hover:bg-seafoam'
                     }`}
                   >
-                    {x.label}
+                    {label}
                   </button>
                 ))}
               </div>
@@ -162,23 +230,33 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
                 <div className="space-y-4">
                   <Block title={t('pg.equipment')} items={guide.equipment} />
                   <Block title={t('pg.ingredients')} items={guide.ingredients} />
+
                   {guide.preparation.length > 0 && (
                     <div className="space-y-2">
                       <h5 className="text-lg font-semibold">{t('pg.prep')}</h5>
                       <ul className="space-y-2">
-                        {guide.preparation.map((text, i) => {
-                          const on = ticked.has(i)
+                        {guide.preparation.map((text, index) => {
+                          const checked = ticked.has(index)
+
                           return (
                             <li key={text}>
                               <button
                                 type="button"
                                 role="checkbox"
-                                aria-checked={on}
-                                onClick={() => toggle(i)}
-                                className={`flex min-h-12 w-full items-center gap-3 rounded-md border px-3 py-2 text-left transition ${on ? 'border-teal bg-seafoam' : 'border-line bg-card'}`}
+                                aria-checked={checked}
+                                onClick={() => toggle(index)}
+                                className={`flex min-h-12 w-full items-center gap-3 rounded-md border px-3 py-2 text-left transition ${
+                                  checked ? 'border-teal bg-seafoam' : 'border-line bg-card'
+                                }`}
                               >
-                                <span className={`grid size-7 shrink-0 place-items-center rounded-full border-2 ${on ? 'border-teal bg-teal text-on-accent' : 'border-line'}`}>
-                                  {on && <Check size={16} strokeWidth={3} aria-hidden />}
+                                <span
+                                  className={`grid size-7 shrink-0 place-items-center rounded-full border-2 ${
+                                    checked
+                                      ? 'border-teal bg-teal text-on-accent'
+                                      : 'border-line'
+                                  }`}
+                                >
+                                  {checked && <Check size={16} strokeWidth={3} aria-hidden />}
                                 </span>
                                 <span className="flex-1">{text}</span>
                               </button>
@@ -188,7 +266,10 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
                       </ul>
                     </div>
                   )}
-                  {guide.equipment.length + guide.ingredients.length + guide.preparation.length === 0 && (
+
+                  {guide.equipment.length +
+                    guide.ingredients.length +
+                    guide.preparation.length === 0 && (
                     <p className="text-ink-soft">{t('pg.incomplete')}</p>
                   )}
                 </div>
@@ -199,7 +280,9 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
                   <h5 className="text-lg font-semibold">{t('pg.steps')}</h5>
                   {guide.steps.length > 0 ? (
                     <ol className="list-decimal space-y-2 pl-5">
-                      {guide.steps.map((s) => <li key={s}>{s}</li>)}
+                      {guide.steps.map((step) => (
+                        <li key={step}>{step}</li>
+                      ))}
                     </ol>
                   ) : (
                     <p className="text-ink-soft">{t('pg.incomplete')}</p>
@@ -221,7 +304,12 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
                 {t('pg.source')}: {guide.source.title}, {guide.source.issuer}
                 {guide.source.version ? ` (${guide.source.version})` : ''}
                 {guide.source.url && (
-                  <a href={guide.source.url} target="_blank" rel="noopener noreferrer" className="ml-2 inline-flex items-center gap-1 font-semibold text-teal underline">
+                  <a
+                    href={guide.source.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 inline-flex items-center gap-1 font-semibold text-teal underline"
+                  >
                     {t('pg.opensrc')}
                     <ExternalLink size={14} strokeWidth={2} aria-hidden />
                   </a>

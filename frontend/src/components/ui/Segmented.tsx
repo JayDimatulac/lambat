@@ -8,10 +8,12 @@ type Props<T extends string> = {
   options: Option<T>[]
   label: string
   className?: string
+  tone?: 'teal' | 'coral'
 }
 
 // A pill-shaped toggle. One option is always selected.
-export default function Segmented<T extends string>({ value, onChange, options, label, className = '' }: Props<T>) {
+export default function Segmented<T extends string>({ value, onChange, options, label, className = '', tone = 'teal' }: Props<T>) {
+  const on = tone === 'coral' ? 'bg-coral text-deep shadow-raised' : 'bg-teal text-on-accent shadow-rest'
   return (
     <div role="radiogroup" aria-label={label} className={`inline-flex rounded-full border border-line bg-seafoam/50 p-1 ${className}`}>
       {options.map((o) => (
@@ -23,7 +25,7 @@ export default function Segmented<T extends string>({ value, onChange, options, 
           aria-label={o.aria}
           onClick={() => onChange(o.value)}
           className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold transition ${
-            o.value === value ? 'bg-teal text-on-accent shadow-rest' : 'text-navy hover:bg-seafoam'
+            o.value === value ? on : 'text-navy hover:bg-seafoam'
           }`}
         >
           {o.label}

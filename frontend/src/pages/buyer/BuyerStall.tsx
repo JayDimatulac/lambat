@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogOut, Moon, RotateCcw } from 'lucide-react'
+import { LogOut, Mail, MapPin, Moon, Phone, RotateCcw } from 'lucide-react'
 import LogoutSheet from '../../components/auth/LogoutSheet'
 import LangToggle from '../../components/layout/LangToggle'
 import { LifebuoyIcon, StallIcon } from '../../components/buyer/BuyerIcons'
@@ -23,17 +23,26 @@ export default function BuyerStall() {
   const prof = user.buyer
 
   return (
-    <div className="mx-auto max-w-xl space-y-5">
-      <section className="overflow-hidden rounded-lg border border-line bg-card shadow-rest">
-        <div className="h-4" style={{ background: 'repeating-linear-gradient(90deg, var(--color-coral) 0 18px, var(--color-cream) 18px 36px)' }} aria-hidden="true" />
-        <div className="flex items-center gap-4 p-4">
-          <span className="grid size-16 shrink-0 place-items-center rounded-full bg-seafoam text-teal"><StallIcon size={34} /></span>
-          <div className="min-w-0">
-            <h1 className="font-numeral text-2xl font-bold leading-tight">{prof?.businessName ?? user.name}</h1>
-            <p className="text-sm text-ink-soft">{prof ? `${t(`party.${prof.buyerType}` as Key)} · ${prof.address}` : user.barangay}</p>
-            <p className="mt-1 inline-flex rounded-full bg-risk-low-bg px-2.5 py-0.5 text-xs font-bold text-risk-low">{t('status.ACTIVE')}</p>
+    <div className="mx-auto max-w-2xl space-y-5">
+      <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(135deg, var(--tide-sky-1), var(--tide-sea-1))' }}>
+        <div className="flex items-center gap-4 p-5 text-white">
+          <span className="grid size-16 shrink-0 place-items-center rounded-full border-2 border-white/70 font-numeral text-2xl font-bold">{user.initials}</span>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-numeral text-2xl font-bold leading-tight">{user.name}</h1>
+            <p className="text-sm text-white/90">{prof ? `${prof.businessName} · ${t(`party.${prof.buyerType}` as Key)}` : t('byr.role')}</p>
+            <p className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-risk-low px-2.5 py-0.5 text-xs font-bold text-white">{t('status.ACTIVE')}</p>
           </div>
+          <StallIcon size={56} className="hidden shrink-0 text-white/80 sm:block" />
         </div>
+      </section>
+
+      <section className="space-y-3 rounded-lg border border-line bg-card/90 p-4 shadow-rest">
+        <h2 className="font-numeral text-lg font-bold">Buyer Information</h2>
+        <ul className="space-y-2 text-sm">
+          {user.mobile && <li className="flex items-center gap-2"><Phone size={16} className="text-teal" aria-hidden="true" />{user.mobile}</li>}
+          {user.email && <li className="flex items-center gap-2"><Mail size={16} className="text-teal" aria-hidden="true" />{user.email}</li>}
+          <li className="flex items-center gap-2"><MapPin size={16} className="text-teal" aria-hidden="true" />{prof?.address || user.barangay}</li>
+        </ul>
       </section>
 
       <section className={`rounded-lg border-2 p-4 ${isRescue ? 'border-coral bg-card shadow-raised' : 'border-line bg-card'}`}>

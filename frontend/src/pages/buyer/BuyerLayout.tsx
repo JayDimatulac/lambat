@@ -1,6 +1,6 @@
 import { useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { LogOut, Settings } from 'lucide-react'
+import { LayoutDashboard, LogOut, Settings } from 'lucide-react'
 import Sheet from '../../components/ui/Sheet'
 import LogoutSheet from '../../components/auth/LogoutSheet'
 import LangToggle from '../../components/layout/LangToggle'
@@ -15,21 +15,21 @@ import { useSettings } from '../../lib/settings'
 import { MoonTideIcon } from '../admin/AdminIcons'
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
-type Item = { to: string; label: BKey; icon: Icon; end?: boolean }
+type Item = { to: string; label?: BKey; raw?: string; icon: Icon; end?: boolean }
 
 const NEED = '/buyer/needs'
-const PIER: Item = { to: '/buyer', label: 'nav.pantalan', icon: PierIcon, end: true }
+const DASH: Item = { to: '/buyer', raw: 'Dashboard', icon: LayoutDashboard, end: true }
+const PIER: Item = { to: '/buyer/pier', label: 'nav.pantalan', icon: PierIcon }
 const OFFERS: Item = { to: '/buyer/offers', label: 'nav.offers', icon: CrateIcon }
 const NEEDS: Item = { to: NEED, label: 'nav.needs', icon: KnotPlusIcon }
 const ORDERS: Item = { to: '/buyer/orders', label: 'nav.orders', icon: RopeIcon }
 const STALL: Item = { to: '/buyer/stall', label: 'nav.stall', icon: StallIcon }
 
 // The dock follows NAV. The phone bar has four tabs and the float button in the middle.
-const NAV: Item[] = [PIER, OFFERS, NEEDS, ORDERS, STALL]
+const NAV: Item[] = [DASH, PIER, OFFERS, NEEDS, ORDERS, STALL]
 const PHONE_TABS: Item[] = [PIER, OFFERS, ORDERS, STALL]
 const isActive = (i: Item, path: string) => (i.end ? path === i.to : path.startsWith(i.to))
 
-/* The harbor dock, same as the fisherfolk and admin ones: a slim icon strip that opens on hover or focus and pushes the page. */
 const label = 'whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover/dock:opacity-100 group-has-[:focus-visible]/dock:opacity-100'
 const rowBase = 'relative flex h-12 w-full items-center gap-3 rounded-2xl pl-3 pr-4 text-left text-[15px] font-semibold transition'
 const rowIdle = 'text-navy/75 hover:bg-seafoam/70 hover:text-navy'
@@ -44,7 +44,6 @@ function ActiveGlow() {
   )
 }
 
-/* The float: the one main action for a buyer is to say what they need. Same buoy as the fisher's log button. */
 function FloatButton() {
   const b = useBT()
   return (
@@ -58,7 +57,6 @@ function FloatButton() {
   )
 }
 
-/* The parola: one tap switches between day and night at sea. Its lamp is lit at night. */
 function ParolaToggle({ night, onToggle }: { night: boolean; onToggle: () => void }) {
   const t = useT()
   const text = night ? t('adm.day') : t('adm.night')
@@ -110,20 +108,20 @@ export default function BuyerLayout() {
   const [menu, setMenu] = useState(false)
   const [askLogout, setAskLogout] = useState(false)
 
+  const name = (i: Item) => i.raw ?? b(i.label as BKey)
   const night = theme === 'night'
   const current = NAV.find((i) => isActive(i, pathname))
   const onSettings = pathname.startsWith('/buyer/settings')
-  const title = current ? b(current.label) : onSettings ? t('nav.settings') : pathname.startsWith('/buyer/alerts') ? b('nav.alerts') : 'LAMBAT'
+  const title = current ? name(current) : onSettings ? t('nav.settings') : pathname.startsWith('/buyer/alerts') ? b('nav.alerts') : 'LAMBAT'
   const place = user.buyer?.businessName ?? t('byr.role')
 
   return (
-    <div className="min-h-dvh lg:flex">
-      {/* Desktop dock: floating, pushes the page when it opens */}
+    <div className="app-backdrop min-h-dvh overflow-x-clip lg:flex">
+      {/* Desktop dock */}
       <div className="group/dock pointer-events-none hidden w-24 shrink-0 transition-[width] duration-300 ease-out hover:w-[264px] has-[:focus-visible]:w-[264px] lg:block">
         <aside
           className="pointer-events-auto fixed bottom-3 left-3 top-3 z-40 flex w-[72px] flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card via-card to-seafoam px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] group-hover/dock:w-60 group-has-[:focus-visible]/dock:w-60"
         >
-          {/* Brand */}
           <Link to="/buyer" aria-label="LAMBAT" className="mb-5 flex h-12 shrink-0 items-center gap-3">
             <Logo size={48} className="size-12" />
             <span className={`flex flex-col leading-none ${label}`}>
@@ -132,7 +130,6 @@ export default function BuyerLayout() {
             </span>
           </Link>
 
-          {/* The one primary action */}
           <Link
             to={`${NEED}?new=1`}
             aria-label={b('needs.new')}
@@ -148,16 +145,15 @@ export default function BuyerLayout() {
             {NAV.map((item) => {
               const active = item === current
               return (
-                <NavLink key={item.to} to={item.to} end={item.end} aria-label={b(item.label)} className={`${rowBase} ${active ? rowOn : rowIdle}`}>
+                <NavLink key={item.to} to={item.to} end={item.end} aria-label={name(item)} className={`${rowBase} ${active ? rowOn : rowIdle}`}>
                   {active && <ActiveGlow />}
                   <item.icon size={24} strokeWidth={1.8} className="relative shrink-0" />
-                  <span className={`relative ${label}`}>{b(item.label)}</span>
+                  <span className={`relative ${label}`}>{name(item)}</span>
                 </NavLink>
               )
             })}
           </nav>
 
-          {/* Settings and sign out, kept at the bottom of the dock */}
           <div className="mt-auto flex shrink-0 flex-col gap-1.5 pt-4">
             <div aria-hidden="true" className="mb-2 h-px bg-line" />
             <NavLink to="/buyer/settings" aria-label={t('nav.settings')} className={`${rowBase} ${onSettings ? rowOn : rowIdle}`}>
@@ -175,11 +171,9 @@ export default function BuyerLayout() {
       </div>
 
       <div className="min-w-0 flex-1">
-        {/* Top bar: a floating glass bar that lines up with the page content */}
         <header className="sticky top-0 z-30 pt-3">
-          <div className="mx-auto max-w-5xl px-4 lg:px-8">
+          <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
             <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
-              {/* Phones and tablets: the logo. Desktop: where you are. */}
               <Link to="/buyer" aria-label="LAMBAT" className="flex items-center gap-2.5 lg:hidden">
                 <Logo size={40} className="size-10" />
                 <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
@@ -210,11 +204,11 @@ export default function BuyerLayout() {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-5xl px-4 pb-32 pt-5 lg:px-8 lg:pb-10"><Outlet /></main>
+        <main className="mx-auto max-w-[1440px] px-4 pb-32 pt-5 lg:px-8 lg:pb-10"><Outlet /></main>
       </div>
 
-      {/* Phone bar: four tabs with the "I need" float in the middle */}
-      <nav aria-label={t('nav.main')} className="net-mesh fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
+      {/* Phone bar */}
+      <nav aria-label={t('nav.main')} className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden">
         {[PHONE_TABS[0], PHONE_TABS[1], null, PHONE_TABS[2], PHONE_TABS[3]].map((item, i) => {
           if (!item) {
             return (
@@ -232,7 +226,7 @@ export default function BuyerLayout() {
               <span className={`grid h-8 w-14 place-items-center rounded-full transition ${active ? 'bg-seafoam text-teal' : 'text-navy'}`}>
                 <item.icon size={24} strokeWidth={1.8} />
               </span>
-              <span className={active ? 'text-teal' : 'text-navy'}>{b(item.label)}</span>
+              <span className={active ? 'text-teal' : 'text-navy'}>{name(item)}</span>
             </NavLink>
           )
         })}

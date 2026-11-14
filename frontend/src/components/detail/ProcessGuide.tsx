@@ -23,7 +23,6 @@ type Processing = {
   guide: Guide | null
   ai: Ai | null
 }
-type FollowUp = { answer: string; supported: boolean; source: 'ai' | 'template'; disclaimer: string }
 
 function errText(e: unknown, t: TFn): string {
   const status = e instanceof ApiError ? e.status : -1
@@ -43,7 +42,7 @@ function Block({ title, items }: { title: string; items: string[] }) {
 }
 
 /* "View Process" for one pathway. The server decides if processing is suitable and sends the verified guide.
-   The steps are shown exactly as stored; the AI only adds a short intro, explains words, and answers questions. */
+   The steps are shown exactly as stored; the AI only adds a short intro and explains words. */
 export default function ProcessGuide({ catchId, product }: { catchId: string; product: string }) {
   const t = useT()
   const { lang } = useSettings()
@@ -55,17 +54,12 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('req')
   const [ticked, setTicked] = useState<Set<number>>(new Set())
-  const [question, setQuestion] = useState('')
-  const [asking, setAsking] = useState(false)
-  const [reply, setReply] = useState<FollowUp | null>(null)
-  const [askError, setAskError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!open) return
     let cancelled = false
     setBusy(true)
     setError(null)
-    setReply(null)
     setTicked(new Set())
     api
       .get<Processing>(`/catches/${catchId}/processing?product=${encodeURIComponent(product)}&lang=${l}`)
@@ -82,20 +76,6 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
       else next.add(i)
       return next
     })
-
-  const ask = async () => {
-    const q = question.trim()
-    if (q.length < 3 || asking) return
-    setAsking(true)
-    setAskError(null)
-    try {
-      setReply(await api.post<FollowUp>(`/catches/${catchId}/processing/ask`, { product, question: q, lang: l }))
-    } catch (e) {
-      setAskError(errText(e, t))
-    } finally {
-      setAsking(false)
-    }
-  }
 
   const guide = data?.guide ?? null
   const tabs: { id: Tab; label: string }[] = [
@@ -247,39 +227,6 @@ export default function ProcessGuide({ catchId, product }: { catchId: string; pr
                   </a>
                 )}
               </p>
-
-              <form
-                onSubmit={(e) => { e.preventDefault(); void ask() }}
-                className="space-y-2 border-t border-line pt-4"
-              >
-                <label htmlFor={`ask-${catchId}-${product}`} className="text-lg font-semibold">{t('pg.ask.title')}</label>
-                <div className="flex gap-2">
-                  <input
-                    id={`ask-${catchId}-${product}`}
-                    value={question}
-                    onChange={(e) => setQuestion(e.target.value)}
-                    maxLength={300}
-                    placeholder={t('pg.ask.ph')}
-                    className="min-h-12 flex-1 rounded-md border border-line bg-card px-3"
-                  />
-                  <button
-                    type="submit"
-                    disabled={asking || question.trim().length < 3}
-                    className="inline-flex min-h-12 items-center gap-2 rounded-full bg-teal px-5 font-semibold text-on-accent disabled:opacity-60"
-                  >
-                    {asking && <Loader2 size={18} strokeWidth={2} className="animate-spin" aria-hidden />}
-                    {asking ? t('pg.ask.busy') : t('pg.ask.btn')}
-                  </button>
-                </div>
-                {askError && <p role="alert" className="text-sm font-semibold text-risk-critical">{askError}</p>}
-                {reply && (
-                  <div className="space-y-1 rounded-md bg-mint p-3">
-                    {!reply.supported && <p className="text-sm font-semibold text-ink-soft">{t('pg.ask.nocover')}</p>}
-                    <p>{reply.answer}</p>
-                    <p className="text-sm text-ink-soft">{reply.source === 'ai' ? t('explain.ai') : t('explain.plain')}</p>
-                  </div>
-                )}
-              </form>
             </>
           )}
 

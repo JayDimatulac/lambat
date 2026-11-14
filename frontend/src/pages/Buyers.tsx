@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import type { ComponentType, ReactNode } from 'react'
+import { ArrowRight, Check, FlaskConical, Info, Radar as RadarIcon, RotateCw, Share2, Users, Zap } from 'lucide-react'
 import NeedRadar, { type Blip } from '../components/buyer/NeedRadar'
 import OrdersToFinish from '../components/buyer/OrdersToFinish'
 import Radar from '../components/buyer/Radar'
@@ -9,8 +10,9 @@ import Button from '../components/ui/Button'
 import Chip from '../components/ui/Chip'
 import Disclaimer from '../components/ui/Disclaimer'
 import Segmented from '../components/ui/Segmented'
-import { BangkaIcon } from '../components/home/HomeIcons'
-import { PierIcon, RowsIcon } from '../components/icons'
+import { StallIcon } from '../components/buyer/BuyerIcons'
+import FishShape from '../components/FishShape'
+import { FishIcon, PierIcon, RowsIcon } from '../components/icons'
 import { byUrgency, isActive, type Catch } from '../data/mock'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
@@ -30,6 +32,22 @@ const WHEN: Record<When, string> = { today: 'Today', tomorrow: 'Tomorrow', week:
 const RANGES = [5, 10, 20, 40]
 const SPEED_KMH = 20 // a tricycle or motorbike on a coastal road
 const field = 'min-h-12 w-full rounded-md border border-line bg-mint px-3 text-base font-semibold'
+
+/* A titled card used on the right-hand side of the page */
+function Panel({ icon: Icon, title, badge, children }: { icon: ComponentType<{ size?: number; className?: string }>; title: string; badge?: ReactNode; children: ReactNode }) {
+  return (
+    <section className="rounded-lg border border-line bg-card p-4 shadow-rest sm:p-5">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="flex items-center gap-2 font-sans text-base font-bold">
+          <Icon size={20} className="shrink-0 text-teal" />
+          {title}
+        </h3>
+        {badge}
+      </div>
+      {children}
+    </section>
+  )
+}
 
 /* One real buyer need, with the offer form for the catch you picked. */
 function NeedRow({ live, c, offers, onSent, selected }: { live: Live; c: Catch; offers: ApiOffer[]; onSent: () => void; selected?: boolean }) {
@@ -162,17 +180,33 @@ export default function Buyers() {
 
   const liveRadar = (
     <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
-      <div className="flex items-center justify-between gap-2 px-4 pt-3 text-white">
-        <h2 className="font-numeral text-lg font-bold text-white">{t('buyers.radar')}</h2>
-        <button type="button" onClick={scan} disabled={loading} className="min-h-11 rounded-full bg-coral px-3 text-xs font-bold text-deep disabled:opacity-60">
-          {loading ? 'Scanning…' : 'Scan again'}
+      <div className="flex items-start justify-between gap-2 px-4 pt-4 text-white">
+        <div className="min-w-0">
+          <h2 className="flex items-center gap-2 font-numeral text-lg font-bold text-white">
+            <RadarIcon size={22} strokeWidth={1.8} aria-hidden="true" className="shrink-0" />
+            {t('buyers.radar')}
+          </h2>
+          <p className="mt-0.5 text-xs font-semibold text-white/80">
+            {error ? error : scannedAt ? `Last scan ${new Date(scannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · scans every 15 seconds` : 'Scanning for buyers…'}
+          </p>
+        </div>
+        <button type="button" onClick={scan} disabled={loading} className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-coral px-4 text-sm font-bold text-deep shadow-rest transition hover:brightness-105 disabled:opacity-60">
+          <RotateCw size={16} strokeWidth={2.2} aria-hidden="true" className={loading ? 'animate-spin' : ''} />
+          {loading ? t('buyers.scanning') : t('buyers.scan')}
         </button>
       </div>
-      <p className="px-4 pt-1 text-xs font-semibold text-white/80">
-        {error ? error : scannedAt ? `Last scan ${new Date(scannedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · scans every 15 seconds` : 'Scanning for buyers…'}
-      </p>
       <div className="flex flex-wrap gap-2 px-4 pt-3">
-        {RANGES.map((r) => <Chip key={r} active={range === r} onClick={() => setRange(r)}>{r} km</Chip>)}
+        {RANGES.map((r) => (
+          <button
+            key={r}
+            type="button"
+            aria-pressed={range === r}
+            onClick={() => setRange(r)}
+            className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition ${range === r ? 'border-white bg-white text-deep' : 'border-white/35 bg-white/10 text-white hover:bg-white/20'}`}
+          >
+            {r} km
+          </button>
+        ))}
       </div>
       <div className="px-2 pb-1 pt-1">
         <NeedRadar blips={blips} selectedId={selectedLive?.need.id ?? null} onSelect={setPickedNeed} range={range} />
@@ -210,34 +244,83 @@ export default function Buyers() {
 
   const isLive = kind === 'buyer'
 
-  const radarPanel = view === 'radar' ? (isLive ? liveRadar : sampleRadar) : null
+  // LIVE side: the buyers who are really asking for this fish
+  const callout = isLive && inRange.length === 0 && (
+    <div role="status" className="flex items-start gap-3 rounded-lg border border-line bg-gradient-to-r from-seafoam to-ice p-4">
+      <span className="grid size-9 shrink-0 place-items-center rounded-full bg-teal text-on-accent"><Info size={20} aria-hidden="true" /></span>
+      <div className="min-w-0">
+        <p className="font-bold">{lives.length === 0 ? t('buyers.nobody', { species: c.species }) : t('buyers.wider', { km: range })}</p>
+        {lives.length === 0 && <p className="mt-0.5 text-sm text-ink-soft">{t('buyers.keepopen')}</p>}
+      </div>
+    </div>
+  )
 
-  // the answer side: the buyer you can offer to, or the list of them
-  const results = isLive ? (
-    inRange.length === 0 ? (
-      <p className="rounded-lg border border-dashed border-line bg-card p-6 text-center text-sm font-semibold text-ink-soft">
-        {lives.length === 0
-          ? `No buyer is asking for ${c.species} right now. Keep this page open, the radar scans again every 15 seconds.`
-          : `No buyer within ${range} km. Try a wider range.`}
-      </p>
-    ) : view === 'radar' && selectedLive ? (
-      <>
-        <NeedRow key={`${selectedLive.need.id}:${c.id}`} live={selectedLive} c={c} offers={myOffers} onSent={reloadOffers} selected />
-        {inRange.length > 1 && (
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-ink-soft">Other buyers</p>
-            <div className="flex flex-wrap gap-2">
-              {inRange.filter((l) => l.need.id !== selectedLive.need.id).map((l) => (
-                <Chip key={l.need.id} active={false} onClick={() => setPickedNeed(l.need.id)}>{buyerName(l.need)} · {l.km.toFixed(1)} km</Chip>
-              ))}
-            </div>
+  const liveBody = inRange.length === 0 ? (
+    <div className="flex flex-col items-center gap-2 px-2 py-4 text-center">
+      <StallIcon size={72} strokeWidth={1.4} className="text-teal/70" />
+      <p className="font-bold">{t('buyers.none.title')}</p>
+      <p className="max-w-sm text-sm text-ink-soft">{t('buyers.none.hint')}</p>
+    </div>
+  ) : view === 'radar' && selectedLive ? (
+    <div className="space-y-4">
+      <NeedRow key={`${selectedLive.need.id}:${c.id}`} live={selectedLive} c={c} offers={myOffers} onSent={reloadOffers} selected />
+      {inRange.length > 1 && (
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-ink-soft">Other buyers</p>
+          <div className="flex flex-wrap gap-2">
+            {inRange.filter((l) => l.need.id !== selectedLive.need.id).map((l) => (
+              <Chip key={l.need.id} compact active={false} onClick={() => setPickedNeed(l.need.id)}>{buyerName(l.need)} · {l.km.toFixed(1)} km</Chip>
+            ))}
           </div>
-        )}
-      </>
-    ) : (
-      inRange.map((l) => <NeedRow key={`${l.need.id}:${c.id}`} live={l} c={c} offers={myOffers} onSent={reloadOffers} />)
-    )
-  ) : view === 'radar' && selected ? (
+        </div>
+      )}
+    </div>
+  ) : (
+    <div className="grid gap-4 md:grid-cols-2 md:items-start">
+      {inRange.map((l) => <NeedRow key={`${l.need.id}:${c.id}`} live={l} c={c} offers={myOffers} onSent={reloadOffers} />)}
+    </div>
+  )
+
+  const quickActions = (
+    <Panel icon={Zap} title={t('buyers.actions')}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={() => { setKind('share'); setPicked(null) }}
+          className="flex min-h-16 items-center gap-3 rounded-md bg-teal p-3 text-left text-on-accent shadow-rest transition hover:brightness-110 active:scale-[0.98]"
+        >
+          <Share2 size={26} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+          <span className="min-w-0">
+            <span className="block font-bold leading-tight">{t('buyers.share.t')}</span>
+            <span className="block text-xs">{t('buyers.share.s')}</span>
+          </span>
+        </button>
+        <Link
+          to={`/value-added?catch=${c.id}`}
+          className="flex min-h-16 items-center gap-3 rounded-md border border-line bg-seafoam p-3 transition hover:bg-ice active:scale-[0.98]"
+        >
+          <FlaskConical size={26} strokeWidth={1.8} className="shrink-0 text-teal" aria-hidden="true" />
+          <span className="min-w-0">
+            <span className="block font-bold leading-tight">{t('buyers.value.t')}</span>
+            <span className="block text-xs text-ink-soft">{t('buyers.value.s')}</span>
+          </span>
+        </Link>
+      </div>
+    </Panel>
+  )
+
+  const liveRight = (
+    <>
+      {callout}
+      <Panel icon={Users} title={t('buyers.nearby')} badge={<span className="rounded-full bg-seafoam px-3 py-1 text-xs font-bold">{t('buyers.found', { n: inRange.length })}</span>}>
+        {liveBody}
+      </Panel>
+      {quickActions}
+    </>
+  )
+
+  // SHARE side (sample barangay programs): unchanged
+  const shareResults = view === 'radar' && selected ? (
     <PartyCard m={selected} kg={c.kg} best={selected.party.id === matches.find((m) => m.reachable)?.party.id} selected offered={isOffered(selected.party.id)} onOffer={() => offer(selected.party.id)} />
   ) : (
     matches.map((m, i) => (
@@ -246,29 +329,36 @@ export default function Buyers() {
   )
 
   return (
-    <div className="space-y-5">
+    <div className="mx-auto w-full max-w-[1440px] space-y-5">
       {finish}
 
       {/* 1. Pick the catch, and see its status, in one card */}
-      <section className="space-y-4 rounded-lg border border-line bg-card p-4 shadow-rest">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-ink-soft">{t('va.pick')}</p>
+      <section className="space-y-4 rounded-lg border border-line bg-card p-4 shadow-rest sm:p-5">
+        <div className="space-y-3">
+          <p className="flex items-center gap-2 text-base font-bold">
+            <FishIcon size={20} className="shrink-0 text-teal" />
+            {t('va.pick')}
+          </p>
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:overflow-visible lg:px-0">
             {active.map((x) => (
-              <Chip key={x.id} active={x.id === c.id} onClick={() => { setParams({ catch: x.id }); setPickedNeed(null) }} className="shrink-0">{x.species} · {x.kg} kg</Chip>
+              <Chip key={x.id} compact active={x.id === c.id} onClick={() => { setParams({ catch: x.id }); setPickedNeed(null) }} className="inline-flex shrink-0 items-center gap-1.5">
+                {x.id === c.id && <Check size={16} strokeWidth={2.4} aria-hidden="true" />}
+                {x.species} · {x.kg} kg
+              </Chip>
             ))}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 rounded-md bg-seafoam p-3">
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-card text-teal"><BangkaIcon size={28} /></span>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3 overflow-hidden rounded-md bg-gradient-to-r from-seafoam via-ice to-seafoam p-3 sm:p-4">
+          <FishShape shape={c.shape} className="h-11 w-20 shrink-0 text-teal" />
+          <span aria-hidden="true" className="hidden h-10 w-px bg-line sm:block" />
           <div className="min-w-0 flex-1">
             <p className="font-numeral text-lg font-bold leading-tight">{c.species} · {c.kg} kg</p>
             <p className="text-sm">{c.minsMin > 0 ? `${t('detail.timeleft')}: ${countdownText(c.minsMin)} · ${sellByText(c.hoursMin, lang, t)}` : t('detail.timesup')}</p>
           </div>
           <Link to={`/catches/${c.id}`} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border-2 border-teal bg-card px-4 text-sm font-semibold text-teal transition hover:bg-mint">
             {t('va.see')}
-            <ArrowRight size={18} strokeWidth={1.8} aria-hidden />
+            <ArrowRight size={18} strokeWidth={1.8} aria-hidden="true" />
           </Link>
         </div>
       </section>
@@ -295,19 +385,29 @@ export default function Buyers() {
             ]}
           />
         </div>
-        <p className="text-sm font-semibold text-ink-soft">
+        <p className="flex items-center gap-1.5 text-sm font-semibold text-ink-soft">
           {isLive ? `${reachableLive} of ${inRange.length} buyers can be reached in time` : t('buyers.summary', { n: reachable })}
+          <Info size={16} strokeWidth={1.8} aria-hidden="true" />
         </p>
       </div>
 
-      {/* 3. The radar beside the answer. In list view the answers sit in a grid. */}
-      {radarPanel ? (
+      {/* 3. The radar beside the answer. In list view the answers take the full width. */}
+      {isLive ? (
+        view === 'radar' ? (
+          <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
+            {liveRadar}
+            <div className="space-y-4">{liveRight}</div>
+          </div>
+        ) : (
+          <div className="space-y-4">{liveRight}</div>
+        )
+      ) : view === 'radar' ? (
         <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
-          {radarPanel}
-          <div className="space-y-4">{results}</div>
+          {sampleRadar}
+          <div className="space-y-4">{shareResults}</div>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 md:items-start">{results}</div>
+        <div className="grid gap-4 md:grid-cols-2 md:items-start">{shareResults}</div>
       )}
 
       {!isLive && <Disclaimer>{t('buyers.note')}</Disclaimer>}

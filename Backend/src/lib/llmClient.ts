@@ -1,5 +1,5 @@
 // one JSON-answering call to the same provider llm.ts uses
-export async function chatJson(system: string, user: string): Promise<string | null> {
+export async function chatJson(system: string, user: string, maxMs = 10_000): Promise<string | null> {
   const key = process.env.LLM_API_KEY;
   const base = process.env.LLM_BASE_URL;
   const model = process.env.LLM_MODEL;
@@ -17,7 +17,7 @@ export async function chatJson(system: string, user: string): Promise<string | n
     ],
   });
   const BUSY = [429, 500, 502, 503, 504];
-  const deadline = Date.now() + 20_000;
+    const deadline = Date.now() + maxMs; // the most we wait in total, so a busy provider cannot hold the page;
 
   try {
     let res: Response | null = null;

@@ -80,8 +80,8 @@ export type ExplainContext = {
   allowedNextActions: string[];
 };
 
-// 409 minutes -> "6 hours 49 minutes". The AI is given the finished words so it never converts time itself.
-function duration(totalMins: number, lang: Lang): string {
+// 409 minutes -> "6 hours 49 minutes". The AI is given finished words so it never converts time itself.
+export function duration(totalMins: number, lang: Lang): string {
   const mins = Math.max(0, Math.round(totalMins));
   const h = Math.floor(mins / 60);
   const m = mins % 60;
@@ -91,6 +91,7 @@ function duration(totalMins: number, lang: Lang): string {
   if (m === 0) return `${h} ${hw}`;
   return lang === "fil" ? `${h} ${hw} at ${m} ${mw}` : `${h} ${hw} ${m} ${mw}`;
 }
+
 
 // always in Philippine time, so the AI never sees a UTC time it could misread
 function when(d: Date, lang: Lang): string {

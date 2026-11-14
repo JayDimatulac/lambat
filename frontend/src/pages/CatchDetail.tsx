@@ -16,6 +16,8 @@ import { agoText, clockText, countdownText, rangeText, sellByText } from '../lib
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 import ExplainCard from '../components/detail/ExplainCard'
+import NextActionCard from '../components/detail/NextActionCard'
+import type { StrandId } from '../lib/actions'
 
 export default function CatchDetail() {
   const { id } = useParams()
@@ -25,6 +27,7 @@ export default function CatchDetail() {
   const [sheet, setSheet] = useState<'ice' | Outcome | null>(null)
   const [pulse, setPulse] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
+  const [best, setBest] = useState<StrandId | null | undefined>(undefined) // the strand the server suggests  
 
   useEffect(() => {
     if (!toast) return
@@ -100,6 +103,19 @@ export default function CatchDetail() {
         {/* THE FORK, or the record of what happened */}
         <div className="space-y-4 lg:col-start-2 lg:row-span-3 lg:row-start-1">
           {!closed && <NeedAlert c={c} />}
+                    {!closed && (
+            <NextActionCard
+              id={c.id}
+              species={c.species}
+              kg={c.kg}
+              risk={c.risk}
+              stamp={`${c.risk}-${c.hoursMin}`}
+              onAction={setBest}
+              onAddIce={() => setSheet('ice')}
+              onShare={() => setSheet('shared')}
+            />
+          )}
+
           {closed && c.outcome ? (
             <section className="space-y-3 rounded-lg border-2 border-teal bg-seafoam p-5 text-center">
               <span className="mx-auto grid size-14 place-items-center rounded-full bg-teal text-on-accent"><Check size={30} strokeWidth={2.4} aria-hidden /></span>

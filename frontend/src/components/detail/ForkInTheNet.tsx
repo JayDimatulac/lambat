@@ -45,15 +45,16 @@ function Strand({ status, last }: { status: StrandState['status']; last: boolean
 
 type Props = {
   c: Catch
+  best?: StrandId | null // what the server suggests: undefined = not answered yet, null = nothing glows
   onSell: () => void
   onShare: () => void
   onLost: () => void
 }
 
-export default function ForkInTheNet({ c, onSell, onShare, onLost }: Props) {
+export default function ForkInTheNet({ c, best, onSell, onShare, onLost }: Props) {
   const t = useT()
   const { lang } = useSettings()
-  const states = strandsFor(c)
+  const states = strandsFor(c, best)
 
   const hints: Record<StrandId, string> = {
     sell: sellByText(c.hoursMin, lang, t),

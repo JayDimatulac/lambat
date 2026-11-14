@@ -97,7 +97,7 @@ export async function explain(ctx: ExplainContext): Promise<Explanation> {
   });
   const BUSY = [429, 500, 502, 503, 504];
   const started = Date.now();
-  const deadline = started + 20_000; // the fisher never waits more than about 20 seconds in total
+  const deadline = started + 10_000; // the fisher never waits more than about 10 seconds in total
 
   try {
     let res: Response | null = null;

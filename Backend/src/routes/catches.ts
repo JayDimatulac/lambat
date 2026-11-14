@@ -1,5 +1,6 @@
 import { rateLimit } from "express-rate-limit";
 import { explain } from "../lib/llm";
+import { buildNextAction, decideNextAction, explainNextAction } from "../lib/nextAction";
 import { buildExplainContext } from "../lib/explainContext";
 import { Router } from "express";
 import type { CatchStatus, RiskLevel } from "@prisma/client";
@@ -519,3 +520,83 @@ catchesRouter.post("/:id/processing/ask", requireAuth, requireRole("FISHERFOLK")
   const out = await askGuide(ctx, question);
   res.json({ ...out, disclaimer: DISCLAIMER[lang] });
 });
+// 60 per hour per person: the card loads by itself, but one answer is reused for 5 minutes
+const nextActionLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 60,
+  keyGenerator: (_req, res) => (res.locals.auth as { userId: string }).userId,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Too many requests for now. Please try again later." },
+});
+
+// "LAMBAT suggests": the rules choose the next action, the AI only explains it
+catchesRouter.post(
+  "/:id/next-action",
+  requireAuth,
+  requireRole("FISHERFOLK"),
+  nextActionLimiter,
+  async (req, res) => {
+    const { userId } = res.locals.auth as { userId: string };
+    const lang = req.body?.lang === "fil" ? "fil" : "en";
+
+    const found = await prisma.catchBatch.findUnique({
+      where: { id: String(req.params.id) },
+      include: catchInclude,
+    });
+    if (!found || found.userId !== userId) {
+      res.status(404).json({ error: "Catch not found" });
+      return;
+    }
+    if (found.status !== "ACTIVE") {
+      res.status(409).json({ error: "This catch already has an outcome" });
+      return;
+    }
+    // a catch with a confirmed or completed order has nothing left to suggest
+    const hasOrder = await prisma.order.findFirst({
+      where: { catchId: found.id, status: { in: ["CONFIRMED", "COMPLETED"] } },
+    });
+    if (hasOrder) {
+      res.status(409).json({ error: "This catch already has an order" });
+      return;
+    }
+
+    const a = assess(found, found.iceEvents, found.species);
+
+    // buyer search: the same rule as GET /needs/matches (open needs, same species or same local name)
+    const me = await prisma.user.findUnique({ where: { id: userId } });
+    const myArea = (me?.barangay ?? "").toLowerCase();
+    const needs = await prisma.buyerNeed.findMany({
+      where: {
+        status: "OPEN",
+        buyer: { status: "ACTIVE" },
+        OR: [{ speciesId: found.speciesId }, { species: { localNames: { hasSome: found.species.localNames } } }],
+      },
+      select: { barangay: true, buyer: { select: { barangay: true } } },
+    });
+    const sameBarangayCount = myArea
+      ? needs.filter((n) => n.barangay.toLowerCase() === myArea || n.buyer.barangay.toLowerCase() === myArea).length
+      : 0;
+
+    // processing is only possible when the pathways table lists this species for this risk (same rule as /pathways)
+    const level: RiskLevel | null = a.risk === "low" ? "LOW" : a.risk === "moderate" ? "MEDIUM" : null;
+    const pathwayCount = level
+      ? await prisma.pathway.count({ where: { speciesId: found.speciesId, active: true, allowedRisks: { has: level } } })
+      : 0;
+
+    const decision = decideNextAction({ a, matchCount: needs.length, pathwayEligible: pathwayCount > 0 });
+    const { ctx, base } = buildNextAction({
+      id: found.id,
+      species: found.species.englishName,
+      localNames: found.species.localNames,
+      kilos: found.kilos,
+      a,
+      decision,
+      matchCount: needs.length,
+      sameBarangayCount,
+      lang,
+    });
+
+    res.json(await explainNextAction(ctx, base));
+  }
+);

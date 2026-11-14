@@ -60,6 +60,10 @@
   --tide-seabed: #0a2f3c;
   --tide-sun: #fbd9b8;
   --tide-sun-glow: rgba(251, 217, 184, 0.55);
+
+  /* App background: files live in frontend/public/bg/ */
+  --app-bg-image: url('/bg/lambat-day.png');
+  --app-bg-veil: rgba(238, 246, 244, 0.2);
 }
 
 /* Night at sea: every color is a mix of the locked palette */
@@ -95,6 +99,9 @@
   --tide-seabed: #05171e;
   --tide-sun: #e6f4f9;
   --tide-sun-glow: rgba(230, 244, 249, 0.35);
+
+  --app-bg-image: url('/bg/lambat-night.png');
+  --app-bg-veil: rgba(10, 47, 60, 0.45);
 }
 
 @layer base {
@@ -209,41 +216,18 @@ html[data-simple='true'] .simple-hide { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .anim-drift { animation: none; }
 }
-@custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --color-canvas: #EAF5F3;
-  --color-surface: #FFFFFF;
-  --color-elevated: #F1FAF9;
-  --color-brand: #0E7583;
-  --color-text: #092F40;
-  --color-text-muted: #536E78;
-  --color-border: #CFE5E2;
-  --color-action: #F2765B;
-}
-.dark {
-  --color-canvas: #061C29;
-  --color-surface: #0B3543;
-  --color-elevated: #104555;
-  --color-brand: #20A6B5;
-  --color-text: #EAF7F7;
-  --color-text-muted: #A5C5CC;
-  --color-border: #1B5967;
-}
-
-@keyframes beam-sweep {
-  0%, 100% { transform: rotate(-4deg); opacity: .25; }
-  50%      { transform: rotate(4deg);  opacity: .6; }
-}
-@keyframes wave-drift { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-@keyframes boat-bob {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50%      { transform: translateY(-4px) rotate(1deg); }
-}
-.anim-beam { transform-origin: left center; animation: beam-sweep 6s ease-in-out infinite; }
-.anim-wave { animation: wave-drift 18s linear infinite; }
-.anim-boat { animation: boat-bob 5s ease-in-out infinite; }
-
-@media (prefers-reduced-motion: reduce) {
-  .anim-beam, .anim-wave, .anim-boat { animation: none; }
+/* Fixed image behind the whole fisherfolk app. A veil keeps text readable over busy art.
+   A fixed layer (not background-attachment: fixed) so it also behaves on iOS Safari. */
+.app-backdrop { isolation: isolate; }
+.app-backdrop::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--color-mint);
+  background-image: linear-gradient(var(--app-bg-veil), var(--app-bg-veil)), var(--app-bg-image);
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
 }

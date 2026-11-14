@@ -289,7 +289,7 @@ export default function AppShell() {
   const current = pageTitles.find((p) => pathname.startsWith(p.to))
   const place = user.fisher?.landing || user.barangay
   return (
-    <div className="min-h-dvh overflow-x-clip lg:flex">
+    <div className="app-backdrop min-h-dvh overflow-x-clip lg:flex">
       <Rail />
       <div className="min-w-0 flex-1">
         {/* Top bar: a floating glass bar that lines up with the page content */}

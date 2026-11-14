@@ -6,14 +6,14 @@
   --font-sans: "Plus Jakarta Sans", system-ui, sans-serif;
   --font-numeral: "Plus Jakarta Sans", system-ui, sans-serif;
 
-  --color-navy: #0a2f3c;      /* main text (remapped in night mode) */
-  --color-deep: #0a2f3c;      /* always-dark ink, never remapped */
-  --color-teal: #0f6e7a;
-  --color-coral: #e8735a;
+  --color-navy: #103847;      /* main text (remapped in night mode) */
+  --color-deep: #103847;      /* always-dark ink, never remapped */
+  --color-teal: #087987;
+  --color-coral: #f47b61;
   --color-coral-dark: #c95a43;
-  --color-seafoam: #dcefea;
-  --color-mint: #eef6f4;      /* page background */
-  --color-ice: #e6f4f9;
+  --color-seafoam: #cdeef0;
+  --color-mint: #f2f8f8;      /* page background */
+  --color-ice: #eaf4f5;
   --color-peach: #f2b893;
   --color-cream: #fbd9b8;
   --color-line: #d5e6e2;
@@ -61,23 +61,26 @@
   --tide-sun: #fbd9b8;
   --tide-sun-glow: rgba(251, 217, 184, 0.55);
 
-  /* App background: files live in frontend/public/bg/ */
-  --app-bg-image: url('/bg/lambat-day.png');
-  --app-bg-veil: rgba(238, 246, 244, 0.2);
+  /* App background: soft gradient + three quiet wave layers at the bottom (no image file needed) */
+  --app-bg-gradient: linear-gradient(180deg, #f2f8f8 0%, #eaf4f5 100%);
+  --wave-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%23CDEEF0' fill-opacity='0.55' d='M0 90 C180 40 360 40 540 80 S900 140 1080 90 S1320 40 1440 70 V200 H0Z'/%3E%3C/svg%3E");
+  --wave-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%238FD3DA' fill-opacity='0.22' d='M0 120 C200 80 380 90 560 120 S920 170 1100 130 S1340 90 1440 110 V200 H0Z'/%3E%3C/svg%3E");
+  --wave-3: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%23087987' fill-opacity='0.07' d='M0 150 C220 120 420 130 620 155 S980 190 1180 160 S1360 135 1440 150 V200 H0Z'/%3E%3C/svg%3E");
 }
 
 /* Night at sea: every color is a mix of the locked palette */
 :root[data-theme='night'] {
   color-scheme: dark;
-  --color-mint: #0a2f3c;
-  --color-card: #0b3e4b;
-  --color-navy: #eef6f4;
-  --color-ink-soft: #a5bdbd;
-  --color-line: #0d525e;
-  --color-teal: #94c1c9;
-  --color-seafoam: #0c4956;
-  --color-ice: #0c424f;
-  --color-on-accent: #0a2f3c;
+  --color-mint: #071d2a;
+  --color-card: #103341;
+  --color-navy: #f4fafb;
+  --color-ink-soft: #a8c4cd;
+  --color-line: #1d4a59;
+  --color-teal: #48c4cf;
+  --color-seafoam: #153e4b;
+  --color-ice: #0b2936;
+  --color-on-accent: #071d2a;
+  --color-coral: #ff896e;
 
   --color-risk-low: #3db86b;
   --color-risk-moderate: #f2c230;
@@ -100,8 +103,10 @@
   --tide-sun: #e6f4f9;
   --tide-sun-glow: rgba(230, 244, 249, 0.35);
 
-  --app-bg-image: url('/bg/lambat-night.png');
-  --app-bg-veil: rgba(10, 47, 60, 0.45);
+  --app-bg-gradient: linear-gradient(180deg, #071d2a 0%, #0b2936 65%, #0d3340 100%);
+  --wave-1: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%2348C4CF' fill-opacity='0.07' d='M0 90 C180 40 360 40 540 80 S900 140 1080 90 S1320 40 1440 70 V200 H0Z'/%3E%3C/svg%3E");
+  --wave-2: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%2348C4CF' fill-opacity='0.08' d='M0 120 C200 80 380 90 560 120 S920 170 1100 130 S1340 90 1440 110 V200 H0Z'/%3E%3C/svg%3E");
+  --wave-3: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 200' preserveAspectRatio='none'%3E%3Cpath fill='%230B2936' fill-opacity='0.55' d='M0 150 C220 120 420 130 620 155 S980 190 1180 160 S1360 135 1440 150 V200 H0Z'/%3E%3C/svg%3E");
 }
 
 @layer base {
@@ -217,17 +222,29 @@ html[data-simple='true'] .simple-hide { display: none; }
   .anim-drift { animation: none; }
 }
 
-/* Fixed image behind the whole fisherfolk app. A veil keeps text readable over busy art.
-   A fixed layer (not background-attachment: fixed) so it also behaves on iOS Safari. */
+/* Fixed, quiet background behind the whole fisherfolk app: a soft gradient, and up to three
+   low-contrast wave layers in the bottom ~15% of the screen. Decoration only: it never takes pointer events.
+   Fixed layers (not background-attachment: fixed) so it also behaves on iOS Safari. */
 .app-backdrop { isolation: isolate; }
-.app-backdrop::before {
+.app-backdrop::before,
+.app-backdrop::after {
   content: '';
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
   z-index: -1;
+}
+.app-backdrop::before {
+  inset: 0;
   background-color: var(--color-mint);
-  background-image: linear-gradient(var(--app-bg-veil), var(--app-bg-veil)), var(--app-bg-image);
-  background-size: cover;
-  background-position: center bottom;
+  background-image: var(--app-bg-gradient);
+}
+.app-backdrop::after {
+  bottom: 0;
+  height: clamp(96px, 15vh, 160px);
+  background-image: var(--wave-3), var(--wave-2), var(--wave-1);
+  background-size: 100% 100%;
+  background-position: bottom;
   background-repeat: no-repeat;
 }

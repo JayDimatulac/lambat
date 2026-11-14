@@ -116,61 +116,59 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-start lg:gap-5">
+    <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
+      {/* LEFT: timeline, the one primary action, quick actions, weekly utilization */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        <div className="order-1">
+        <div className="order-2 lg:order-1">
           <TideScene catches={active.slice(0, 4)} header={header} />
         </div>
 
         <Link
           to="/catches/new"
-          className="order-2 flex min-h-14 items-center gap-3 rounded-full border border-white/70 bg-linear-to-r from-[#ffb78d] via-[#ff925f] to-[#ff7946] px-2 pr-4 text-deep shadow-raised transition hover:brightness-105 active:scale-[0.98] xl:min-h-[64px]"
+          className="order-3 flex min-h-14 items-center gap-3 rounded-full border border-white/70 bg-linear-to-r from-[#ffb78d] via-[#ff925f] to-[#ff7946] px-2 pr-4 text-deep shadow-raised transition hover:brightness-105 active:scale-[0.98] lg:order-2 xl:min-h-16"
         >
-          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-white/50">
-            <BangkaIcon size={32} />
+          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/50">
+            <BangkaIcon size={30} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-numeral text-xl font-bold leading-tight">
-              {t('home.log')}
-            </span>
-            <span className="simple-hide block text-xs font-medium sm:text-sm">
-              {t('home.log.sub')}
-            </span>
+            <span className="block font-numeral text-lg font-bold leading-tight">{t('home.log')}</span>
+            <span className="simple-hide block text-xs font-medium sm:text-sm">{t('home.log.sub')}</span>
           </span>
           <span className="grid size-9 shrink-0 place-items-center rounded-full bg-black/15 text-white">
             <ArrowRight size={21} aria-hidden="true" />
           </span>
         </Link>
 
-        <div className="order-3 grid grid-cols-2 gap-3 sm:grid-cols-3">   
+        <div className="order-4 grid grid-cols-3 gap-2 sm:gap-3 lg:order-3">
           {shortcuts.map(({ to, icon, title, description, color }) => (
             <Link
               key={to}
               to={to}
-              className={`flex min-h-[112px] flex-col items-center justify-center rounded-[24px] border border-white/80 bg-linear-to-br ${color} px-2 py-3 text-center text-deep shadow-raised transition hover:-translate-y-0.5 active:scale-[0.98] xl:min-h-[124px]`}
+              className={`flex min-h-[92px] flex-col items-center justify-center rounded-[20px] border border-white/80 bg-linear-to-br ${color} px-2 py-2.5 text-center text-deep shadow-rest transition hover:-translate-y-0.5 active:scale-[0.98] xl:min-h-[104px]`}
             >
-              <span className="mb-2" aria-hidden="true">{icon}</span>
+              <span className="mb-1.5" aria-hidden="true">{icon}</span>
               <span className="text-sm font-bold leading-tight">{title}</span>
-              <span className="simple-hide mt-1 text-xs leading-tight">{description}</span>
+              <span className="simple-hide mt-0.5 hidden text-xs leading-tight sm:block">{description}</span>
             </Link>
           ))}
         </div>
 
-        <div className="order-5 lg:order-4">
+        <div className="order-6 lg:order-4">
           <NetTally sold={sum('sold')} shared={sum('shared')} lost={sum('lost')} />
         </div>
       </div>
 
+      {/* RIGHT: needs action + weather share the left column's height. On a phone, needs action comes first. */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        <div className="order-4 lg:order-1 [&>*]:lg:min-h-[350px] [&>*]:xl:min-h-[410px] [&>*]:lg:justify-between">
+        <div className="order-1 lg:flex-1 [&>*]:h-full">
           <ParolaPanel urgent={urgent} next={next} />
         </div>
 
-        <div className="order-6 flex flex-col lg:order-2 [&>*]:lg:min-h-[330px] [&>*]:xl:min-h-[385px]">
+        <div className="order-5 lg:flex-1 [&>*]:h-full">
           <WeatherCard forecast={forecast} />
         </div>
 
-        <p className="order-7 flex items-center gap-2 px-1 text-xs font-medium text-ink-soft lg:order-3 lg:justify-end">
+        <p className="order-7 flex items-center gap-2 px-1 text-xs font-medium text-ink-soft lg:justify-end">
           <Info size={14} aria-hidden="true" className="shrink-0" />
           {t('disc.guide')}
         </p>

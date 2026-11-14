@@ -2,10 +2,10 @@ import { LostFishIcon, SharedFishIcon, SoldFishIcon } from './HomeIcons'
 import { useT } from '../../lib/i18n'
 
 // The week as a lambat (net). Every mesh holds a share of the catch. A mesh with a tear is a share that was lost.
-const COLS = 10
-const ROWS = 5
+const COLS = 28
+const ROWS = 3
 const CELLS = COLS * ROWS
-const CELL_W = 30
+const CELL_W = 22
 
 type Share = { n: number; kg: number }
 type Kind = 'sold' | 'shared' | 'lost'
@@ -41,9 +41,9 @@ export default function NetTally({ sold, shared, lost }: { sold: Share; shared: 
 
   const cell = (i: number) => {
     const row = Math.floor(i / COLS)
-    const cx = 15 + (i % COLS) * CELL_W + (row % 2 ? 15 : 0)
-    const cy = 14 + row * 14
-    return { cx, cy, points: `${cx},${cy - 14} ${cx + 15},${cy} ${cx},${cy + 14} ${cx - 15},${cy}` }
+    const cx = 11 + (i % COLS) * CELL_W + (row % 2 ? 11 : 0)
+    const cy = 10 + row * 10
+    return { cx, cy, points: `${cx},${cy - 10} ${cx + 11},${cy} ${cx},${cy + 10} ${cx - 11},${cy}` }
   }
 
   const legend = [
@@ -53,17 +53,17 @@ export default function NetTally({ sold, shared, lost }: { sold: Share; shared: 
   ]
 
   return (
-    <section className="overflow-hidden rounded-lg border border-line bg-card p-5 shadow-rest">
+    <section className="overflow-hidden rounded-lg border border-line bg-card px-5 py-4 shadow-rest">
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">{t('home.week')}</p>
       <div className="mt-2 flex items-end gap-4">
-        <p className="font-numeral text-[72px] font-bold leading-[0.8] text-teal">
+        <p className="font-numeral text-[56px] font-bold leading-[0.85] text-teal xl:text-[64px]">
           {pct}
           <span className="text-3xl">%</span>
         </p>
         <p className="pb-1 text-sm font-medium leading-snug">{t('tally.summary', { pct })}</p>
       </div>
 
-      <svg viewBox="0 0 315 84" className="mt-5 block w-full" role="img" aria-label={t('tally.summary', { pct })}>
+      <svg viewBox="0 0 627 40" className="mt-4 block w-full" role="img" aria-label={t('tally.summary', { pct })}>
         {kinds.map((kind, i) => {
           const { points } = cell(i)
           return kind === 'lost' ? (
@@ -81,11 +81,11 @@ export default function NetTally({ sold, shared, lost }: { sold: Share; shared: 
         {kinds.map((kind, i) => {
           if (kind === 'lost') return null
           const { cx, cy } = cell(i)
-          return <circle key={`k${i}`} cx={cx} cy={cy - 14} r="2" strokeWidth="1" style={{ fill: 'var(--color-cream)', stroke: 'var(--color-deep)', strokeOpacity: 0.6 }} />
+          return <circle key={`k${i}`} cx={cx} cy={cy - 10} r="1.6" strokeWidth="1" style={{ fill: 'var(--color-cream)', stroke: 'var(--color-deep)', strokeOpacity: 0.6 }} />
         })}
       </svg>
 
-      <ul className="mt-5 grid grid-cols-3 gap-2">
+      <ul className="mt-4 grid grid-cols-3 gap-2">
         {legend.map(({ kind, share, Icon, color }) => (
           <li key={kind} className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -93,9 +93,9 @@ export default function NetTally({ sold, shared, lost }: { sold: Share; shared: 
               <span className="truncate text-xs font-bold">{t(`tally.${kind}`)}</span>
             </div>
             <div className="mt-1 flex items-center gap-2">
-              <Icon size={30} className={color} />
+              <Icon size={26} className={color} />
               <div>
-                <p className="font-numeral text-3xl font-bold leading-none">{share.n}</p>
+                <p className="font-numeral text-2xl font-bold leading-none">{share.n}</p>
                 <p className="mt-0.5 text-xs font-medium text-ink-soft">{Math.round(share.kg)} kg</p>
               </div>
             </div>

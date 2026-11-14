@@ -154,7 +154,7 @@ export default function ParolaPanel({ urgent, next }: Props) {
         </div>
       </div>
 
-      <ul className="space-y-3 px-4 pb-4">
+      <ul className="mt-auto space-y-3 px-4 pb-4 pt-3">
         {urgent.map((c) => (
           <li key={c.id} className="relative rounded-md border border-white/15 bg-deep/45 p-3">
             <div className="flex items-center gap-3">

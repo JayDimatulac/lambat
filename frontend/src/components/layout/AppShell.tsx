@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Check, ChevronDown, CloudSun, LogOut, Send, Sparkles, UserRound, Wifi, WifiLow, WifiOff } from 'lucide-react'
+import { Check, ChevronDown, CloudSun, LogOut, MapPin, PanelLeftClose, PanelLeftOpen, Send, Sparkles, Wifi, WifiLow, WifiOff } from 'lucide-react'
 import { FishIcon, KnotPlusIcon, PierIcon, TideIcon } from '../icons'
 import { useT, type Key } from '../../lib/i18n'
 import { useSettings, type Connection } from '../../lib/settings'
@@ -48,49 +48,47 @@ function FloatButton({ size }: { size: 'sm' | 'lg' }) {
   )
 }
 
-/* The harbor dock: a floating panel that follows day and night (it uses the theme colors). It rests as a slim
-   icon strip and opens by itself when the pointer (or keyboard focus) reaches it. It opens OVER the page. */
-const label = 'min-w-0 whitespace-nowrap leading-tight opacity-0 transition-opacity duration-200 group-hover/dock:whitespace-normal group-hover/dock:opacity-100 group-has-[:focus-visible]/dock:whitespace-normal group-has-[:focus-visible]/dock:opacity-100'
-const rowBase = 'relative flex h-12 w-full items-center gap-3 rounded-2xl pl-3 pr-4 text-left text-[15px] font-semibold transition'
+/* The harbor dock: a solid floating panel that follows day and night. It is either a slim icon strip or open
+   with labels. A button in the top bar toggles it, and the page content moves over to make room (nothing is covered). */
+const rowBase = 'relative flex min-h-12 w-full items-center rounded-2xl text-left text-[15px] font-semibold leading-tight transition'
 const rowIdle = 'text-navy/75 hover:bg-seafoam/70 hover:text-navy'
 const rowOn = 'bg-seafoam text-teal'
 
-/* the lighthouse beam: a coral light reaching in from the edge, marking the page you are on */
-function ActiveGlow() {
-  return (
-    <>
-      <span aria-hidden="true" className="absolute inset-0 rounded-2xl bg-gradient-to-r from-coral/30 via-coral/10 to-transparent" />
-      <span aria-hidden="true" className="absolute -left-3 top-3 h-6 w-1 rounded-r-full bg-coral" />
-    </>
-  )
+/* a small coral tab on the edge marks the page you are on, like a lighthouse light */
+function ActiveMark() {
+  return <span aria-hidden="true" className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-coral" />
 }
 
-function Rail() {
+function Rail({ open }: { open: boolean }) {
   const t = useT()
+  const user = useUser()
   const { pathname } = useLocation()
   const [askLogout, setAskLogout] = useState(false)
   const onProfile = pathname.startsWith('/profile')
+  const rowPad = open ? 'gap-3 py-2 pl-4 pr-3' : 'justify-center'
   return (
-    <div className="hidden w-24 shrink-0 lg:block">
+    <div className={`hidden shrink-0 transition-[width] duration-300 ease-out lg:block ${open ? 'w-[264px]' : 'w-28'}`}>
       <aside
-        className="group/dock fixed bottom-3 left-3 top-3 z-40 flex w-[72px] flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card via-card to-seafoam/70 px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] hover:w-48 has-[:focus-visible]:w-48"
+        id="app-rail"
+        className={`fixed bottom-3 left-3 top-3 z-40 flex flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card to-ice px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] ${open ? 'w-60' : 'w-[88px]'}`}
       >
-        {/* Brand: the emblem in a coral ring, like the circle in the logo */}
-        <Link to="/home" aria-label="LAMBAT" className="mb-5 flex h-12 shrink-0 items-center gap-3">
+        {/* Brand: the emblem and the LAMBAT wordmark */}
+        <Link to="/home" aria-label="LAMBAT" className={`mb-4 flex shrink-0 items-center ${open ? 'gap-3 px-1' : 'flex-col gap-1'}`}>
           <Logo size={48} className="size-12" />
-          <span className={`font-display text-lg font-bold tracking-wider text-navy ${label}`}>LAMBAT</span>
+          <span className={`font-display font-bold tracking-wider text-navy ${open ? 'text-xl' : 'text-[13px] leading-none'}`}>LAMBAT</span>
         </Link>
 
         {/* The one primary action */}
         <Link
           to="/catches/new"
           aria-label={t('page.log')}
-          className="flex h-12 w-full shrink-0 items-center overflow-hidden rounded-full bg-coral font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95"
+          title={open ? undefined : t('page.log')}
+          className="flex h-12 w-full shrink-0 items-center overflow-hidden rounded-full bg-coral pl-2 font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95"
         >
           <span className="grid size-12 shrink-0 place-items-center">
             <KnotPlusIcon size={24} />
           </span>
-          <span className={`pr-5 ${label}`}>{t('page.log')}</span>
+          {open && <span className="whitespace-nowrap pr-5">{t('page.log')}</span>}
         </Link>
 
         <div aria-hidden="true" className="my-4 h-px shrink-0 bg-line" />
@@ -99,10 +97,17 @@ function Rail() {
           {railItems.map((item) => {
             const active = isActive(item, pathname)
             return (
-              <NavLink key={item.to} to={item.to} end={item.end} aria-label={t(item.label)} className={`${rowBase} ${active ? rowOn : rowIdle}`}>
-                {active && <ActiveGlow />}
-                <item.icon size={24} strokeWidth={1.8} className="relative shrink-0" />
-                <span className={`relative ${label}`}>{t(item.label)}</span>
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                aria-label={t(item.label)}
+                title={open ? undefined : t(item.label)}
+                className={`${rowBase} ${rowPad} ${active ? rowOn : rowIdle}`}
+              >
+                {active && <ActiveMark />}
+                <item.icon size={24} strokeWidth={1.8} className="shrink-0" />
+                {open && <span className="min-w-0">{t(item.label)}</span>}
               </NavLink>
             )
           })}
@@ -111,14 +116,34 @@ function Rail() {
         {/* You: profile and sign out, kept at the bottom of the dock */}
         <div className="mt-auto flex shrink-0 flex-col gap-1.5 pt-4">
           <div aria-hidden="true" className="mb-2 h-px bg-line" />
-          <NavLink to="/profile" aria-label={t('nav.profile')} className={`${rowBase} ${onProfile ? rowOn : rowIdle}`}>
-            {onProfile && <ActiveGlow />}
-            <UserRound size={24} strokeWidth={1.8} className="relative shrink-0" />
-            <span className={`relative ${label}`}>{t('nav.profile')}</span>
+          <NavLink
+            to="/profile"
+            aria-label={t('nav.profile')}
+            title={open ? undefined : t('nav.profile')}
+            className={`relative flex items-center rounded-2xl transition ${open ? 'gap-3 p-2' : 'flex-col gap-1 px-1 py-2'} ${onProfile ? rowOn : 'text-navy hover:bg-seafoam/70'}`}
+          >
+            {onProfile && <ActiveMark />}
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-teal text-sm font-bold text-on-accent">{user.initials}</span>
+            {open ? (
+              <span className="min-w-0 leading-tight">
+                <span className="block truncate text-sm font-semibold">{user.shortName}</span>
+                <span className="block truncate text-xs font-medium text-ink-soft">{t('nav.profile')}</span>
+              </span>
+            ) : (
+              <span className="flex max-w-full items-center gap-0.5 text-[11px] font-semibold leading-none">
+                <span className="truncate">{user.shortName}</span>
+                <ChevronDown size={12} strokeWidth={2} aria-hidden="true" className="shrink-0" />
+              </span>
+            )}
           </NavLink>
-          <button type="button" onClick={() => setAskLogout(true)} aria-label={t('auth.logout')} className={`${rowBase} text-navy/75 hover:bg-risk-critical-bg hover:text-risk-critical`}>
-            <LogOut size={24} strokeWidth={1.8} className="shrink-0" />
-            <span className={label}>{t('auth.logout')}</span>
+          <button
+            type="button"
+            onClick={() => setAskLogout(true)}
+            aria-label={t('auth.logout')}
+            className={`flex w-full items-center rounded-2xl font-semibold text-navy/75 transition hover:bg-risk-critical-bg hover:text-risk-critical ${open ? 'h-11 gap-3 pl-4 pr-3 text-[15px]' : 'flex-col justify-center gap-0.5 py-1.5 text-[10px] leading-tight'}`}
+          >
+            <LogOut size={open ? 22 : 18} strokeWidth={1.8} className="shrink-0" aria-hidden="true" />
+            <span className="max-w-full truncate">{t('auth.logout')}</span>
           </button>
         </div>
       </aside>
@@ -261,7 +286,7 @@ function ConnectionBar() {
   if (connection === 'online') return null
   const weak = connection === 'weak'
   return (
-    <div className="mx-auto max-w-5xl px-4 pt-3 lg:px-8">
+    <div className="mx-auto max-w-[1440px] px-4 pt-3 lg:px-8">
       <div role="status" className={`flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${weak ? 'border-risk-moderate-line bg-risk-moderate-bg text-risk-moderate' : 'border-risk-high-line bg-risk-high-bg text-risk-high'}`}>
         <p className="flex items-center gap-2 font-semibold">
           {weak ? <WifiLow size={20} strokeWidth={1.8} aria-hidden /> : <WifiOff size={20} strokeWidth={1.8} aria-hidden />}
@@ -286,15 +311,26 @@ export default function AppShell() {
   const user = useUser()
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+    // the sidebar is slim by default; the person's choice is remembered
+  const [railOpen, setRailOpen] = useState(() => {
+    try { return localStorage.getItem('lambat.rail') === 'open' } catch { return false }
+  })
+  const toggleRail = () =>
+    setRailOpen((open) => {
+      const next = !open
+      try { localStorage.setItem('lambat.rail', next ? 'open' : 'closed') } catch { /* storage can be blocked */ }
+      return next
+    })
   const current = pageTitles.find((p) => pathname.startsWith(p.to))
+  const PageIcon = railItems.find((i) => isActive(i, pathname))?.icon  
   const place = user.fisher?.landing || user.barangay
   return (
     <div className="app-backdrop min-h-dvh overflow-x-clip lg:flex">
-      <Rail />
+      <Rail open={railOpen} />
       <div className="min-w-0 flex-1">
         {/* Top bar: a floating glass bar that lines up with the page content */}
         <header className="sticky top-0 z-30 pt-3">
-          <div className="mx-auto max-w-5xl px-4 lg:px-8">
+          <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
             <div className="flex h-16 items-center justify-between gap-2 rounded-3xl border border-line bg-card/80 pl-3 pr-2 shadow-rest backdrop-blur-md sm:gap-3 sm:pl-4">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
               <Link to="/home" aria-label="LAMBAT" className="flex shrink-0 items-center gap-2 lg:hidden">
@@ -302,10 +338,27 @@ export default function AppShell() {
                 <span className="hidden font-display text-xl font-bold tracking-wider min-[420px]:inline">LAMBAT</span>
               </Link>
               <div className="hidden items-center gap-3 lg:flex">
+                <button
+                  type="button"
+                  onClick={toggleRail}
+                  aria-expanded={railOpen}
+                  aria-controls="app-rail"
+                  aria-label={t(railOpen ? 'nav.collapse' : 'nav.expand')}
+                  title={t(railOpen ? 'nav.collapse' : 'nav.expand')}
+                  className="grid size-10 shrink-0 place-items-center rounded-xl border border-line text-navy transition hover:bg-seafoam/60"
+                >
+                  {railOpen ? <PanelLeftClose size={20} strokeWidth={1.8} aria-hidden="true" /> : <PanelLeftOpen size={20} strokeWidth={1.8} aria-hidden="true" />}
+                </button>                
                 <span aria-hidden="true" className="h-9 w-1 rounded-full bg-coral" />
+                {PageIcon && <PageIcon size={26} strokeWidth={1.8} className="shrink-0 text-teal" />}
                 <div className="leading-tight">
                   <p className="font-display text-xl font-bold">{current ? t(current.label) : 'LAMBAT'}</p>
-                  {place && <p className="text-sm font-medium text-ink-soft">{place}</p>}
+                  {place && (
+                    <p className="flex items-center gap-1 text-sm font-medium text-ink-soft">
+                      <MapPin size={13} strokeWidth={2} aria-hidden="true" />
+                      {place}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -330,7 +383,7 @@ export default function AppShell() {
           </div>
         </header>
         <ConnectionBar />
-        <main className="mx-auto max-w-5xl px-4 pb-32 pt-5 lg:px-8 lg:pb-10">
+        <main className="mx-auto max-w-[1440px] px-4 pb-32 pt-5 lg:px-8 lg:pb-10">
           <Outlet />
         </main>
       </div>

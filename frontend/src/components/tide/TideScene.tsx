@@ -7,8 +7,8 @@ import { useT } from '../../lib/i18n'
 import { rangeText } from '../../lib/time'
 
 // Scene geometry (px). The sea is a fixed-height strip; each buoy sinks along TRAVEL as time runs out.
-const SEABED = 40
-const TRAVEL = 112
+const SEABED = 34
+const TRAVEL = 88
 const LANE = 84
 const FLOAT_CY = 42 // y of the buoy's float centre inside its 44x68 drawing
 
@@ -50,8 +50,8 @@ export default function TideScene({ catches, header }: Props) {
   const t = useT()
   const navigate = useNavigate()
   const n = catches.length
-  const skyH = header ? 152 : 64
-  const H = skyH + 6 + TRAVEL + 22 + SEABED
+  const skyH = header ? 140 : 64
+  const H = skyH + 6 + TRAVEL + 20 + SEABED
   const yFor = (u: number) => skyH + 6 + u * TRAVEL
   const cols = { gridTemplateColumns: `repeat(${Math.max(n, 1)}, minmax(${LANE}px, 1fr))` }
 
@@ -151,7 +151,7 @@ export default function TideScene({ catches, header }: Props) {
                     key={c.id}
                     to={`/catches/${c.id}`}
                     aria-label={t('a11y.catch', { species: c.species, kg: c.kg, risk: t(`risk.${c.risk}`), left: t('time.left', { range }) })}
-                    className="flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 py-3 text-center hover:bg-seafoam/50"
+                    className="flex min-h-12 flex-col items-center gap-0.5 rounded-sm px-1 py-2 text-center hover:bg-seafoam/50"
                   >
                     <span className="text-sm font-semibold leading-tight">{c.species}</span>
                     <span className="text-sm text-ink-soft">{c.kg} kg</span>
@@ -185,7 +185,7 @@ export default function TideScene({ catches, header }: Props) {
         {header && <div className="absolute inset-x-0 top-0 z-20 p-4">{header}</div>}
       </div>
 
-      <p className="simple-hide px-4 pb-3 pt-1 text-sm text-ink-soft">{t('tide.hint')}</p>
+      <p className="simple-hide px-4 pb-2.5 pt-0.5 text-sm text-ink-soft">{t('tide.hint')}</p>
     </section>
   )
 }

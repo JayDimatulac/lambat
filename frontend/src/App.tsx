@@ -35,6 +35,7 @@ import { MarketProvider } from './lib/market'
 import BuyerLayout from './pages/buyer/BuyerLayout'
 import NeedsBoard from './pages/NeedsBoard'
 import ForgotPassword from './pages/ForgotPassword'
+import BuyerPier from './pages/buyer/BuyerPier'
 
 // Placeholder screens get their title from the dictionary so the language toggle works on them too
 function Ph({ k }: { k: Key }) {
@@ -85,6 +86,7 @@ export default function App() {
           <Route path="/buyer" element={<BuyerGate />}>
             <Route element={<BuyerLayout />}>
             <Route index element={<BuyerHome />} />
+            <Route path="pier" element={<BuyerPier />} />
             <Route path="offers" element={<BuyerOffers />} />
             <Route path="needs" element={<BuyerNeeds />} />
             <Route path="orders" element={<BuyerOrders />} />

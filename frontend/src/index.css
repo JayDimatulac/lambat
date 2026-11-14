@@ -248,3 +248,8 @@ html[data-simple='true'] .simple-hide { display: none; }
   background-position: bottom;
   background-repeat: no-repeat;
 }
+/* Pier Radar card: the day scene or the night scene, with a veil so the white labels stay readable */
+:root[data-theme='night'] .scene-day,
+:root:not([data-theme='night']) .scene-night { display: none; }
+.radar-veil { background: linear-gradient(180deg, rgba(16, 56, 71, 0.62) 0%, rgba(16, 56, 71, 0.42) 55%, rgba(16, 56, 71, 0.3) 100%); }
+:root[data-theme='night'] .radar-veil { background: linear-gradient(180deg, rgba(4, 20, 28, 0.4) 0%, rgba(4, 20, 28, 0.22) 55%, rgba(4, 20, 28, 0.1) 100%); }

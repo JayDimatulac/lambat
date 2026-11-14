@@ -24,6 +24,8 @@ import { matchesFor, type Kind } from '../lib/buyers'
 import { countdownText, sellByText } from '../lib/time'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
+import radarDay from '../assets/radar/radar-day.webp'
+import radarNight from '../assets/radar/radar-night.webp'
 
 type View = 'radar' | 'list'
 type Live = { need: MatchedNeed; km: number; bearing: number; mins: number; reach: boolean }
@@ -34,9 +36,9 @@ const SPEED_KMH = 20 // a tricycle or motorbike on a coastal road
 const field = 'min-h-12 w-full rounded-md border border-line bg-mint px-3 text-base font-semibold'
 
 /* A titled card used on the right-hand side of the page */
-function Panel({ icon: Icon, title, badge, children }: { icon: ComponentType<{ size?: number; className?: string }>; title: string; badge?: ReactNode; children: ReactNode }) {
+function Panel({ icon: Icon, title, badge, grow, children }: { icon: ComponentType<{ size?: number; className?: string }>; title: string; badge?: ReactNode; grow?: boolean; children: ReactNode }) {
   return (
-    <section className="rounded-lg border border-line bg-card p-4 shadow-rest sm:p-5">
+    <section className={`rounded-lg border border-line bg-card p-4 shadow-rest sm:p-5 ${grow ? 'flex flex-1 flex-col' : ''}`}>
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 font-sans text-base font-bold">
           <Icon size={20} className="shrink-0 text-teal" />
@@ -44,8 +46,19 @@ function Panel({ icon: Icon, title, badge, children }: { icon: ComponentType<{ s
         </h3>
         {badge}
       </div>
-      {children}
+      <div className={grow ? 'flex flex-1 flex-col justify-center' : ''}>{children}</div>
     </section>
+  )
+}
+
+/* The radar's scenery: your sea scene (day or night) with a veil so the labels stay readable. Decoration only. */
+function RadarBackdrop() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+      <img src={radarDay} alt="" loading="lazy" className="scene-day absolute inset-0 size-full object-cover object-right-bottom" />
+      <img src={radarNight} alt="" loading="lazy" className="scene-night absolute inset-0 size-full object-cover object-right-bottom" />
+      <div className="radar-veil absolute inset-0" />
+    </div>
   )
 }
 
@@ -179,8 +192,9 @@ export default function Buyers() {
   const isOffered = (id: string) => offered.has(`${c.id}:${id}`)
 
   const liveRadar = (
-    <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
-      <div className="flex items-start justify-between gap-2 px-4 pt-4 text-white">
+    <section className="relative flex h-full flex-col overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
+      <RadarBackdrop />
+      <div className="relative z-10 flex items-start justify-between gap-2 px-4 pt-4 text-white">
         <div className="min-w-0">
           <h2 className="flex items-center gap-2 font-numeral text-lg font-bold text-white">
             <RadarIcon size={22} strokeWidth={1.8} aria-hidden="true" className="shrink-0" />
@@ -195,7 +209,7 @@ export default function Buyers() {
           {loading ? t('buyers.scanning') : t('buyers.scan')}
         </button>
       </div>
-      <div className="flex flex-wrap gap-2 px-4 pt-3">
+      <div className="relative z-10 flex flex-wrap gap-2 px-4 pt-3">
         {RANGES.map((r) => (
           <button
             key={r}
@@ -208,10 +222,12 @@ export default function Buyers() {
           </button>
         ))}
       </div>
-      <div className="px-2 pb-1 pt-1">
-        <NeedRadar blips={blips} selectedId={selectedLive?.need.id ?? null} onSelect={setPickedNeed} range={range} />
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-3">
+        <div className="w-full max-w-[340px]">
+          <NeedRadar blips={blips} selectedId={selectedLive?.need.id ?? null} onSelect={setPickedNeed} range={range} />
+        </div>
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 pb-4 text-xs font-semibold text-white">
+      <div className="relative z-10 mx-4 mb-4 mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-full bg-deep/60 px-4 py-2 text-xs font-semibold text-white">
         <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-cream bg-coral" />Can arrive in time</span>
         <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-dashed border-white/70" />May be too late</span>
         <span>Number = kilos wanted</span>
@@ -220,21 +236,24 @@ export default function Buyers() {
   )
 
   const sampleRadar = (
-    <section className="overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
-      <div className="flex items-center justify-between px-4 pt-3 text-white">
+    <section className="relative flex h-full flex-col overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sea-2))' }}>
+      <RadarBackdrop />
+      <div className="relative z-10 flex items-center justify-between px-4 pt-3 text-white">
         <h2 className="font-numeral text-lg font-bold text-white">{t('buyers.radar')}</h2>
         <span className="rounded-full bg-deep/50 px-2.5 py-0.5 text-xs font-semibold text-white">{t('ui.sample')}</span>
       </div>
-      <div className="px-2 pb-1 pt-1">
-        <Radar
-          matches={matches}
-          selectedId={selectedId}
-          onSelect={setPicked}
-          accent={accent}
-          label={(m) => `${m.party.name}, ${m.party.km} km, ${m.reachable ? t('radar.reach') : t('radar.noreach')}`}
-        />
+      <div className="relative z-10 flex flex-1 items-center justify-center px-4 py-3">
+        <div className="w-full max-w-[340px]">
+          <Radar
+            matches={matches}
+            selectedId={selectedId}
+            onSelect={setPicked}
+            accent={accent}
+            label={(m) => `${m.party.name}, ${m.party.km} km, ${m.reachable ? t('radar.reach') : t('radar.noreach')}`}
+          />
+        </div>
       </div>
-      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 px-4 pb-4 text-xs font-semibold text-white">
+      <div className="relative z-10 mx-4 mb-4 mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 rounded-full bg-deep/60 px-4 py-2 text-xs font-semibold text-white">
         <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-cream" style={{ background: accent }} />{t('radar.reach')}</span>
         <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-dashed border-white/70" />{t('radar.noreach')}</span>
         <span className="inline-flex items-center gap-1.5"><span className="size-3 rounded-full border-2 border-coral" />{t('buyers.best')}</span>
@@ -312,7 +331,7 @@ export default function Buyers() {
   const liveRight = (
     <>
       {callout}
-      <Panel icon={Users} title={t('buyers.nearby')} badge={<span className="rounded-full bg-seafoam px-3 py-1 text-xs font-bold">{t('buyers.found', { n: inRange.length })}</span>}>
+      <Panel icon={Users} grow title={t('buyers.nearby')} badge={<span className="rounded-full bg-seafoam px-3 py-1 text-xs font-bold">{t('buyers.found', { n: inRange.length })}</span>}>
         {liveBody}
       </Panel>
       {quickActions}
@@ -394,17 +413,17 @@ export default function Buyers() {
       {/* 3. The radar beside the answer. In list view the answers take the full width. */}
       {isLive ? (
         view === 'radar' ? (
-          <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
+          <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-stretch lg:gap-6 lg:space-y-0">
             {liveRadar}
-            <div className="space-y-4">{liveRight}</div>
+            <div className="flex flex-col gap-4">{liveRight}</div>
           </div>
         ) : (
-          <div className="space-y-4">{liveRight}</div>
+          <div className="flex flex-col gap-4">{liveRight}</div>
         )
       ) : view === 'radar' ? (
-        <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-start lg:gap-6 lg:space-y-0">
+        <div className="space-y-5 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-stretch lg:gap-6 lg:space-y-0">
           {sampleRadar}
-          <div className="space-y-4">{shareResults}</div>
+          <div className="flex flex-col gap-4">{shareResults}</div>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 md:items-start">{shareResults}</div>

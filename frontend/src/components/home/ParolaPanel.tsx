@@ -1,9 +1,9 @@
-import { Clock } from 'lucide-react'
+import { Clock, Megaphone } from 'lucide-react'
 import Boat from '../buyer/Boat'
 import { Link } from 'react-router-dom'
 import RiskBadge from '../ui/RiskBadge'
 import LifebuoyTimer from './LifebuoyTimer'
-import { FISH, WaveArrow } from './HomeIcons'
+import { WaveArrow } from './HomeIcons'
 import type { Catch } from '../../data/mock'
 import { sellByText } from '../../lib/time'
 import { useT } from '../../lib/i18n'
@@ -122,19 +122,6 @@ export function ParolaScene({ alert, night, bare = false, boat = false, classNam
   )
 }
 
-/* Three fish swimming past: fills the empty part of the panel on a wide screen */
-function School() {
-  return (
-    <svg viewBox="0 0 360 56" className="block w-full" aria-hidden="true">
-      {[[24, 30, 1.1, 0.14], [104, 14, 0.8, 0.1], [196, 34, 1.4, 0.16], [290, 18, 0.9, 0.1]].map(([x, y, s, o], i) => (
-        <g key={i} transform={`translate(${x} ${y}) scale(${s})`} fill="#fff" fillOpacity={o}>
-          <path d={FISH} transform="translate(-12 -18)" />
-        </g>
-      ))}
-    </svg>
-  )
-}
-
 type Props = { urgent: Catch[]; next?: Catch }
 
 export default function ParolaPanel({ urgent, next }: Props) {
@@ -146,7 +133,7 @@ export default function ParolaPanel({ urgent, next }: Props) {
   return (
     <section
       aria-label={t('home.actions')}
-      className="relative flex h-full flex-col overflow-hidden rounded-lg border border-white/10 text-white shadow-raised"
+      className="relative flex flex-col overflow-hidden rounded-lg border border-white/10 text-white shadow-raised"
       style={{ background: night ? BG_NIGHT : BG_DAY }}
     >
       <div className="h-1.5 w-full shrink-0" style={{ background: alert ? HAZARD : 'var(--color-teal)' }} aria-hidden="true" />
@@ -155,7 +142,10 @@ export default function ParolaPanel({ urgent, next }: Props) {
         <ParolaScene alert={alert} night={night} boat />
         <div className="absolute right-0 top-[30%] left-[40%] pr-4">
           <div className="flex items-start justify-between gap-2">
-            <h2 className={`font-numeral text-[22px] font-bold leading-tight ${night ? 'text-white' : 'text-deep'}`}>{t('home.actions')}</h2>
+            <h2 className={`flex items-center gap-2 font-numeral text-[22px] font-bold leading-tight ${night ? 'text-white' : 'text-deep'}`}>
+              <Megaphone size={26} strokeWidth={1.8} className="shrink-0 text-coral" aria-hidden="true" />
+              {t('home.actions')}
+            </h2>
             {alert && (
               <span className="grid size-8 shrink-0 place-items-center rounded-full bg-coral font-numeral text-base font-bold text-deep">{urgent.length}</span>
             )}
@@ -213,10 +203,6 @@ export default function ParolaPanel({ urgent, next }: Props) {
         )}
       </ul>
 
-      <div className="mt-auto">
-        <School />
-        <p className="border-t border-white/15 px-4 py-3 text-sm leading-snug text-white">{t('disc.guide')}</p>
-      </div>
     </section>
   )
 }

@@ -101,7 +101,7 @@ export function assess(
   const hoursMin = Math.floor(leftMin + 0.1);
 
   return {
-    risk: riskFor((leftMin + leftMax) / 2),
+      risk: riskFor(leftMin),
     iceLevel: iceLevel(last.iceKg, c.kilos),
     hoursElapsed,
     leftMinHours: round1(leftMin),

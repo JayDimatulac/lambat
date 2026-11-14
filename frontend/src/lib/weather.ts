@@ -88,13 +88,23 @@ export function windOutlook(hours: Hour[], nowHour: number): WindOutlook {
   return { kind: 'until', to: ahead[end].h + 1 }
 }
 
+// 8-point compass from degrees (wind direction is where the wind comes FROM)
+export const compass = (deg: number) => ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'][Math.round((((deg % 360) + 360) % 360) / 45) % 8]
+
 export const hour12 = (h: number) => `${((h + 11) % 12) + 1} ${h % 24 < 12 ? 'AM' : 'PM'}`
 
 /* ---------- the real forecast, from the backend ---------- */
 
 type ApiForecast = {
   stale?: boolean
-  current?: { time?: string; weather_code?: number | null }
+  current?: {
+    time?: string
+    weather_code?: number | null
+    temperature_2m?: number | null
+    relative_humidity_2m?: number | null
+    wind_speed_10m?: number | null
+    wind_direction_10m?: number | null
+  }
   hourly?: {
     time: string[]
     precipitation_probability: (number | null)[]
@@ -112,11 +122,13 @@ type ApiForecast = {
     wind_gusts_10m_max?: (number | null)[]
   }
   location?: { name?: string; lat: number; lon: number; isDefault?: boolean }
-  waves?: { hourly?: { time: string[]; wave_height: (number | null)[] } | null } | null
+  waves?: { current?: { wave_height?: number | null } | null; hourly?: { time: string[]; wave_height: (number | null)[] } | null } | null
 }
 
 // status: 'loading' while the first answer is on its way, 'live' for the real forecast, 'sample' when it could not be loaded
-export type Forecast = { week: Day[]; hours: Hour[]; live: boolean; stale: boolean; place?: string; status: 'loading' | 'live' | 'sample' }
+// Conditions right now (Home weather card). Any field can be missing: the card shows a dash for it.
+export type NowConditions = { temp?: number; humidity?: number; wind?: number; windDir?: number; wave?: number }
+export type Forecast = { week: Day[]; hours: Hour[]; live: boolean; stale: boolean; place?: string; status: 'loading' | 'live' | 'sample'; now?: NowConditions }
 
 // WMO weather codes to the four skies the screens draw
 function skyOf(code: number | null | undefined): Sky {
@@ -209,7 +221,17 @@ function fromApi(r: ApiForecast): Forecast {
     return day
   })
 
-  return { week, hours: hours.length ? hours : todayHours(), live: true, stale: !!r.stale, place: r.location?.name, status: 'live' }
+  const num = (v: number | null | undefined) => (typeof v === 'number' ? v : undefined)
+  const c = r.current
+  const now: NowConditions = {
+    temp: num(c?.temperature_2m) !== undefined ? Math.round(c!.temperature_2m!) : undefined,
+    humidity: num(c?.relative_humidity_2m) !== undefined ? Math.round(c!.relative_humidity_2m!) : undefined,
+    wind: num(c?.wind_speed_10m) !== undefined ? Math.round(c!.wind_speed_10m!) : undefined,
+    windDir: num(c?.wind_direction_10m),
+    wave: num(r.waves?.current?.wave_height) !== undefined ? Math.round(r.waves!.current!.wave_height! * 10) / 10 : undefined,
+  }
+
+  return { week, hours: hours.length ? hours : todayHours(), live: true, stale: !!r.stale, place: r.location?.name, status: 'live', now }
 }
 
 // The forecast for a landing place. While it loads, status is 'loading' and screens must not show a verdict.

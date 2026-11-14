@@ -119,9 +119,9 @@ export default function Dashboard() {
     <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
       {/* LEFT: timeline, the one primary action, quick actions, weekly utilization */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        <div className="order-2 lg:order-1">
+        <div className="order-1 lg:order-1">
           <TideScene catches={active.slice(0, 4)} header={header} />
-        </div>
+      </div>
 
         <Link
           to="/catches/new"
@@ -158,12 +158,11 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* RIGHT: needs action + weather share the left column's height. On a phone, needs action comes first. */}
+      {/* RIGHT: needs action + weather share the left column's height. On a phone, the buoys come first, then needs action. */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        <div className="order-1 lg:flex-1 [&>*]:h-full">
+        <div className="order-2 lg:flex-1 [&>*]:h-full">
           <ParolaPanel urgent={urgent} next={next} />
         </div>
-
         <div className="order-5 lg:flex-1 [&>*]:h-full">
           <WeatherCard forecast={forecast} />
         </div>

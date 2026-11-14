@@ -1,8 +1,8 @@
 import { FISH } from '../home/HomeIcons'
 
 // A drying rack with five fish hung on it. Every dry, golden fish is one point for drying that day.
-export default function DryRack({ score, size = 'sm' }: { score: number; size?: 'sm' | 'lg' }) {
-  const w = size === 'lg' ? 220 : 76
+export default function DryRack({ score, size = 'sm' }: { score: number; size?: 'sm' | 'md' | 'lg' }) {
+  const w = size === 'lg' ? 220 : size === 'md' ? 120 : 76
   return (
     <svg viewBox="0 0 90 56" width={w} height={(w * 56) / 90} aria-hidden="true">
       <path d="M6 54L14 6M84 54L76 6" stroke="var(--color-ink-soft)" strokeWidth="2.2" strokeLinecap="round" />

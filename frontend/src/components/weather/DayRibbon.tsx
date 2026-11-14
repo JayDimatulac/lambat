@@ -1,8 +1,15 @@
-import { calmWindow, hour12, sailLevel, windWindow, type Hour, type Level } from '../../lib/weather'
+import { Clock, Cloud, CloudRain, CloudSun, Sun } from 'lucide-react'
+import { calmWindow, hour12, sailLevel, type Hour, type Level, type Sky } from '../../lib/weather'
 import { useT } from '../../lib/i18n'
 
-// Today as one calm ribbon instead of a column of icons per hour: soft green where it is good to go out,
-// amber where to be careful, and red where to stay ashore. A small marker shows where you are now.
+// The hours shown as columns above the bar. Change this list to show other hours (the forecast covers 5 AM to 7 PM).
+const SLOTS = [6, 9, 12, 15, 17, 18]
+
+const SKY_ICON = { sun: Sun, partly: CloudSun, cloud: Cloud, rain: CloudRain }
+const SKY_TONE: Record<Sky, string> = { sun: 'text-[#f5b83d]', partly: 'text-[#f5b83d]', cloud: 'text-[#7ea6b3]', rain: 'text-[#4f8fb0]' }
+
+// Today as one calm bar: soft green where it is good to go out, amber where to be careful,
+// and red where to stay ashore. A small marker shows where you are now.
 const TONE: Record<Level, string> = {
   good: 'bg-risk-low-line/60',
   caution: 'bg-risk-moderate-line/70',
@@ -17,44 +24,49 @@ export default function DayRibbon({ hours, nowHour }: { hours: Hour[]; nowHour: 
   // hours that have already passed are no use for planning
   const ahead = hours.filter((x) => x.h >= nowHour)
   const calm = ahead.length ? calmWindow(ahead) : null
-  const strong = ahead.length ? windWindow(ahead) : null
+  const slots = SLOTS.map((h) => hours.find((x) => x.h === h)).filter((x): x is Hour => !!x)
 
   return (
-    <section className="min-w-0 space-y-4 rounded-lg border border-line bg-card p-5 shadow-rest">
-      <h2 className="text-xl">{t('wx.hourly')}</h2>
+    <section className="min-w-0 space-y-5 rounded-lg border border-line bg-card p-5 shadow-rest lg:h-full">
+      <h2 className="flex items-center gap-2 text-xl">
+        <Clock size={22} strokeWidth={1.8} aria-hidden="true" className="text-teal" />
+        {t('wx.hourly')}
+      </h2>
 
-      <div className="relative pt-6">
-        <div className="flex h-4 gap-px overflow-hidden rounded-full" role="img" aria-label={t('wx.hourly')}>
+      {slots.length > 0 && (
+        <ul className="grid divide-x divide-line rounded-2xl border border-line bg-ice/60 py-3" style={{ gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))` }}>
+          {slots.map((x) => {
+            const Icon = SKY_ICON[x.sky]
+            return (
+              <li key={x.h} className="flex flex-col items-center gap-1.5 text-center">
+                <span className="text-xs font-semibold text-ink-soft">{hour12(x.h)}</span>
+                <Icon size={24} strokeWidth={1.6} aria-hidden="true" className={SKY_TONE[x.sky]} />
+                <span className="font-numeral text-sm font-bold">{x.temp !== undefined ? `${x.temp}°C` : '–'}</span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
+      <div className="relative">
+        <div className="flex h-4 overflow-hidden rounded-full" role="img" aria-label={t('wx.hourly')}>
           {hours.map((x) => (
             <span key={x.h} className={`flex-1 ${TONE[sailLevel(x.wind, x.gust ?? x.wind * 1.5, x.wave, x.rain)]} ${x.h < nowHour ? 'opacity-40' : ''}`} />
           ))}
         </div>
         {nowIdx >= 0 && (
-          <>
-            <span className="absolute top-0 -translate-x-1/2 text-xs font-bold text-teal" style={{ left: pct(nowIdx) }}>{t('when.nowlabel')}</span>
-            <span className="absolute top-8 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-card bg-navy shadow-rest" style={{ left: pct(nowIdx) }} aria-hidden="true" />
-          </>
+          <span
+            className="absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-card bg-navy shadow-rest"
+            style={{ left: pct(nowIdx) }}
+            aria-hidden="true"
+          />
         )}
       </div>
 
-      <div className="relative h-4 text-xs font-semibold text-ink-soft" aria-hidden="true">
-        {hours.map((x, i) => (x.h - hours[0].h) % 3 === 0 ? (
-          <span key={x.h} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: pct(i) }}>{hour12(x.h)}</span>
-        ) : null)}
-      </div>
-
-      <ul className="space-y-1.5 text-[15px] font-semibold">
-        <li className="flex items-center gap-2.5">
-          <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-risk-low-line/70" />
-          {calm ? `${t('wx.best')}: ${hour12(calm.from)} – ${hour12(calm.to)}` : t('wx.nowindow')}
-        </li>
-        {strong && (
-          <li className="flex items-center gap-2.5">
-            <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-risk-critical-line/70" />
-            {t('wx.avoid')}: {hour12(strong.from)} – {hour12(strong.to)}
-          </li>
-        )}
-      </ul>
+      <p className="flex items-center gap-2.5 text-[15px] font-semibold">
+        <span aria-hidden="true" className="size-3 shrink-0 rounded-full bg-risk-low-line/70" />
+        {calm ? `${t('wx.best')}: ${hour12(calm.from)} – ${hour12(calm.to)}` : t('wx.nowindow')}
+      </p>
     </section>
   )
 }

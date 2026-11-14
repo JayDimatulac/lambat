@@ -9,7 +9,7 @@ export const WEATHER_IS_LIVE = false
 export type Sky = 'sun' | 'partly' | 'cloud' | 'rain'
 export type Level = 'good' | 'caution' | 'danger'
 
-export type Hour = { h: number; sky: Sky; wind: number; wave: number; rain: number; gust?: number } // wind and gust km/h, wave metres, rain %
+export type Hour = { h: number; sky: Sky; wind: number; wave: number; rain: number; gust?: number; temp?: number }
 export type Day = { date: Date; sky: Sky; tMax: number; tMin: number; rain: number; wind: number; gust: number; wave: number; waveEst?: boolean }
 
 // Sail level, from PAGASA's sea bulletins (km/h, wave height in metres):
@@ -107,6 +107,7 @@ type ApiForecast = {
   }
   hourly?: {
     time: string[]
+    temperature_2m?: (number | null)[]
     precipitation_probability: (number | null)[]
     wind_speed_10m: (number | null)[]
     wind_gusts_10m?: (number | null)[]
@@ -173,12 +174,14 @@ function fromApi(r: ApiForecast): Forecast {
       const hr = Number(stamp.slice(11, 13))
       if (hr < 5 || hr > 19) return
       const wind = Math.round(h.wind_speed_10m[i] ?? 0)
-      const g = h.wind_gusts_10m?.[i]
+           const g = h.wind_gusts_10m?.[i]
+          const tmp = h.temperature_2m?.[i]
       hours.push({
         h: hr,
         sky: skyOf(h.weather_code[i]),
         wind,
         gust: typeof g === 'number' ? Math.round(g) : undefined,
+        temp: typeof tmp === 'number' ? Math.round(tmp) : undefined,
         rain: Math.round(h.precipitation_probability[i] ?? 0),
         wave: waveAt(stamp) ?? estWave(wind),
       })

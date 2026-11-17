@@ -7,13 +7,13 @@ import { Card, Chip, Head, type Icon } from './ui'
 
 const ICONS: Icon[] = [SoldFishIcon, SharedFishIcon, DryRackIcon, LostFishIcon]
 const W = 640
-const H = 240
-const PL = 28
-const PR = 28
-const PT = 22
-const PB = 6
+const H = 260
+const PL = 48
+const PR = 20
+const PT = 44
+const PB = 8
 
-// A smooth S-curve between two points, so the layers flow like swells instead of stepping like bars
+// A smooth S-curve between points, so the line flows like a swell instead of stepping
 const bump = (pts: [number, number][]) =>
   pts.slice(1).map(([px, py], i) => {
     const [qx, qy] = pts[i]
@@ -33,12 +33,11 @@ export default function TideChart() {
   const top = Math.ceil(Math.max(...totals) / 500) * 500
   const x = (i: number) => PL + (i * (W - PL - PR)) / (n - 1)
   const y = (v: number) => H - PB - (v / top) * (H - PT - PB)
-  const bounds = Array.from({ length: 5 }, (_, k) => weeks.map((w) => w.kg.slice(0, k).reduce((a, b) => a + b, 0)))
-  const band = (k: number) => {
-    const up = weeks.map((_, i): [number, number] => [x(i), y(bounds[k + 1][i])])
-    const lo = weeks.map((_, i): [number, number] => [x(i), y(bounds[k][i])]).reverse()
-    return `M${up[0][0]} ${up[0][1]}${bump(up)}L${lo[0][0]} ${lo[0][1]}${bump(lo)}Z`
-  }
+  const pts = totals.map((v, i): [number, number] => [x(i), y(v)])
+  const line = `M${pts[0][0]} ${pts[0][1]}${bump(pts)}`
+  const area = `${line}L${x(n - 1)} ${H - PB}L${x(0)} ${H - PB}Z`
+  const ticks = Array.from({ length: top / 500 + 1 }, (_, i) => i * 500)
+
   const scrub = (e: PointerEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
     const px = ((e.clientX - r.left) / r.width) * W
@@ -48,10 +47,12 @@ export default function TideChart() {
 
   const prev = idx > 0 ? totals[idx - 1] : null
   const delta = prev ? Math.round(((totals[idx] - prev) / prev) * 100) : null
+  const tipX = Math.min(Math.max(x(idx), PL + 42), W - PR - 42)
+  const tipY = y(totals[idx]) - 38
 
   return (
     <Card>
-      <Head icon={TideIcon} title="The weekly tide" sub="Drag across the water to move through the weeks"
+      <Head icon={TideIcon} title="The weekly tide" sub="Move across the chart to look at each week"
         right={
           <div role="radiogroup" aria-label="Range" className="inline-flex rounded-full border border-line bg-seafoam/50 p-1">
             {(['4', '8'] as const).map((r) => (
@@ -68,22 +69,32 @@ export default function TideChart() {
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} className="block w-full cursor-crosshair select-none" style={{ touchAction: 'pan-y' }}
-        onPointerMove={scrub} onPointerDown={scrub} role="img" aria-label="Catch outcomes per week, stacked as flowing layers">
+        onPointerMove={scrub} onPointerDown={scrub} role="img" aria-label="Total catch per week as a line">
         <defs>
-          {OUTCOMES.map((o, k) => (
-            <linearGradient key={o.name} id={`tide-g${k}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor={o.color} stopOpacity="1" />
-              <stop offset="1" stopColor={o.color} stopOpacity="0.78" />
-            </linearGradient>
-          ))}
+          <linearGradient id="tide-area" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="var(--color-teal)" stopOpacity="0.32" />
+            <stop offset="1" stopColor="var(--color-teal)" stopOpacity="0.03" />
+          </linearGradient>
         </defs>
-        {Array.from({ length: top / 500 }, (_, i) => (i + 1) * 500).map((v) => (
-          <path key={v} d={`M${PL} ${y(v)}H${W - PR}`} stroke="var(--color-line)" strokeWidth="1.5" strokeDasharray="3 6" />
+
+        {ticks.map((v) => (
+          <g key={v}>
+            <path d={`M${PL} ${y(v)}H${W - PR}`} stroke="var(--color-line)" strokeWidth="1.5" strokeDasharray={v === 0 ? undefined : '3 6'} />
+            <text x={PL - 10} y={y(v) + 4} textAnchor="end" fontSize="11" fill="var(--color-ink-soft)">{v.toLocaleString('en-PH')}</text>
+          </g>
         ))}
-        {OUTCOMES.map((o, k) => <path key={o.name} d={band(k)} fill={`url(#tide-g${k})`} stroke="var(--color-card)" strokeWidth="1.5" strokeLinejoin="round" />)}
-        <path d={`M${x(idx)} ${PT - 8}V${H - PB}`} stroke="var(--color-navy)" strokeOpacity="0.7" strokeWidth="2" strokeDasharray="2 5" strokeLinecap="round" />
-        <circle cx={x(idx)} cy={PT - 10} r="6" style={{ fill: 'var(--color-cream)' }} stroke="var(--color-navy)" strokeWidth="2" />
-        {OUTCOMES.map((o, k) => <circle key={o.name} cx={x(idx)} cy={y(bounds[k + 1][idx])} r="4.5" fill="var(--color-card)" stroke={o.color} strokeWidth="2.5" />)}
+
+        <path d={area} fill="url(#tide-area)" />
+        <path d={line} fill="none" stroke="var(--color-teal)" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        {pts.map(([px, py], i) => (
+          <circle key={weeks[i].label} cx={px} cy={py} r={i === idx ? 6 : 4} fill="var(--color-card)" stroke="var(--color-teal)" strokeWidth="2.5" />
+        ))}
+
+        <path d={`M${x(idx)} ${y(totals[idx]) + 8}V${H - PB}`} stroke="var(--color-navy)" strokeOpacity="0.5" strokeWidth="1.5" strokeDasharray="2 5" strokeLinecap="round" />
+        <g>
+          <rect x={tipX - 42} y={tipY - 11} width="84" height="24" rx="8" fill="var(--color-deep)" />
+          <text x={tipX} y={tipY + 5} textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">{totals[idx].toLocaleString('en-PH')} kg</text>
+        </g>
       </svg>
 
       <div className="relative mt-1 h-8">

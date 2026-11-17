@@ -74,3 +74,11 @@ export const SENT: Sent[] = [
   { title: 'High waves along the Calatagan coast', meta: 'Weather / sea condition · Calatagan coast', reach: '96 SMS · 410 app', when: 'Yesterday', sev: 'watch' },
   { title: 'Tamban price dropped by ₱3/kg', meta: 'Market update · All 1st District', reach: '0 SMS · 880 app', when: '2 days ago', sev: 'calm' },
 ]
+
+export type Activity = { kind: 'buyer' | 'advisory' | 'catch' | 'user'; title: string; sub: string; when: string; to: string }
+export const ACTIVITY: Activity[] = [
+  { kind: 'buyer', title: 'New buyer for approval', sub: 'Pilar’s Fish Trading', when: '10:24 AM', to: '/admin/verifications' },
+  { kind: 'advisory', title: 'Advisory published', sub: SENT[1].title, when: 'Yesterday', to: '/admin/advisories' },
+  { kind: 'catch', title: 'Catch updated', sub: 'Tamban · 350 kg · Lemery', when: 'Yesterday', to: '/admin/listings' },
+  { kind: 'user', title: 'New user registered', sub: 'Maria Santos (Fisherfolk)', when: 'Nov 10', to: '/admin/verifications' },
+]

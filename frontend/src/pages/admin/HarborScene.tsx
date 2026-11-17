@@ -24,7 +24,7 @@ export default function HarborScene() {
     </g>
   )
   return (
-    <svg viewBox="0 0 720 120" preserveAspectRatio="xMaxYMax slice" className="pointer-events-none absolute inset-x-0 bottom-0 h-36 w-full sm:h-40" aria-hidden="true">
+    <svg viewBox="0 0 720 120" preserveAspectRatio="xMaxYMax slice" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
       <defs>
         <radialGradient id="harbor-glow">
           <stop offset="0" style={{ stopColor: 'var(--color-cream)' }} stopOpacity="0.85" />

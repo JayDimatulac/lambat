@@ -1,6 +1,6 @@
 import { useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Fish, Hourglass, LayoutDashboard, LogOut, Megaphone, ShieldCheck, UserCheck } from 'lucide-react'
+import { Bell, Fish, Hourglass, LayoutDashboard, LogOut, Megaphone, UserCheck } from 'lucide-react'
 import Sheet from '../../components/ui/Sheet'
 import LogoutSheet from '../../components/auth/LogoutSheet'
 import LangToggle from '../../components/layout/LangToggle'
@@ -23,20 +23,16 @@ const NAV: Item[] = [
 ]
 const isActive = (i: Item, path: string) => (i.end ? path === i.to : path.startsWith(i.to))
 
-/* The harbor dock, same as the fisherfolk one: a slim icon strip that opens on hover or focus and pushes the page. */
-const label = 'whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover/dock:opacity-100 group-has-[:focus-visible]/dock:opacity-100'
+/* The harbor sidebar: dark teal, flush to the left edge. A slim icon strip that opens on hover or focus,
+   and stays open with its labels on wide screens (xl and up). */
+const label = 'whitespace-nowrap opacity-0 transition-opacity duration-200 group-hover/dock:opacity-100 group-has-[:focus-visible]/dock:opacity-100 xl:opacity-100'
 const rowBase = 'relative flex h-12 w-full items-center gap-3 rounded-2xl pl-3 pr-4 text-left text-[15px] font-semibold transition'
-const rowIdle = 'text-navy/75 hover:bg-seafoam/70 hover:text-navy'
-const rowOn = 'bg-seafoam text-teal'
+const rowIdle = 'text-white/80 hover:bg-white/10 hover:text-white'
+const rowOn = 'bg-[#d9eff1] text-[#0a4a57]'
 
-/* the lighthouse beam: a coral light reaching in from the edge, marking the page you are on */
+/* a coral light on the edge, marking the page you are on */
 function ActiveGlow() {
-  return (
-    <>
-      <span aria-hidden="true" className="absolute inset-0 rounded-2xl bg-gradient-to-r from-coral/30 via-coral/10 to-transparent" />
-      <span aria-hidden="true" className="absolute -left-3 top-3 h-6 w-1 rounded-r-full bg-coral" />
-    </>
-  )
+  return <span aria-hidden="true" className="absolute -left-3 top-3 h-6 w-1 rounded-r-full bg-coral" />
 }
 
 const Count = ({ n, className }: { n: number; className: string }) =>
@@ -104,36 +100,21 @@ export default function AdminLayout() {
 
   return (
     <div className="min-h-dvh lg:flex">
-      {/* Desktop dock: floating, pushes the page when it opens */}
-      <div className="group/dock pointer-events-none hidden w-24 shrink-0 transition-[width] duration-300 ease-out hover:w-[264px] has-[:focus-visible]:w-[264px] lg:block">
+      {/* Desktop sidebar: pushes the page when it opens, always open on xl */}
+      <div className="group/dock pointer-events-none hidden w-[72px] shrink-0 transition-[width] duration-300 ease-out hover:w-60 has-[:focus-visible]:w-60 lg:block xl:w-60">
         <aside
-          className="pointer-events-auto fixed bottom-3 left-3 top-3 z-40 flex w-[72px] flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card via-card to-seafoam px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] group-hover/dock:w-60 group-has-[:focus-visible]/dock:w-60"
+          className="pointer-events-auto fixed inset-y-0 left-0 z-40 flex w-[72px] flex-col overflow-y-auto overflow-x-hidden bg-gradient-to-b from-[#0a4a57] to-[#06333c] px-3 py-5 text-white shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] group-hover/dock:w-60 group-has-[:focus-visible]/dock:w-60 xl:w-60"
         >
           {/* Brand */}
           <Link to="/admin" aria-label="LAMBAT admin" className="mb-5 flex h-12 shrink-0 items-center gap-3">
-            <Logo size={48} className="size-12" />
+            <Logo size={48} className="size-12 shrink-0" />
             <span className={`flex flex-col leading-none ${label}`}>
-              <span className="font-display text-xl font-bold tracking-widest text-navy">LAMBAT</span>
-              <span className="mt-1 text-xs font-bold tracking-[0.25em] text-teal">ADMIN</span>
+              <span className="font-display text-xl font-bold tracking-widest text-white">LAMBAT</span>
+              <span className="mt-1 text-xs font-bold tracking-[0.25em] text-seafoam">ADMIN</span>
             </span>
           </Link>
 
-          {/* The one primary action: approve waiting accounts */}
-          <Link
-            to="/admin/verifications"
-            aria-label={t('adm.verify.cta')}
-            className="relative flex h-12 shrink-0 items-center gap-3 rounded-full bg-coral pl-3 pr-5 font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95"
-          >
-            <ShieldCheck size={24} strokeWidth={1.8} className="shrink-0" />
-            <span className={label}>{t('adm.verify.cta')}</span>
-            {pending > 0 && (
-              <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full bg-deep px-1.5 text-xs font-bold text-white ring-2 ring-card">
-                {pending}
-              </span>
-            )}
-          </Link>
-
-          <div aria-hidden="true" className="my-4 h-px shrink-0 bg-line" />
+          <div aria-hidden="true" className="mb-4 h-px shrink-0 bg-white/15" />
 
           <nav className="flex flex-col gap-1.5" aria-label="Admin">
             {NAV.map((item) => {
@@ -151,11 +132,11 @@ export default function AdminLayout() {
             })}
           </nav>
 
-          {/* Sign out, kept at the bottom of the dock */}
+          {/* Sign out, kept at the bottom of the sidebar */}
           <div className="mt-auto flex shrink-0 flex-col gap-1.5 pt-4">
-            <div aria-hidden="true" className="mb-2 h-px bg-line" />
+            <div aria-hidden="true" className="mb-2 h-px bg-white/15" />
             <button type="button" onClick={() => setAskLogout(true)} aria-label={t('auth.logout')}
-              className={`${rowBase} text-navy/75 hover:bg-risk-critical-bg hover:text-risk-critical`}>
+              className={`${rowBase} text-white/80 hover:bg-white/10 hover:text-white`}>
               <LogOut size={24} strokeWidth={1.8} className="shrink-0" />
               <span className={label}>{t('auth.logout')}</span>
             </button>
@@ -166,7 +147,7 @@ export default function AdminLayout() {
       <div className="min-w-0 flex-1">
         {/* Top bar: a floating glass bar that lines up with the page content */}
         <header className="sticky top-0 z-20 pt-3">
-          <div className="mx-auto max-w-6xl px-4 lg:px-8">
+          <div className="mx-auto max-w-7xl px-4 lg:px-8">
             <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
               <Link to="/admin" aria-label="LAMBAT admin" className="flex items-center gap-2.5 lg:hidden">
@@ -182,13 +163,13 @@ export default function AdminLayout() {
               </div>
 
               <div className="flex items-center gap-1.5 sm:gap-2">
-                {pending > 0 && (
-                  <Link to="/admin/verifications" className="hidden min-h-10 items-center gap-2 rounded-full border border-line px-3 text-sm font-semibold text-teal transition hover:bg-seafoam/60 sm:inline-flex">
-                    <UserCheck size={18} strokeWidth={1.8} />{t('adm.waiting', { n: pending })}
-                  </Link>
-                )}
                 <ParolaToggle night={night} onToggle={() => setTheme(night ? 'day' : 'night')} />
                 <LangToggle />
+                <Link to="/admin/verifications" aria-label={pending > 0 ? t('adm.waiting', { n: pending }) : 'Notifications'}
+                  className="relative grid size-11 place-items-center rounded-full border border-line transition hover:bg-seafoam/60">
+                  <Bell size={22} strokeWidth={1.8} />
+                  {pending > 0 && <span aria-hidden="true" className="absolute right-2 top-2 size-2.5 rounded-full bg-coral ring-2 ring-card" />}
+                </Link>
                 <span aria-hidden="true" className="mx-1 hidden h-8 w-px bg-line sm:block" />
                 <button
                   type="button"
@@ -203,7 +184,7 @@ export default function AdminLayout() {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-6xl px-4 pb-32 pt-5 lg:px-8 lg:pb-10"><Outlet context={ctx} /></main>
+        <main className="mx-auto max-w-7xl px-4 pb-32 pt-5 lg:px-8 lg:pb-10"><Outlet context={ctx} /></main>
       </div>
 
       {/* Phone bar */}

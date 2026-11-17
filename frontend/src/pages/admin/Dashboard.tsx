@@ -1,16 +1,15 @@
 import type { ComponentType } from 'react'
-import { Link } from 'react-router-dom'
+import { data, Link } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, ArrowUpRight, Fish, Megaphone, UserCheck, Wallet } from 'lucide-react'
 import { BuoyIcon } from '../../components/icons'
 import { LostFishIcon } from '../../components/home/HomeIcons'
-import { useAuth } from '../../lib/auth'
 import BuoyRack from './BuoyRack'
 import CatchOutcomes from './CatchOutcomes'
 import HarborScene from './HarborScene'
 import RecentActivity from './RecentActivity'
 import TideChart from './TideChart'
 import { Bar, Card, Head } from './ui'
-import { LISTINGS, SENT, SPECIES, TOWNS } from './data'
+import { fmtPeso, fmtTons, useAdminOverview } from '../../lib/adminApi'
 
 type LIcon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
 
@@ -78,11 +77,13 @@ function Task({ to, icon: Icon, title, sub, count, urgent }: { to: string; icon:
 }
 
 export default function Dashboard() {
-  const { accounts } = useAuth()
-
-  const pending = accounts.filter((a) => a.role !== 'admin' && a.status === 'PENDING').length
-  const urgent = LISTINGS.filter((l) => l.risk === 'crit' || l.risk === 'high').length
-
+  const { data, error, loading } = useAdminOverview()
+if (loading) return <p className="p-6 text-ink-soft">Loading the harbor…</p>
+if (error || !data) return <p className="p-6 text-risk-high">{error ?? 'No data'}</p>
+const pending = data.accountsWaiting
+const urgent = data.atRisk
+const lost = data.lostBySpecies
+const areas = data.areas
   return (
     <div className="space-y-5">
       {/* Hero: slim, the harbor at dawn */}
@@ -96,8 +97,8 @@ export default function Dashboard() {
 
       {/* Key numbers */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi to="/admin/listings" icon={Fish} label="Landed in total" value="18.6" unit="t" note="1,284 catches logged" trend={{ up: true, good: true, text: '+112 this week' }} />
-        <Kpi to="/admin/listings" icon={Wallet} label="Value recovered" value="₱412k" note="from fish that would have spoiled" trend={{ up: true, good: true, text: '10% lost' }} />
+        <Kpi to="/admin/listings" icon={Fish} label="Landed in total" value={fmtTons(data.landed.kg)} unit="t" note={`${data.landed.count} catches logged`} trend={{ up: true, good: true, text: `+${data.landed.thisWeek} this week` }} />
+        <Kpi to="/admin/listings" icon={Wallet} label="Value of completed sales" value={fmtPeso(data.valueRecovered)} note="from completed orders" trend={{ up: false, good: data.lossRatePct <= 10, text: `${data.lossRatePct}% lost` }} />
         <Kpi to="/admin/verifications" icon={UserCheck} label="Accounts waiting" value={pending} note={pending === 0 ? 'All caught up' : 'need your approval'} />
         <Kpi to="/admin/listings" icon={BuoyIcon as LIcon} label="Catches at risk" value={urgent} note="high or critical" tone="coral" trend={urgent > 0 ? { up: true, good: false, text: 'act today' } : undefined} />
       </div>
@@ -110,7 +111,7 @@ export default function Dashboard() {
         </div>
         <Task to="/admin/verifications" icon={UserCheck} title="Approve new accounts" sub={pending === 0 ? 'Nobody is waiting' : `${pending} waiting to moor`} count={pending} />
         <Task to="/admin/listings" icon={Fish} title="Check at-risk catches" sub={`${urgent} near spoilage`} count={urgent} urgent={urgent > 0} />
-        <Task to="/admin/advisories" icon={Megaphone} title="Send an advisory" sub={`Last sent: ${SENT[0].when}`} />
+        <Task to="/admin/advisories" icon={Megaphone} title="Send an advisory" sub={`Last sent: ${sub={data.lastAdvisory ? `Last sent: ${new Date(data.lastAdvisory.createdAt).toLocaleDateString()}` : 'None sent yet'}n}`} />
       </section>
 
       {/* Weekly tide and what just happened */}

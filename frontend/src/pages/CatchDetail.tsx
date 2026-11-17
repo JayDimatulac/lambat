@@ -27,7 +27,7 @@ export default function CatchDetail() {
   const [sheet, setSheet] = useState<'ice' | Outcome | null>(null)
   const [pulse, setPulse] = useState(0)
   const [toast, setToast] = useState<string | null>(null)
-  const [best, setBest] = useState<StrandId | null | undefined>(undefined) // the strand the server suggests  
+  const [, setBest] = useState<StrandId | null | undefined>(undefined) // the strand the server suggests 
 
   useEffect(() => {
     if (!toast) return

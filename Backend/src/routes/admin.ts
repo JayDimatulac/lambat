@@ -151,6 +151,150 @@ adminRouter.get("/stats", async (_req, res) => {
     catches: catches.map((c) => ({ status: c.status, count: c._count })),
   });
 });
+
+// ---- helpers for /overview ----
+const DAY = 86_400_000;
+const WEEKS = 8;
+
+// Monday 00:00 of the week that contains d
+function startOfWeek(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+  return x;
+}
+const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+
+// Everything the admin dashboard shows, in one call
+adminRouter.get("/overview", async (_req, res) => {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * DAY);
+  const firstWeek = startOfWeek(new Date(now.getTime() - (WEEKS - 1) * 7 * DAY));
+
+  const [catches, completedOrders, accountsWaiting, recentUsers, recentAdvisories] =
+    await Promise.all([
+      prisma.catchBatch.findMany({
+        orderBy: { createdAt: "desc" },
+        select: {
+          kilos: true,
+          status: true,
+          place: true,
+          caughtAt: true,
+          createdAt: true,
+          user: { select: { barangay: true } },
+          species: { select: { englishName: true, l0Min: true, l0Max: true, histamine: true } },
+          iceEvents: { select: { at: true, iceKg: true }, orderBy: { at: "asc" } },
+        },
+      }),
+      prisma.order.findMany({
+        where: { status: "COMPLETED" },
+        select: { kilos: true, pricePerKg: true },
+      }),
+      prisma.user.count({ where: { status: "PENDING", role: { not: "ADMIN" } } }),
+      prisma.user.findMany({
+        where: { role: { in: ["FISHERFOLK", "BUYER"] } },
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: { name: true, role: true, status: true, businessName: true, createdAt: true },
+      }),
+      prisma.advisory.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 3,
+        select: { title: true, createdAt: true },
+      }),
+    ]);
+
+  const outcomes = { ACTIVE: 0, SOLD: 0, REDISTRIBUTED: 0, PROCESSED: 0, DISCARDED: 0 };
+  const riskNow = { low: 0, moderate: 0, high: 0, critical: 0, unknown: 0 };
+  const lostBySpecies = new Map<string, number>();
+  const areas = new Map<string, { kg: number; lostKg: number }>();
+  const weeks = Array.from({ length: WEEKS }, (_, i) => ({
+    weekStart: new Date(firstWeek.getTime() + i * 7 * DAY),
+    kg: { ACTIVE: 0, SOLD: 0, REDISTRIBUTED: 0, PROCESSED: 0, DISCARDED: 0 },
+  }));
+  let atRisk = 0;
+
+  for (const c of catches) {
+    outcomes[c.status] += c.kilos;
+
+    const area = (c.place ?? c.user.barangay ?? "").trim() || "Unknown";
+    const a = areas.get(area) ?? { kg: 0, lostKg: 0 };
+    a.kg += c.kilos;
+    if (c.status === "DISCARDED") {
+      a.lostKg += c.kilos;
+      lostBySpecies.set(c.species.englishName, (lostBySpecies.get(c.species.englishName) ?? 0) + c.kilos);
+    }
+    areas.set(area, a);
+
+    if (c.status === "ACTIVE") {
+      const r = assess(c, c.iceEvents, c.species).risk;
+      riskNow[r ?? "unknown"] += 1;
+      if (r === "high" || r === "critical") atRisk += 1;
+    }
+
+    const w = Math.floor((c.caughtAt.getTime() - firstWeek.getTime()) / (7 * DAY));
+    if (w >= 0 && w < WEEKS) weeks[w].kg[c.status] += c.kilos;
+  }
+
+  const totalKg = sum(catches.map((c) => c.kilos));
+
+  const activity = [
+    ...recentUsers.map((u) => {
+      const newBuyer = u.role === "BUYER" && u.status === "PENDING";
+      return {
+        kind: newBuyer ? ("buyer" as const) : ("user" as const),
+        title: newBuyer ? "New buyer for approval" : "New user registered",
+        sub: u.role === "BUYER" ? (u.businessName ?? u.name) : `${u.name} (Fisherfolk)`,
+        at: u.createdAt,
+      };
+    }),
+    ...recentAdvisories.map((a) => ({
+      kind: "advisory" as const,
+      title: "Advisory published",
+      sub: a.title,
+      at: a.createdAt,
+    })),
+    ...catches.slice(0, 5).map((c) => ({
+      kind: "catch" as const,
+      title: "Catch logged",
+      sub: `${c.species.englishName} · ${Math.round(c.kilos)} kg · ${c.place ?? c.user.barangay}`,
+      at: c.createdAt,
+    })),
+  ]
+    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    .slice(0, 6);
+
+  res.json({
+    landed: {
+      kg: totalKg,
+      count: catches.length,
+      thisWeek: catches.filter((c) => c.createdAt >= weekAgo).length,
+    },
+    outcomes,
+    lossRatePct: totalKg > 0 ? Math.round((outcomes.DISCARDED / totalKg) * 100) : 0,
+    valueRecovered: Math.round(sum(completedOrders.map((o) => o.kilos * o.pricePerKg))),
+    accountsWaiting,
+    atRisk,
+    riskNow,
+    weeks: weeks.map((w) => ({ weekStart: w.weekStart.toISOString(), kg: w.kg })),
+    lostBySpecies: [...lostBySpecies]
+      .map(([name, kg]) => ({ name, kg: Math.round(kg) }))
+      .sort((a, b) => b.kg - a.kg)
+      .slice(0, 5),
+    areas: [...areas]
+      .map(([name, v]) => ({
+        name,
+        kg: Math.round(v.kg),
+        lostKg: Math.round(v.lostKg),
+        lossPct: v.kg > 0 ? Math.round((v.lostKg / v.kg) * 100) : 0,
+      }))
+      .sort((a, b) => b.lossPct - a.lossPct || b.kg - a.kg)
+      .slice(0, 5),
+    lastAdvisory: recentAdvisories[0] ?? null,
+    activity,
+  });
+});
+
 // Set a species' shelf life at 0 C (hours). Send l0Min and l0Max together, or both null to clear.
 adminRouter.patch("/species/:id", async (req, res) => {
   const { l0Min, l0Max, histamine } = req.body ?? {};
@@ -179,6 +323,7 @@ adminRouter.patch("/species/:id", async (req, res) => {
   });
   res.json(updated);
 });
+
 // ---- Pathways (admin) ----
 
 const PATHWAY_RISKS: RiskLevel[] = ["LOW", "MEDIUM"];
@@ -338,6 +483,7 @@ adminRouter.patch("/pathways/:id", async (req, res) => {
     throw e;
   }
 });
+
 // Reset a forgotten password (SMS is not available yet, so the admin tells the person the new one).
 // Admin accounts are reset with the create-admin script, never through the API.
 adminRouter.patch("/users/:id/password", async (req, res) => {
@@ -364,6 +510,7 @@ adminRouter.patch("/users/:id/password", async (req, res) => {
   });
   res.json({ ok: true });
 });
+
 // ---- Moderation views (admin only; the whole router already requires an admin) ----
 
 function limitOf(v: unknown): number {

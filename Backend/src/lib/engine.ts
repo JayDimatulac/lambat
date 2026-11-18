@@ -31,7 +31,7 @@ export function iceLevel(iceKg: number, fishKg: number): IceLevel {
 }
 
 // how many times faster the fish spoils at tempC than at 0 C
-const relativeRate = (tempC: number) => (1 + 0.1 * tempC) ** 2;
+export const relativeRate = (tempC: number) => (1 + 0.1 * tempC) ** 2;   // after
 
 export function riskFor(midHoursLeft: number): Risk {
   if (midHoursLeft <= RISK_HOURS.critical) return "critical";

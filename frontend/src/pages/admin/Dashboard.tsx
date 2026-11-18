@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { data, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { ArrowDownRight, ArrowRight, ArrowUpRight, Fish, Megaphone, UserCheck, Wallet } from 'lucide-react'
 import { BuoyIcon } from '../../components/icons'
 import { LostFishIcon } from '../../components/home/HomeIcons'
@@ -9,7 +9,7 @@ import HarborScene from './HarborScene'
 import RecentActivity from './RecentActivity'
 import TideChart from './TideChart'
 import { Bar, Card, Head } from './ui'
-import { fmtPeso, fmtTons, useAdminOverview } from '../../lib/adminApi'
+import { fmtPeso, fmtWeight, useAdminOverview } from '../../lib/adminApi'
 
 type LIcon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
 
@@ -77,13 +77,19 @@ function Task({ to, icon: Icon, title, sub, count, urgent }: { to: string; icon:
 }
 
 export default function Dashboard() {
+  // the hook always runs first, before any early return
   const { data, error, loading } = useAdminOverview()
-if (loading) return <p className="p-6 text-ink-soft">Loading the harbor…</p>
-if (error || !data) return <p className="p-6 text-risk-high">{error ?? 'No data'}</p>
-const pending = data.accountsWaiting
-const urgent = data.atRisk
-const lost = data.lostBySpecies
-const areas = data.areas
+
+  if (loading) return <p className="p-6 text-ink-soft">Loading the harbor…</p>
+  if (error || !data) return <p className="p-6 text-risk-high">{error ?? 'No data'}</p>
+
+  const pending = data.accountsWaiting
+  const urgent = data.atRisk
+  const lost = data.lostBySpecies
+  const areas = data.areas
+  const landed = fmtWeight(data.landed.kg)
+  const lastSent = data.lastAdvisory ? new Date(data.lastAdvisory.createdAt).toLocaleDateString() : null
+
   return (
     <div className="space-y-5">
       {/* Hero: slim, the harbor at dawn */}
@@ -97,7 +103,7 @@ const areas = data.areas
 
       {/* Key numbers */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi to="/admin/listings" icon={Fish} label="Landed in total" value={fmtTons(data.landed.kg)} unit="t" note={`${data.landed.count} catches logged`} trend={{ up: true, good: true, text: `+${data.landed.thisWeek} this week` }} />
+        <Kpi to="/admin/listings" icon={Fish} label="Landed in total" value={landed.value} unit={landed.unit} note={`${data.landed.count} catches logged`} trend={{ up: true, good: true, text: `+${data.landed.thisWeek} this week` }} />
         <Kpi to="/admin/listings" icon={Wallet} label="Value of completed sales" value={fmtPeso(data.valueRecovered)} note="from completed orders" trend={{ up: false, good: data.lossRatePct <= 10, text: `${data.lossRatePct}% lost` }} />
         <Kpi to="/admin/verifications" icon={UserCheck} label="Accounts waiting" value={pending} note={pending === 0 ? 'All caught up' : 'need your approval'} />
         <Kpi to="/admin/listings" icon={BuoyIcon as LIcon} label="Catches at risk" value={urgent} note="high or critical" tone="coral" trend={urgent > 0 ? { up: true, good: false, text: 'act today' } : undefined} />
@@ -111,19 +117,19 @@ const areas = data.areas
         </div>
         <Task to="/admin/verifications" icon={UserCheck} title="Approve new accounts" sub={pending === 0 ? 'Nobody is waiting' : `${pending} waiting to moor`} count={pending} />
         <Task to="/admin/listings" icon={Fish} title="Check at-risk catches" sub={`${urgent} near spoilage`} count={urgent} urgent={urgent > 0} />
-        <Task to="/admin/advisories" icon={Megaphone} title="Send an advisory" sub={`Last sent: ${sub={data.lastAdvisory ? `Last sent: ${new Date(data.lastAdvisory.createdAt).toLocaleDateString()}` : 'None sent yet'}n}`} />
+        <Task to="/admin/advisories" icon={Megaphone} title="Send an advisory" sub={lastSent ? `Last sent: ${lastSent}` : 'None sent yet'} />
       </section>
 
-      {/* Weekly tide and what just happened */}
+      {/* Weekly tide and what just happened (live from the overview) */}
       <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
-        <TideChart />
-        <RecentActivity />
+        <TideChart weeks={data.weeks} />
+        <RecentActivity activity={data.activity} />
       </div>
 
       {/* Where the catch went, and how risky it is out there */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <CatchOutcomes />
-        <BuoyRack />
+        <CatchOutcomes outcomes={data.outcomes} />
+        <BuoyRack riskNow={data.riskNow} />
       </div>
 
       {/* Where the losses are */}
@@ -131,23 +137,25 @@ const areas = data.areas
         <Card>
           <Head icon={LostFishIcon} title="Fish lost the most" sub="Recorded loss by species" />
           <div className="flex flex-col gap-2.5">
-            {SPECIES.map(([n, kg]) => (
-              <div key={n} className="flex items-center gap-2.5 text-sm">
-                <span className="w-28 shrink-0">{n}</span>
-                <Bar pct={(kg / SPECIES[0][1]) * 100} color="var(--color-coral)" />
+            {lost.length === 0 && <p className="text-sm text-ink-soft">No losses recorded yet.</p>}
+            {lost.map(({ name, kg }) => (
+              <div key={name} className="flex items-center gap-2.5 text-sm">
+                <span className="w-28 shrink-0">{name}</span>
+                <Bar pct={(kg / (lost[0]?.kg || 1)) * 100} color="var(--color-coral)" />
                 <b className="w-16 text-right">{kg} kg</b>
               </div>
             ))}
           </div>
         </Card>
         <Card>
-          <Head icon={BuoyIcon} title="Landing areas to watch" sub="Loss rate by town" />
+          <Head icon={BuoyIcon} title="Landing areas to watch" sub="Loss rate by landing area" />
           <div className="flex flex-col gap-2.5">
-            {TOWNS.map(([n, p]) => (
-              <div key={n} className="flex items-center gap-2.5 text-sm">
-                <span className="w-28 shrink-0">{n}</span>
-                <Bar pct={(p / TOWNS[0][1]) * 100} color="var(--color-teal)" />
-                <b className="w-16 text-right">{p}%</b>
+            {areas.length === 0 && <p className="text-sm text-ink-soft">No catches logged yet.</p>}
+            {areas.map(({ name, lossPct }) => (
+              <div key={name} className="flex items-center gap-2.5 text-sm">
+                <span className="w-28 shrink-0">{name}</span>
+                <Bar pct={(lossPct / (areas[0]?.lossPct || 1)) * 100} color="var(--color-teal)" />
+                <b className="w-16 text-right">{lossPct}%</b>
               </div>
             ))}
           </div>

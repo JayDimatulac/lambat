@@ -1,11 +1,26 @@
 import { useState, type PointerEvent } from 'react'
 import { LostFishIcon, SharedFishIcon, SoldFishIcon } from '../../components/home/HomeIcons'
 import { TideIcon } from '../../components/icons'
+import { Fish } from 'lucide-react'
 import { DryRackIcon } from './AdminIcons'
-import { OUTCOMES, WEEKS } from './data'
+import { weekLabel, type AdminOverview } from '../../lib/adminApi'
 import { Card, Chip, Head, type Icon } from './ui'
 
-const ICONS: Icon[] = [SoldFishIcon, SharedFishIcon, DryRackIcon, LostFishIcon]
+// one tile per outcome, in the same order as the numbers built below
+const TILES: { name: string; color: string; icon: Icon }[] = [
+  { name: 'Sold', color: '#2e8391', icon: SoldFishIcon },
+  { name: 'Redistributed', color: '#94c1c9', icon: SharedFishIcon },
+  { name: 'Processed', color: '#f2b893', icon: DryRackIcon },
+  { name: 'Lost', color: '#e8735a', icon: LostFishIcon },
+  { name: 'Still unsold', color: '#6b8c96', icon: Fish },
+]
+
+// a round step (10, 20, 50, 100, 200, 500 ...) so the grid has about four lines
+function niceStep(max: number): number {
+  const raw = Math.max(max, 1) / 4
+  const p = 10 ** Math.floor(Math.log10(raw))
+  return ([1, 2, 5, 10].map((m) => m * p).find((v) => v >= raw)) ?? p * 10
+}
 const W = 640
 const H = 260
 const PL = 48
@@ -21,7 +36,11 @@ const bump = (pts: [number, number][]) =>
     return `C${m} ${qy} ${m} ${py} ${px} ${py}`
   }).join('')
 
-export default function TideChart() {
+export default function TideChart({ weeks: raw }: { weeks: AdminOverview['weeks'] }) {
+  const WEEKS = raw.map((w) => ({
+    label: weekLabel(w.weekStart),
+    kg: [w.kg.SOLD, w.kg.REDISTRIBUTED, w.kg.PROCESSED, w.kg.DISCARDED, w.kg.ACTIVE],
+  }))
   const [range, setRange] = useState<'4' | '8'>('8')
   const [pick, setPick] = useState(WEEKS[WEEKS.length - 1].label)
 
@@ -30,13 +49,14 @@ export default function TideChart() {
   const found = weeks.findIndex((w) => w.label === pick)
   const idx = found === -1 ? n - 1 : found
   const totals = weeks.map((w) => w.kg.reduce((a, b) => a + b, 0))
-  const top = Math.ceil(Math.max(...totals) / 500) * 500
+  const step = niceStep(Math.max(...totals))
+  const top = Math.max(step, Math.ceil(Math.max(...totals) / step) * step)
   const x = (i: number) => PL + (i * (W - PL - PR)) / (n - 1)
   const y = (v: number) => H - PB - (v / top) * (H - PT - PB)
   const pts = totals.map((v, i): [number, number] => [x(i), y(v)])
   const line = `M${pts[0][0]} ${pts[0][1]}${bump(pts)}`
   const area = `${line}L${x(n - 1)} ${H - PB}L${x(0)} ${H - PB}Z`
-  const ticks = Array.from({ length: top / 500 + 1 }, (_, i) => i * 500)
+  const ticks = Array.from({ length: Math.round(top / step) + 1 }, (_, i) => i * step)
 
   const scrub = (e: PointerEvent<SVGSVGElement>) => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -63,7 +83,7 @@ export default function TideChart() {
         } />
 
       <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <b className="font-numeral text-3xl font-bold leading-none">{totals[idx].toLocaleString('en-PH')} kg</b>
+        <b className="font-numeral text-3xl font-bold leading-none">{Math.round(totals[idx]).toLocaleString('en-PH')} kg</b>
         <span className="text-sm text-ink-soft">week of {weeks[idx].label}</span>
         {delta !== null && <Chip tone={delta >= 0 ? 'ok' : 'warn'}>{delta >= 0 ? '+' : ''}{delta}% vs the week before</Chip>}
       </div>
@@ -93,7 +113,7 @@ export default function TideChart() {
         <path d={`M${x(idx)} ${y(totals[idx]) + 8}V${H - PB}`} stroke="var(--color-navy)" strokeOpacity="0.5" strokeWidth="1.5" strokeDasharray="2 5" strokeLinecap="round" />
         <g>
           <rect x={tipX - 42} y={tipY - 11} width="84" height="24" rx="8" fill="var(--color-deep)" />
-          <text x={tipX} y={tipY + 5} textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">{totals[idx].toLocaleString('en-PH')} kg</text>
+          <text x={tipX} y={tipY + 5} textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">{Math.round(totals[idx]).toLocaleString('en-PH')} kg</text>
         </g>
       </svg>
 
@@ -106,14 +126,14 @@ export default function TideChart() {
         ))}
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {OUTCOMES.map((o, k) => {
-          const I = ICONS[k]
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+        {TILES.map((o, k) => {
+          const I = o.icon
           return (
             <div key={o.name} className="rounded-md bg-mint p-3" style={{ borderLeft: `4px solid ${o.color}` }}>
               <span className="flex items-center gap-1.5 text-[13px] font-semibold"><I size={20} />{o.name}</span>
-              <b className="mt-1 block font-numeral text-xl leading-tight">{weeks[idx].kg[k].toLocaleString('en-PH')} kg</b>
-              <small className="text-xs text-ink-soft">{Math.round((weeks[idx].kg[k] / totals[idx]) * 100)}% of the week</small>
+              <b className="mt-1 block font-numeral text-xl leading-tight">{Math.round(weeks[idx].kg[k]).toLocaleString('en-PH')} kg</b>
+              <small className="text-xs text-ink-soft">{totals[idx] === 0 ? 0 : Math.round((weeks[idx].kg[k] / totals[idx]) * 100)}% of the week</small>
             </div>
           )
         })}

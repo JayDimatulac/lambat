@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import type { CSSProperties } from 'react'
 import { BuoyIcon } from '../../components/icons'
 import { WaveArrow } from '../../components/home/HomeIcons'
-import { RISK_MIX, type Risk } from './data'
+import type { Risk } from './data'
+import type { AdminOverview } from '../../lib/adminApi'
 import { Card, Head } from './ui'
 
 // Four marker buoys on the water. The worse the risk, the lower the buoy floats.
@@ -18,6 +19,13 @@ const NOTE: Record<Risk, string> = {
   high: 'Sinking. Selling soon is the best move.',
   crit: 'Almost under. These need action right now.',
 }
+const COLOR: Record<Risk, string> = {
+  low: 'var(--color-risk-low-line)',
+  mod: 'var(--color-risk-moderate-line)',
+  high: 'var(--color-risk-high-line)',
+  crit: 'var(--color-risk-critical-line)',
+}
+const ORDER: Risk[] = ['low', 'mod', 'high', 'crit']
 const WAVE = 'M0 4Q12.5 0 25 4' + Array.from({ length: 15 }, (_, i) => `T${25 * (i + 2)} 4`).join('')
 const SEA = `linear-gradient(180deg, var(--color-ice) 0 ${WL}px, var(--tide-sea-0) ${WL}px, var(--tide-sea-2) 100%)`
 const bob = (i: number): CSSProperties => ({ ['--bob' as string]: '3px', animationDelay: `${i * 0.5}s` })
@@ -34,8 +42,11 @@ function Buoy({ risk, color }: { risk: Risk; color: string }) {
   )
 }
 
-export default function BuoyRack() {
+export default function BuoyRack({ riskNow }: { riskNow: AdminOverview['riskNow'] }) {
   const [sel, setSel] = useState<Risk | null>(null)
+  const count: Record<Risk, number> = { low: riskNow.low, mod: riskNow.moderate, high: riskNow.high, crit: riskNow.critical }
+  const total = ORDER.reduce((n, r) => n + count[r], 0)
+  const pctOf = (r: Risk) => (total === 0 ? 0 : Math.round((count[r] / total) * 100))
   return (
     <Card className="flex flex-col">
       <Head icon={BuoyIcon} title="Risk right now" sub="Active catches, by how low they float" />
@@ -44,8 +55,11 @@ export default function BuoyRack() {
           <path d={WAVE} fill="none" stroke="#fff" strokeOpacity="0.55" strokeWidth="2" vectorEffect="non-scaling-stroke" />
         </svg>
         <div className="grid grid-cols-4">
-          {RISK_MIX.map(([r, pct, color], i) => (
-            <button key={r} type="button" aria-pressed={sel === r} aria-label={`${LABEL[r]}: ${pct}%`} onClick={() => setSel(sel === r ? null : r)}
+          {ORDER.map((r, i) => {
+            const pct = pctOf(r)
+            const color = COLOR[r]
+            return (
+            <button key={r} type="button" aria-pressed={sel === r} aria-label={`${LABEL[r]}: ${pct}%, ${count[r]} catches`} onClick={() => setSel(sel === r ? null : r)}
               className={`flex flex-col items-stretch text-center text-white transition aria-pressed:bg-white/15 ${sel && sel !== r ? 'opacity-60' : ''}`}>
               <svg viewBox="0 0 80 130" preserveAspectRatio="xMidYMax meet" className="block w-full" style={{ height: SVG_H }} aria-hidden="true">
                 <defs>
@@ -58,14 +72,16 @@ export default function BuoyRack() {
               <span className="pb-3">
                 <b className="block font-numeral text-3xl font-bold leading-none">{pct}%</b>
                 <span className="text-[13px] font-semibold text-white/90">{LABEL[r]}</span>
+                <small className="block text-xs text-white/80">{count[r]} {count[r] === 1 ? 'catch' : 'catches'}</small>
               </span>
             </button>
-          ))}
+            )
+          })}
         </div>
       </div>
 
       <div className="mt-auto pt-4">
-        <p className="min-h-10 text-sm" aria-live="polite">{sel ? <><b>{LABEL[sel]}:</b> {NOTE[sel]}</> : <span className="text-ink-soft">Tap a buoy to see what it means.</span>}</p>
+        <p className="min-h-10 text-sm" aria-live="polite">{total === 0 ? <span className="text-ink-soft">No active catches right now.</span> : sel ? <><b>{LABEL[sel]}:</b> {NOTE[sel]}</> : <span className="text-ink-soft">Tap a buoy to see what it means.</span>}</p>
         <Link to="/admin/listings" className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border-[1.5px] border-teal px-4 text-sm font-semibold text-teal hover:bg-seafoam/50">
           See the catches<WaveArrow size={22} />
         </Link>

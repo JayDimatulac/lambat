@@ -541,6 +541,7 @@ adminRouter.get("/catches", async (req, res) => {
     take: limitOf(req.query.limit),
     include: {
       user: who,
+      _count: { select: { offers: { where: { status: "PENDING" } } } },
       species: { select: { id: true, code: true, englishName: true, l0Min: true, l0Max: true, histamine: true } },
       iceEvents: { select: { at: true, iceKg: true }, orderBy: { at: "asc" } },
     },

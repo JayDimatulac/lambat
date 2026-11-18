@@ -4,7 +4,8 @@ import type { AccountStatus, Role, RiskLevel } from "@prisma/client";
 import { prisma } from "../db";
 import { requireAuth, requireRole } from "../middleware/auth";
 import { normalizeMobile } from "./auth";
-import { assess } from "../lib/engine";
+import { assess, relativeRate } from "../lib/engine";
+import { PLACEHOLDER, ICE_TEMP_C, MARGIN_LOW, MARGIN_HIGH, type IceLevel } from "../config/shelfLife";
 import type { CatchStatus, NeedStatus, OfferStatus, OrderStatus } from "@prisma/client";
 
 export const adminRouter = Router();
@@ -292,6 +293,47 @@ adminRouter.get("/overview", async (_req, res) => {
       .slice(0, 5),
     lastAdvisory: recentAdvisories[0] ?? null,
     activity,
+  });
+});
+
+// Shelf life of every species at each ice level, worked out with the same maths the estimator uses
+const round1 = (n: number) => Math.round(n * 10) / 10;
+const ICE_LEVELS = Object.keys(ICE_TEMP_C) as IceLevel[];
+
+adminRouter.get("/shelf-life", async (_req, res) => {
+  const [species, pathways] = await Promise.all([
+    prisma.species.findMany({ orderBy: { englishName: "asc" } }),
+    prisma.pathway.findMany({
+      where: { active: true },
+      select: { speciesId: true, name: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  res.json({
+    placeholder: PLACEHOLDER,
+    species: species.map((s) => {
+      const { l0Min, l0Max } = s;
+      return {
+        id: s.id,
+        englishName: s.englishName,
+        localNames: s.localNames,
+        histamine: s.histamine,
+        l0Min,
+        l0Max,
+        products: pathways.filter((p) => p.speciesId === s.id).map((p) => p.name),
+        levels:
+          l0Min === null || l0Max === null
+            ? null
+            : ICE_LEVELS.map((level) => {
+                const rate = relativeRate(ICE_TEMP_C[level]);
+                const minHours = (l0Min / rate) * MARGIN_LOW;
+                // tuna and mackerel: no optimistic end, the cautious number is the number
+                const maxHours = s.histamine ? minHours : (l0Max / rate) * MARGIN_HIGH;
+                return { level, tempC: ICE_TEMP_C[level], minHours: round1(minHours), maxHours: round1(maxHours) };
+              }),
+      };
+    }),
   });
 });
 

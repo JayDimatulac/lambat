@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowRight, Heart, Search } from 'lucide-react'
+import FilterMenu from '../../components/buyer/FilterMenu'
 import FishPhoto from '../../components/buyer/FishPhoto'
 import { hoursLeft, openListings, useMarket, type Listing } from '../../lib/market'
 
@@ -11,14 +12,13 @@ const loadSaved = (): string[] => {
   try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]') } catch { return [] }
 }
 
+/* The little label on the photo: how fresh or how limited the lot is */
 function badgeOf(l: Listing, now: number) {
   const hrs = hoursLeft(l, now)
   if (hrs <= 6) return { text: 'Limited', cls: 'bg-cream text-deep' }
   if ((now - l.postedAt) / 3_600_000 <= 2) return { text: 'New', cls: 'bg-risk-low-bg text-risk-low' }
   return { text: 'Fresh', cls: 'bg-seafoam text-teal' }
 }
-
-const select = 'min-h-11 rounded-full border border-line bg-card px-3 text-sm font-semibold text-navy'
 
 export default function BuyerPier() {
   const m = useMarket()
@@ -27,7 +27,7 @@ export default function BuyerPier() {
   const [q, setQ] = useState('')
   const [species, setSpecies] = useState('all')
   const [place, setPlace] = useState('all')
-  const [maxPrice, setMaxPrice] = useState(0)
+  const [maxPrice, setMaxPrice] = useState(0) // 0 means any price
   const [sort, setSort] = useState<Sort>('newest')
   const [saved, setSaved] = useState<string[]>(loadSaved)
 
@@ -54,28 +54,44 @@ export default function BuyerPier() {
         <p className="text-sm text-ink-soft">Nearby catch from registered fisherfolk</p>
       </div>
 
+      {/* Search and filters */}
       <div className="flex flex-wrap items-center gap-2 rounded-3xl border border-line bg-card/80 p-2 shadow-rest backdrop-blur-md">
         <label className="flex min-h-11 min-w-48 flex-1 items-center gap-2 rounded-full bg-mint px-4">
           <Search size={18} strokeWidth={1.8} className="text-teal" aria-hidden="true" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by fish, location, or seller..." aria-label="Search" className="w-full bg-transparent text-sm outline-none placeholder:text-ink-soft" />
         </label>
-        <select aria-label="Species" value={species} onChange={(e) => setSpecies(e.target.value)} className={select}>
-          <option value="all">Species</option>
-          {speciesList.map((s) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select aria-label="Location" value={place} onChange={(e) => setPlace(e.target.value)} className={select}>
-          <option value="all">Location</option>
-          {placeList.map((p) => <option key={p} value={p}>{p}</option>)}
-        </select>
-        <select aria-label="Price" value={maxPrice} onChange={(e) => setMaxPrice(Number(e.target.value))} className={select}>
-          <option value={0}>Price</option>
-          {[100, 150, 200, 300].map((p) => <option key={p} value={p}>Up to ₱{p}/kg</option>)}
-        </select>
-        <select aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value as Sort)} className={select}>
-          <option value="newest">Sort: Newest</option>
-          <option value="price">Sort: Lowest price</option>
-          <option value="kg">Sort: Biggest lot</option>
-        </select>
+        <FilterMenu
+          title="Species"
+          value={species}
+          onChange={setSpecies}
+          buttonLabel={species === 'all' ? 'Species' : species}
+          options={[{ value: 'all', label: 'All species' }, ...speciesList.map((s) => ({ value: s, label: s }))]}
+        />
+        <FilterMenu
+          title="Location"
+          value={place}
+          onChange={setPlace}
+          buttonLabel={place === 'all' ? 'Location' : place}
+          options={[{ value: 'all', label: 'All locations' }, ...placeList.map((p) => ({ value: p, label: p }))]}
+        />
+        <FilterMenu
+          title="Price"
+          value={maxPrice}
+          onChange={setMaxPrice}
+          buttonLabel={maxPrice === 0 ? 'Price' : `Up to ₱${maxPrice}/kg`}
+          options={[{ value: 0, label: 'Any price' }, ...[100, 150, 200, 300].map((p) => ({ value: p, label: `Up to ₱${p}/kg` }))]}
+        />
+        <FilterMenu
+          title="Sort"
+          value={sort}
+          onChange={setSort}
+          align="right"
+          options={[
+            { value: 'newest' as Sort, label: 'Sort: Newest' },
+            { value: 'price' as Sort, label: 'Sort: Lowest price' },
+            { value: 'kg' as Sort, label: 'Sort: Biggest lot' },
+          ]}
+        />
       </div>
 
       {list.length === 0 ? (
@@ -90,8 +106,13 @@ export default function BuyerPier() {
                 <div className="relative">
                   <FishPhoto species={l.species} className="h-40 w-full" />
                   <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold ${badge.cls}`}>{badge.text}</span>
-                  <button type="button" onClick={() => toggleSaved(l.id)} aria-pressed={isSaved} aria-label={isSaved ? 'Remove from saved' : 'Save this catch'}
-                    className="absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-card/90 text-coral-dark shadow-rest">
+                  <button
+                    type="button"
+                    onClick={() => toggleSaved(l.id)}
+                    aria-pressed={isSaved}
+                    aria-label={isSaved ? 'Remove from saved' : 'Save this catch'}
+                    className="absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-card/90 text-coral-dark shadow-rest"
+                  >
                     <Heart size={18} strokeWidth={1.8} fill={isSaved ? 'currentColor' : 'none'} aria-hidden="true" />
                   </button>
                 </div>
@@ -110,8 +131,11 @@ export default function BuyerPier() {
                     <span className="grid size-8 place-items-center rounded-full bg-seafoam text-xs font-bold text-teal">{l.fisher.slice(0, 1)}</span>
                     <span className="min-w-0"><span className="block truncate font-semibold leading-tight">{l.fisher}</span><span className="block text-xs text-ink-soft">Fisherfolk</span></span>
                   </p>
-                  <button type="button" onClick={() => navigate('/buyer/offers')}
-                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border-2 border-teal text-sm font-semibold text-teal transition active:scale-[0.98]">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/buyer/offers')}
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border-2 border-teal text-sm font-semibold text-teal transition active:scale-[0.98]"
+                  >
                     View Offer <ArrowRight size={16} aria-hidden="true" />
                   </button>
                 </div>

@@ -1,0 +1,27 @@
+name: Risk alerts
+
+# Every 30 minutes (GitHub may start it a few minutes late). Calls the API so people get
+# "needs action" notices even when they have not opened the app. You can also run it by hand
+# from the Actions tab (Run workflow).
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+jobs:
+  risk-alerts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call the risk alerts endpoint
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          # the free Render instance sleeps, so the first call can take about a minute
+          curl --fail-with-body --silent --show-error \
+            --retry 3 --retry-delay 20 --retry-all-errors \
+            --max-time 120 \
+            -X POST \
+            -H "x-cron-secret: $CRON_SECRET" \
+            "$API_URL/api/internal/risk-alerts"

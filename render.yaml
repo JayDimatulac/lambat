@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     rootDir: Backend
-    buildCommand: npm install && npm run build && npx prisma migrate deploy
+    buildCommand: npm install --include=dev && npm run build && npx prisma migrate deploy
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
@@ -26,6 +26,12 @@ services:
         value: https://generativelanguage.googleapis.com/v1beta/openai
       - key: LLM_MODEL
         sync: false
+      - key: OTP_PEPPER
+        sync: false
+      - key: SMS_WEBHOOK_SECRET
+        sync: false
+      - key: SMS_DRY_RUN
+        value: "true"
 
   - type: web
     name: lambat-app

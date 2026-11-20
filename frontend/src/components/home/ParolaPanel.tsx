@@ -1,8 +1,10 @@
+import { useId } from 'react'
 import { Clock, Megaphone } from 'lucide-react'
 import Boat from '../buyer/Boat'
 import { Link } from 'react-router-dom'
 import RiskBadge from '../ui/RiskBadge'
 import LifebuoyTimer from './LifebuoyTimer'
+import ParolaStage from './ParolaStage'
 import { WaveArrow } from './HomeIcons'
 import type { Catch } from '../../data/mock'
 import { sellByText } from '../../lib/time'
@@ -124,71 +126,85 @@ export function ParolaScene({ alert, night, bare = false, boat = false, classNam
 
 type Props = { urgent: Catch[]; next?: Catch }
 
+// The picture's bottom edge colour, so the art melts into the card
+const SEA_DAY = '#0069ab'
+const SEA_NIGHT = '#002050'
+
 export default function ParolaPanel({ urgent, next }: Props) {
   const t = useT()
   const { lang, theme } = useSettings()
   const night = theme === 'night'
   const alert = urgent.length > 0
+  const actionId = useId()
+  const nextId = useId()
 
   return (
     <section
       aria-label={t('home.actions')}
       className="relative flex flex-col overflow-hidden rounded-lg border border-white/10 text-white shadow-raised"
-      style={{ background: night ? BG_NIGHT : BG_DAY }}
+      style={{ background: night ? SEA_NIGHT : SEA_DAY }}
     >
-      <div className="h-1.5 w-full shrink-0" style={{ background: alert ? HAZARD : 'var(--color-teal)' }} aria-hidden="true" />
+      <ParolaStage night={night} alert={alert} />
 
-      <div className="relative">
-        <ParolaScene alert={alert} night={night} boat />
-        <div className="absolute right-0 top-[30%] left-[40%] pr-4">
-          <div className="flex items-start justify-between gap-2">
-            <h2 className={`flex items-center gap-2 font-numeral text-[22px] font-bold leading-tight ${night ? 'text-white' : 'text-deep'}`}>
-              <Megaphone size={26} strokeWidth={1.8} className="shrink-0 text-coral" aria-hidden="true" />
-              {t('home.actions')}
-            </h2>
+      {/* Two independent sections laid over the water. An urgent catch can never be mistaken for the one that is simply next. */}
+      <div className="relative -mt-14 flex flex-1 flex-col justify-end gap-3 px-3 pb-3 sm:px-4 sm:pb-4">
+        {/* NEEDS ACTION: only catches that are in danger */}
+        <section aria-labelledby={actionId} className="overflow-hidden rounded-md border border-white/20 bg-deep/75 shadow-raised backdrop-blur-sm">
+          <div className="h-1.5 w-full" style={{ background: alert ? HAZARD : 'var(--color-risk-low-line)' }} aria-hidden="true" />
+          <div className="p-3">
+            <div className="flex items-start justify-between gap-2">
+              <h2 id={actionId} className="flex items-center gap-2 font-numeral text-xl font-bold leading-tight text-white">
+                <Megaphone size={24} strokeWidth={1.8} className="shrink-0 text-coral" aria-hidden="true" />
+                {t('home.actions')}
+              </h2>
+              {alert && (
+                <span className="grid size-8 shrink-0 place-items-center rounded-full bg-coral font-numeral text-base font-bold text-deep">{urgent.length}</span>
+              )}
+            </div>
+            <p className="mt-1 text-sm leading-snug text-white">{alert ? t('home.urgent') : t('home.calm')}</p>
+
             {alert && (
-              <span className="grid size-8 shrink-0 place-items-center rounded-full bg-coral font-numeral text-base font-bold text-deep">{urgent.length}</span>
+              <ul className="mt-3 space-y-3">
+                {urgent.map((c) => (
+                  <li key={c.id} className="relative rounded-md border border-white/15 bg-deep/45 p-3">
+                    <div className="flex items-center gap-3">
+                      <LifebuoyTimer leftMins={c.minsMin} hoursLabel={t('home.hours')} />
+                      <div className="min-w-0 flex-1">
+                        <Link to={`/catches/${c.id}`} className="block font-numeral text-[22px] font-bold leading-tight text-white after:absolute after:inset-0">
+                          {c.species}
+                        </Link>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-bold">{c.kg} kg</span>
+                          <RiskBadge level={c.risk} />
+                        </div>
+                        <p className="mt-1.5 text-sm leading-snug text-white">{sellByText(c.hoursMin, lang, t)}</p>
+                      </div>
+                    </div>
+                    <Link
+                      to={`/buyers?catch=${c.id}`}
+                      className="relative z-10 mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-cream text-sm font-semibold text-deep transition active:scale-[0.98]"
+                    >
+                      {t('home.findbuyer')}
+                      <WaveArrow size={22} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
-          <p className={`mt-1 text-sm leading-snug ${night ? 'text-white' : 'text-deep'}`}>{alert ? t('home.urgent') : t('home.calm')}</p>
-        </div>
-      </div>
+        </section>
 
-      <ul className="mt-auto space-y-3 px-4 pb-4 pt-3">
-        {urgent.map((c) => (
-          <li key={c.id} className="relative rounded-md border border-white/15 bg-deep/45 p-3">
-            <div className="flex items-center gap-3">
-              <LifebuoyTimer leftMins={c.minsMin} hoursLabel={t('home.hours')} />
-              <div className="min-w-0 flex-1">
-                <Link to={`/catches/${c.id}`} className="block font-numeral text-[22px] font-bold leading-tight text-white after:absolute after:inset-0">
-                  {c.species}
-                </Link>
-                <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-bold">{c.kg} kg</span>
-                  <RiskBadge level={c.risk} />
-                </div>
-                <p className="mt-1.5 text-sm leading-snug text-white">{sellByText(c.hoursMin, lang, t)}</p>
-              </div>
-            </div>
-            <Link
-              to={`/buyers?catch=${c.id}`}
-              className="relative z-10 mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-cream text-sm font-semibold text-deep transition active:scale-[0.98]"
-            >
-              {t('home.findbuyer')}
-              <WaveArrow size={22} />
-            </Link>
-          </li>
-        ))}
-
-        {!alert && next && (
-          <li>
+        {/* NEXT UP: the next catch to keep an eye on. Calm, always teal, shown with or without an alert. */}
+        {next && (
+          <section aria-labelledby={nextId} className="overflow-hidden rounded-md border border-white/20 bg-deep/75 shadow-raised backdrop-blur-sm">
+            <div className="h-1.5 w-full bg-teal" aria-hidden="true" />
             <Link
               to={`/catches/${next.id}`}
-              className="flex items-center gap-3 rounded-md border border-white/15 bg-deep/45 p-3 transition active:scale-[0.99]"
+              className="flex items-center gap-3 p-3 transition active:scale-[0.99]"
             >
               <LifebuoyTimer leftMins={next.minsMin} hoursLabel={t('home.hours')} size={76} />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-white/90">{t('home.next')}</p>
+                <p id={nextId} className="text-xs font-bold uppercase tracking-wider text-white/90">{t('home.next')}</p>
                 <p className="truncate font-numeral text-xl font-bold leading-tight text-white">{next.species} · {next.kg} kg</p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-sm text-white">
                   <Clock size={16} className="shrink-0" aria-hidden="true" />
@@ -199,10 +215,9 @@ export default function ParolaPanel({ urgent, next }: Props) {
                 <WaveArrow size={22} />
               </span>
             </Link>
-          </li>
+          </section>
         )}
-      </ul>
-
+      </div>
     </section>
   )
 }

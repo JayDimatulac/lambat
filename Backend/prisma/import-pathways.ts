@@ -1,10 +1,9 @@
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
-import { PrismaClient } from "@prisma/client";
 import type { RiskLevel } from "@prisma/client";
+import { prisma } from "../src/db";
 
-const prisma = new PrismaClient();
 // a pathway can never allow HIGH: high and critical catches never get a suggestion (same rule as the admin API)
 const RISKS = ["LOW", "MEDIUM"];
 

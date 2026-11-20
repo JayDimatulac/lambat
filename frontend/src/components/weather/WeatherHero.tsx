@@ -1,9 +1,9 @@
 import { Clock, MapPin, type LucideIcon } from 'lucide-react'
 import { useSettings } from '../../lib/settings'
-
-// Your two illustrations, in frontend/public/images/
-const HERO_DAY = '/images/weather-day-hero.png'
-const HERO_NIGHT = '/images/weather-night-hero.png'
+import type { Sky } from '../../lib/weather'
+import WeatherLayers from './WeatherLayers'
+import dayImg from '../../assets/bg/weather-day.png'
+import nightImg from '../../assets/bg/weather-night.png'
 
 export type HeroStat = { Icon: LucideIcon; label: string; value: string }
 
@@ -16,14 +16,20 @@ type Props = {
   message: string
   bestTime?: string | null
   stats: HeroStat[]
+  // what the forecast moves in the picture
+  sky?: Sky
+  wind?: number // km/h
+  wave?: number // m
+  rain?: number // % chance
+  windDir?: number // degrees, where the wind comes FROM
 }
 
-export default function WeatherHero({ place, tags = [], temp, SkyIcon, skyLabel, message, bestTime, stats }: Props) {
+export default function WeatherHero({ place, tags = [], temp, SkyIcon, skyLabel, message, bestTime, stats, sky = 'sun', wind = 0, wave = 0, rain = 0, windDir }: Props) {
   const { theme } = useSettings()
   const night = theme === 'night'
 
   // If an image file is missing, the gradient after it shows instead
-  const image = night ? HERO_NIGHT : HERO_DAY
+  const image = night ? nightImg : dayImg
   const fallback = night
     ? 'linear-gradient(180deg, #0a2f3c 0%, #0d525e 55%, #05171e 100%)'
     : 'linear-gradient(180deg, #8fd3e3 0%, #d6eff1 55%, #3a9bab 100%)'
@@ -45,13 +51,28 @@ export default function WeatherHero({ place, tags = [], temp, SkyIcon, skyLabel,
   return (
     <div className="relative">
       <section className="relative isolate overflow-hidden rounded-lg shadow-raised">
-        {/* the picture. On a phone the box is tall and narrow, so only a slice shows: 70% 100% = a bit right of centre, bottom edge.
-            Change those two numbers if your boat gets cropped. */}
+        {/* the picture and the forecast's layers on it. They sit in one box that is sized and placed like background-size: cover,
+            so they always line up. On a phone only a slice shows: 70% 100% = a bit right of centre, bottom edge.
+            Change --px and --py if your lantern gets cropped. */}
         <div
           aria-hidden="true"
-          className="absolute inset-0 bg-cover bg-no-repeat [background-position:70%_100%] lg:[background-position:center]"
-          style={{ backgroundImage: `url(${image}), ${fallback}` }}
-        />
+          className="absolute inset-0 [--px:70%] [--py:100%] lg:[--px:50%] lg:[--py:50%]"
+          style={{ containerType: 'size', background: fallback }}
+        >
+          <div
+            className="absolute"
+            style={{
+              width: 'max(104cqw, calc(104cqh * 1.78774))',
+              aspectRatio: '1677 / 938',
+              left: 'var(--px)',
+              top: 'var(--py)',
+              transform: 'translate(calc(var(--px) * -1), calc(var(--py) * -1))',
+            }}
+          >
+            <img src={image} alt="" draggable={false} className="size-full select-none" />
+            <WeatherLayers night={night} sky={sky} wind={wind} wave={wave} rain={rain} windDir={windDir} />
+          </div>
+        </div>
         {/* keeps the text readable on top of any image */}
         <div aria-hidden="true" className={`absolute inset-0 ${shade}`} />
 

@@ -260,3 +260,47 @@ html[data-simple='true'] .simple-hide { display: none; }
 :root[data-theme='night'] .hero-veil {
   background: rgba(4, 20, 28, 0.58);
 }
+/* Needs-action scene (ParolaStage): all slow and seamless. Reduced motion shows the still picture. */
+@keyframes stage-fly { from { transform: translateX(-160px); } to { transform: translateX(1832px); } }
+@keyframes stage-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+@keyframes stage-flap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(-0.4); } }
+@keyframes stage-dart { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(70px, -120px); } }
+@keyframes stage-wave { to { transform: translateX(calc(var(--wl) * -1)); } }
+@keyframes stage-beam { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(-1); } }
+@layer utilities {
+  .stage-bird-fly { animation: stage-fly linear infinite; }
+  .stage-bird-bob { animation: stage-bob 3.6s ease-in-out infinite; }
+  .stage-bird-flap { animation: stage-flap 1.1s ease-in-out infinite; }
+  .stage-bird-flap-fast { animation-duration: 0.35s; }
+  .stage-bird-dart { animation: stage-dart 1.6s ease-in-out; }
+  .stage-wave { animation: stage-wave linear infinite; }
+  .stage-beam { animation: stage-beam 14s ease-in-out infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-bird-fly { transform: translateX(var(--rest, 400px)); }
+}
+/* Weather hero layers (WeatherLayers). Wave drift reuses .stage-wave from the Needs-action scene. */
+@keyframes wx-cross { from { transform: translateX(-560px); } to { transform: translateX(2300px); } }
+@keyframes wx-streak {
+  0% { transform: translateX(-420px); opacity: 0; }
+  12%, 85% { opacity: 1; }
+  100% { transform: translateX(2100px); opacity: 0; }
+}
+@keyframes wx-rain { to { transform: translateY(var(--tile)); } }
+@keyframes wx-cap { 0%, 100% { opacity: 0; } 50% { opacity: 0.9; } }
+@keyframes wx-flicker {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  30% { opacity: 1; transform: scale(1.07); }
+  60% { opacity: 0.8; transform: scale(0.96); }
+}
+@layer utilities {
+  .wx-cross { animation: wx-cross linear infinite; }
+  .wx-streak { animation: wx-streak linear infinite; }
+  .wx-rain { animation: wx-rain linear infinite; }
+  .wx-cap { animation: wx-cap 2.2s ease-in-out infinite; }
+  .wx-flicker { animation: wx-flicker ease-in-out infinite; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wx-cross { transform: translateX(var(--rest, 400px)); }
+  .wx-streak, .wx-rain, .wx-cap { display: none; }
+}

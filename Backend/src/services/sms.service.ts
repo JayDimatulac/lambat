@@ -13,7 +13,7 @@ export async function sendSms(p: { to: string; message: string; type: SmsType })
   } else {
     try {
       const body = new URLSearchParams({
-        apikey: smsEnv.SEMAPHORE_API_KEY,
+        apikey: smsEnv.SEMAPHORE_API_KEY ?? "",
         number: toGatewayFormat(p.to),
         message: p.message,
       });

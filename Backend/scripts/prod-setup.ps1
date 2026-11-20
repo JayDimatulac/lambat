@@ -1,6 +1,6 @@
 # Set up or clean the PRODUCTION database. Your local .env is never read or changed for the URLs.
 # Run from Backend:  npm run prod:setup   or   npm run prod:cleanup
-param([ValidateSet("setup", "cleanup")][string]$Task = "setup")
+param([ValidateSet("setup", "cleanup", "pathways")][string]$Task = "setup")
 
 function Plain($secure) {
   [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure))
@@ -56,6 +56,18 @@ if ($Task -eq "setup") {
     npx ts-node prisma\import-pathways.ts
   }
   "Setup finished."
+} elseif ($Task -eq "pathways") {
+  $lines = 0
+  if (Test-Path "prisma\pathways.csv") { $lines = @(Get-Content "prisma\pathways.csv").Count }
+  if ($lines -le 1) { Stop-Here "prisma\pathways.csv has no data rows. Put your pathway rows under the header first." }
+
+  "--- checking the file against the production species (nothing is written) ---"
+  npx ts-node prisma\import-pathways.ts --check
+  if ($LASTEXITCODE -ne 0) { Stop-Here "The check failed. Fix the file first." }
+
+  if ((Read-Host "Import $($lines - 1) rows into PRODUCTION? (yes/no)") -eq "yes") {
+    npx ts-node prisma\import-pathways.ts
+  }
 } else {
   "--- dry run, nothing is deleted yet ---"
   npx ts-node prisma\cleanup-test-data.ts

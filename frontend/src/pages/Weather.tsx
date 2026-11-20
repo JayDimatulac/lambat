@@ -83,6 +83,11 @@ export default function Weather() {
         skyLabel={t(SKY_WORD[day.sky])}
         message={message}
         bestTime={calm ? `${t('wx.best')}: ${hour12(calm.from)} – ${hour12(calm.to)}` : null}
+        sky={day.sky}
+        wind={wind}
+        wave={wave}
+        rain={day.rain}
+        windDir={cur?.windDir}
         stats={[
           { Icon: Wind, label: t('home.wx.wind'), value: `${wind} km/h${dir}` },
           { Icon: Waves, label: t('home.wx.waves'), value: `${wave} m` },

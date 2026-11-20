@@ -1,0 +1,50 @@
+name: CI
+
+# Runs on every push to main and on every pull request.
+# It catches a broken build here, before Render tries to deploy it.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: Backend
+    env:
+      # fake values: the build only needs them to exist, it never connects to a database
+      DATABASE_URL: postgresql://user:pass@localhost:6543/db?pgbouncer=true
+      DIRECT_URL: postgresql://user:pass@localhost:5432/db
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Backend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: The build made the file Render starts
+        run: test -f dist/index.js
+
+  frontend:
+    name: Frontend builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build

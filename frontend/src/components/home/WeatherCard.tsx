@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, CircleCheck, Cloud, CloudRain, CloudSun, Droplet, Sun, TriangleAlert, Waves, Wind, type LucideIcon } from 'lucide-react'
-import Boat from '../buyer/Boat'
+import WeatherLayers from '../weather/WeatherLayers'
+import dayImg from '../../assets/bg/weather-day.png'
+import nightImg from '../../assets/bg/weather-night.png'
 import { compass, sailLevel, type Forecast, type Level, type Sky } from '../../lib/weather'
 import { useT } from '../../lib/i18n'
 import { useSettings } from '../../lib/settings'
@@ -30,6 +32,12 @@ export default function WeatherCard({ forecast }: { forecast: Forecast }) {
   const wave = now?.wave ?? today.wave
   const humidity = now?.humidity
   const dir = now?.windDir !== undefined ? ` ${compass(now.windDir)}` : ''
+  const rain = today.rain
+  const image = night ? nightImg : dayImg
+  // If the image file is missing, the gradient shows instead
+  const fallback = night
+    ? 'linear-gradient(180deg, #0a2f3c 0%, #0d525e 55%, #05171e 100%)'
+    : 'linear-gradient(180deg, #8fd3e3 0%, #d6eff1 55%, #3a9bab 100%)'
   const level = sailLevel(today.wind, today.gust, today.wave, today.rain)
   const SkyIcon = SKY_ICON[today.sky]
   const ink = night ? 'text-white' : 'text-deep'
@@ -41,21 +49,27 @@ export default function WeatherCard({ forecast }: { forecast: Forecast }) {
   ]
 
   return (
-    <section
-      aria-label={t('home.wx.title')}
-      className="relative flex flex-1 flex-col overflow-hidden rounded-lg border border-white/10 shadow-raised"
-      style={{
-        background: night
-          ? 'linear-gradient(180deg, #0a2f3c 0%, #0d525e 52%, #0a3b49 58%, #05171e 100%)'
-          : 'linear-gradient(180deg, #8fd3e3 0%, #d6eff1 50%, #3a9bab 58%, #0f6e7a 100%)',
-      }}
-    >
-      {/* sun by day, moon by night */}
-      <div
-        aria-hidden="true"
-        className="absolute right-6 top-14 size-14 rounded-full"
-        style={{ background: night ? '#e6f4f9' : '#ffd98a', boxShadow: `0 0 44px 16px ${night ? 'rgba(230,244,249,0.25)' : 'rgba(255,217,138,0.55)'}` }}
-      />
+    <section aria-label={t('home.wx.title')} className="relative isolate flex flex-1 flex-col overflow-hidden rounded-lg border border-white/10 shadow-raised">
+      {/* the picture and the forecast's layers on it, sized and placed like background-size: cover so they line up.
+          The card is tall and narrow, so only a slice shows: 70% 100% = a bit right of centre, bottom edge.
+          Change --px and --py if the lantern gets cropped. */}
+      <div aria-hidden="true" className="absolute inset-0 [--px:70%] [--py:100%]" style={{ containerType: 'size', background: fallback }}>
+        <div
+          className="absolute"
+          style={{
+            width: 'max(104cqw, calc(104cqh * 1.78774))',
+            aspectRatio: '1677 / 938',
+            left: 'var(--px)',
+            top: 'var(--py)',
+            transform: 'translate(calc(var(--px) * -1), calc(var(--py) * -1))',
+          }}
+        >
+          <img src={image} alt="" draggable={false} className="size-full select-none" />
+          <WeatherLayers night={night} sky={today.sky} wind={wind} wave={wave} rain={rain} windDir={now?.windDir} />
+        </div>
+      </div>
+      {/* keeps the text readable on top of the picture */}
+      <div aria-hidden="true" className={`absolute inset-0 ${night ? 'bg-linear-to-b from-deep/60 via-deep/25 to-transparent' : 'bg-linear-to-b from-white/60 via-white/25 to-transparent'}`} />
 
       <div className="relative flex items-center justify-between gap-2 px-4 pt-4">
         <h2 className={`flex items-center gap-2 font-numeral text-lg font-bold ${ink}`}>
@@ -92,14 +106,8 @@ export default function WeatherCard({ forecast }: { forecast: Forecast }) {
         </ul>
       </div>
 
-      {/* the bangka rocking on the water */}
-      <div className="relative flex min-h-24 flex-1 items-end justify-center">
-        <svg viewBox="-80 -58 160 90" className="h-24 w-auto" aria-hidden="true">
-          <g className="anim-rock" style={{ transformBox: 'fill-box', transformOrigin: '50% 100%', '--rock': `${Math.min(6, 2 + today.wave * 2)}deg` } as React.CSSProperties}>
-            <Boat lamp={night ? 'var(--color-cream)' : undefined} />
-          </g>
-        </svg>
-      </div>
+      {/* open space so the picture (sea, boat, lantern) shows */}
+      <div aria-hidden="true" className="relative min-h-24 flex-1" />
 
       {live && (
         <div className="relative px-3 pb-3">

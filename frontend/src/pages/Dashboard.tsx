@@ -1,10 +1,10 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarDays, CloudSun, Info, MapPin, Sparkles, Store } from 'lucide-react'
+import { ArrowRight, CalendarDays, Info, MapPin } from 'lucide-react'
 import TideScene from '../components/tide/TideScene'
 import NetTally from '../components/home/NetTally'
 import ParolaPanel from '../components/home/ParolaPanel'
 import WeatherCard from '../components/home/WeatherCard'
-import { BangkaIcon, PennantIcon } from '../components/home/HomeIcons'
+import { PennantIcon } from '../components/home/HomeIcons'
 import { byUrgency, isActive, weekBase, type Outcome } from '../data/mock'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
@@ -12,6 +12,10 @@ import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 import { localeOf } from '../lib/time'
 import { hour12, useForecast, windOutlook } from '../lib/weather'
+import weatherIcon from '../assets/icons/quick-weather.png'
+import buyersIcon from '../assets/icons/quick-buyers.png'
+import valueIcon from '../assets/icons/quick-value.png'
+import logIcon from '../assets/icons/quick-log.png'
 
 export default function Dashboard() {
   const t = useT()
@@ -61,24 +65,23 @@ export default function Dashboard() {
 
   const filipino = lang === 'fil'
   const shortcuts = [
-
     {
       to: '/weather',
-      icon: <CloudSun size={32} aria-hidden="true" />,
+      icon: weatherIcon,
       title: filipino ? 'Tingnan ang panahon' : 'Check Weather',
       description: filipino ? 'Alamin ang kondisyon ng dagat' : 'See sea conditions',
       color: 'from-[#effbff] to-[#bce7ef]',
     },
     {
       to: '/buyers',
-      icon: <Store size={32} aria-hidden="true" />,
+      icon: buyersIcon,
       title: filipino ? 'Humanap ng mamimili' : 'Find Buyers',
       description: filipino ? 'Kumonekta sa mga mamimili' : 'Connect with buyers',
       color: 'from-[#ecfaf6] to-[#b8e8dd]',
     },
     {
       to: '/value-added',
-      icon: <Sparkles size={32} aria-hidden="true" />,
+      icon: valueIcon,
       title: filipino ? 'Mga ideya para sa huli' : 'Value-Added Ideas',
       description: filipino ? 'Dagdagan ang halaga ng huli' : 'Get more value from your catch',
       color: 'from-[#effbff] to-[#bce7ef]',
@@ -121,14 +124,14 @@ export default function Dashboard() {
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
         <div className="order-1 lg:order-1">
           <TideScene catches={active.slice(0, 4)} header={header} />
-      </div>
+        </div>
 
         <Link
           to="/catches/new"
           className="order-3 flex min-h-14 items-center gap-3 rounded-full border border-white/70 bg-linear-to-r from-[#ffb78d] via-[#ff925f] to-[#ff7946] px-2 pr-4 text-deep shadow-raised transition hover:brightness-105 active:scale-[0.98] lg:order-2 xl:min-h-16"
         >
-          <span className="grid size-10 shrink-0 place-items-center rounded-full bg-white/50">
-            <BangkaIcon size={30} />
+          <span className="grid size-12 shrink-0 place-items-center">
+            <img src={logIcon} alt="" aria-hidden="true" draggable={false} className="size-14 object-contain drop-shadow-md" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-numeral text-lg font-bold leading-tight">{t('home.log')}</span>
@@ -139,15 +142,20 @@ export default function Dashboard() {
           </span>
         </Link>
 
-        <div className="order-4 grid grid-cols-3 gap-2 sm:gap-3 lg:order-3">
+        {/* Quick actions: equal-height tiles, same icon box, same 2-line title box, so everything lines up */}
+        <div className="order-4 grid grid-cols-3 items-stretch gap-2 sm:gap-3 lg:order-3">
           {shortcuts.map(({ to, icon, title, description, color }) => (
             <Link
               key={to}
               to={to}
-              className={`flex min-h-[92px] flex-col items-center justify-center rounded-[20px] border border-white/80 bg-linear-to-br ${color} px-2 py-2.5 text-center text-deep shadow-rest transition hover:-translate-y-0.5 active:scale-[0.98] xl:min-h-[104px]`}
+              className={`shortcut-tile flex h-full min-h-[120px] flex-col items-center justify-start rounded-[20px] border border-white/80 bg-linear-to-br ${color} px-2 pb-3 pt-3 text-center text-deep shadow-rest transition hover:-translate-y-0.5 active:scale-[0.98] xl:min-h-[140px]`}
             >
-              <span className="mb-1.5" aria-hidden="true">{icon}</span>
-              <span className="text-sm font-bold leading-tight">{title}</span>
+              <span className="mb-1.5 grid size-14 shrink-0 place-items-center sm:size-16" aria-hidden="true">
+                <img src={icon} alt="" draggable={false} className="size-full object-contain" />
+              </span>
+              <span className="flex min-h-[2.25rem] items-center justify-center text-sm font-bold leading-tight">
+                {title}
+              </span>
               <span className="simple-hide mt-0.5 hidden text-xs leading-tight sm:block">{description}</span>
             </Link>
           ))}

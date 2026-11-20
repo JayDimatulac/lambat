@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Check, ChevronDown, CloudSun, LogOut, MapPin, PanelLeftClose, PanelLeftOpen, Send, Sparkles, Wifi, WifiLow, WifiOff } from 'lucide-react'
+import { Check, ChevronDown, CloudSun, LogOut, MapPin, PanelLeftClose, PanelLeftOpen, Plus, Send, Sparkles, Wifi, WifiLow, WifiOff } from 'lucide-react'
 import { FishIcon, KnotPlusIcon, PierIcon, TideIcon } from '../icons'
 import { useT, type Key } from '../../lib/i18n'
 import { useSettings, type Connection } from '../../lib/settings'
@@ -56,7 +56,7 @@ const rowOn = 'bg-seafoam text-teal'
 
 /* a small coral tab on the edge marks the page you are on, like a lighthouse light */
 function ActiveMark() {
-  return <span aria-hidden="true" className="absolute -left-3 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-coral" />
+  return <span aria-hidden="true" className="absolute left-1 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-coral" />
 }
 
 function Rail({ open }: { open: boolean }) {
@@ -78,15 +78,15 @@ function Rail({ open }: { open: boolean }) {
           <span className={`font-display font-bold tracking-wider text-navy ${open ? 'text-xl' : 'text-[13px] leading-none'}`}>LAMBAT</span>
         </Link>
 
-        {/* The one primary action */}
+        {/* The one primary action: a perfect circle when the dock is slim, a pill when it is open */}
         <Link
           to="/catches/new"
           aria-label={t('page.log')}
           title={open ? undefined : t('page.log')}
-          className="flex h-12 w-full shrink-0 items-center overflow-hidden rounded-full bg-coral pl-2 font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95"
+          className={`flex h-12 shrink-0 items-center overflow-hidden rounded-full bg-coral font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95 ${open ? 'w-full pl-2' : 'mx-auto w-12 justify-center'}`}
         >
           <span className="grid size-12 shrink-0 place-items-center">
-            <KnotPlusIcon size={24} />
+            <Plus size={24} strokeWidth={2.6} aria-hidden="true" />
           </span>
           {open && <span className="whitespace-nowrap pr-5">{t('page.log')}</span>}
         </Link>
@@ -311,7 +311,7 @@ export default function AppShell() {
   const user = useUser()
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
-    // the sidebar is slim by default; the person's choice is remembered
+  // the sidebar is slim by default; the person's choice is remembered
   const [railOpen, setRailOpen] = useState(() => {
     try { return localStorage.getItem('lambat.rail') === 'open' } catch { return false }
   })
@@ -322,7 +322,7 @@ export default function AppShell() {
       return next
     })
   const current = pageTitles.find((p) => pathname.startsWith(p.to))
-  const PageIcon = railItems.find((i) => isActive(i, pathname))?.icon  
+  const PageIcon = railItems.find((i) => isActive(i, pathname))?.icon
   const place = user.fisher?.landing || user.barangay
   return (
     <div className="app-backdrop min-h-dvh overflow-x-clip lg:flex">
@@ -348,7 +348,7 @@ export default function AppShell() {
                   className="grid size-10 shrink-0 place-items-center rounded-xl border border-line text-navy transition hover:bg-seafoam/60"
                 >
                   {railOpen ? <PanelLeftClose size={20} strokeWidth={1.8} aria-hidden="true" /> : <PanelLeftOpen size={20} strokeWidth={1.8} aria-hidden="true" />}
-                </button>                
+                </button>
                 <span aria-hidden="true" className="h-9 w-1 rounded-full bg-coral" />
                 {PageIcon && <PageIcon size={26} strokeWidth={1.8} className="shrink-0 text-teal" />}
                 <div className="leading-tight">

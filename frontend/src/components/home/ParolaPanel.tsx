@@ -24,9 +24,6 @@ const STARS: [number, number, number][] = [[300, 18, 1.8], [330, 40, 1.3], [250,
 // Day scene: [x, y, scale, opacity] for each drifting cloud
 const CLOUDS: [number, number, number, number][] = [[205, 22, 1, 0.95], [318, 64, 0.8, 0.85], [150, 100, 0.7, 0.75], [262, 108, 0.6, 0.7]]
 
-// Panel background: day sea, and night's original dark sea
-const BG_DAY = 'linear-gradient(180deg, #247a89 0%, #0f6e7a 50%, #0a4f5c 100%)'
-const BG_NIGHT = 'linear-gradient(180deg, var(--tide-sky-0) 0%, #0f4a5c 55%, var(--tide-sea-2) 100%)'
 
 /* Two gulls gliding over the water (day only) */
 const GULLS: [number, number, number][] = [[238, 40, 1], [262, 52, 0.7]]

@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { Minus, Plus } from 'lucide-react'
 import type { Draft } from './steps'
 
@@ -5,10 +6,13 @@ const MAX_DIAL = 100
 const MAX_KG = 500
 const QUICK = [1, 5, 10, 25, 50, 100]
 
-const PALE = '#9fc5cf'
-const LABEL = '#cfe3e8'
-const DARK = '#0a2f3b'
-const CORAL = '#ee6c4d'
+
+const RIM = 'var(--color-teal)'
+const INK = 'var(--color-navy)'
+const FACE = 'var(--color-card)'
+const WATER = 'var(--color-seafoam)'
+const CORAL = 'var(--color-coral)'
+const EYE = 'var(--color-deep)'
 
 const CX = 100
 const CY = 95
@@ -50,7 +54,7 @@ function Fish({ x, y, color, flip }: { x: number; y: number; color: string; flip
     <g transform={`translate(${x} ${y}) scale(${flip ? -0.85 : 0.85} 0.85)`}>
       <ellipse cx="0" cy="0" rx="9" ry="4" fill={color} />
       <path d="M7 0 L14 -4 L14 4 Z" fill={color} />
-      <circle cx="-4.5" cy="-1" r="0.9" fill={DARK} />
+      <circle cx="-4.5" cy="-1" r="0.9" fill={EYE} />
     </g>
   )
 }
@@ -69,10 +73,10 @@ export function ScaleArt({ kg }: { kg: number }) {
       </defs>
 
       {/* Top ring */}
-      <circle cx={CX} cy="12" r="6" fill="none" stroke={PALE} strokeWidth="3" />
+      <circle cx={CX} cy="12" r="6" fill="none" stroke={RIM} strokeWidth="3" />
 
-      {/* Dial rim */}
-      <circle cx={CX} cy={CY} r={R + 5} fill="rgba(159,197,207,0.07)" stroke={PALE} strokeWidth="6" />
+      {/* Dial: solid face with a teal rim */}
+      <circle cx={CX} cy={CY} r={R + 5} fill={FACE} stroke={RIM} strokeWidth="6" />
 
       {/* Tick marks */}
       {ticks.map((v) => {
@@ -87,7 +91,8 @@ export function ScaleArt({ kg }: { kg: number }) {
             y1={p1.y}
             x2={p2.x}
             y2={p2.y}
-            stroke={PALE}
+            stroke={major ? INK : RIM}
+            strokeOpacity={major ? 0.85 : 0.6}
             strokeWidth={major ? 2.8 : 1.2}
             strokeLinecap="round"
           />
@@ -98,13 +103,13 @@ export function ScaleArt({ kg }: { kg: number }) {
       {LABELS.map((v) => {
         const p = polar(angleOf(v), R - 22)
         return (
-          <text key={v} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" fontSize="9" fontWeight="700" fill={LABEL}>
+          <text key={v} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle" fontSize="9" fontWeight="700" fill={INK}>
             {v === 100 ? '100+' : v}
           </text>
         )
       })}
 
-      <text x={CX} y={CY + 18} textAnchor="middle" fontSize="6.5" fontWeight="800" fill={PALE}>
+      <text x={CX} y={CY + 18} textAnchor="middle" fontSize="6.5" fontWeight="800" fill={RIM}>
         KG
       </text>
 
@@ -116,27 +121,27 @@ export function ScaleArt({ kg }: { kg: number }) {
           transition: 'transform 400ms cubic-bezier(0.3, 1.3, 0.5, 1)',
         }}
       >
-        <line x1={CX} y1={CY} x2={CX} y2={CY - R + 18} stroke={PALE} strokeWidth="3" strokeLinecap="round" />
+        <line x1={CX} y1={CY} x2={CX} y2={CY - R + 18} stroke={INK} strokeWidth="3" strokeLinecap="round" />
         <path d={`M${CX} ${CY - R + 12} L${CX - 5} ${CY - R + 26} L${CX + 5} ${CY - R + 26} Z`} fill={CORAL} />
       </g>
 
       {/* Center cap */}
-      <circle cx={CX} cy={CY} r="5.5" fill={PALE} />
+      <circle cx={CX} cy={CY} r="5.5" fill={INK} />
       <circle cx={CX} cy={CY} r="2" fill={CORAL} />
 
       {/* Rod */}
-      <line x1={CX} y1={CY + R + 5} x2={CX} y2="186" stroke={PALE} strokeWidth="2.8" />
+      <line x1={CX} y1={CY + R + 5} x2={CX} y2="186" stroke={RIM} strokeWidth="2.8" />
 
       {/* Everything below is the bucket, scaled up around its top-center */}
       <g transform={`translate(100 190) scale(${BUCKET_SCALE}) translate(-100 -190)`}>
         {/* Bucket handle */}
-        <path d="M64 190 Q100 174 136 190 Z" fill="none" stroke={PALE} strokeWidth="2.5" strokeLinejoin="round" />
+        <path d="M64 190 Q100 174 136 190 Z" fill="none" stroke={RIM} strokeWidth="2.5" strokeLinejoin="round" />
 
         {/* Bucket body */}
-        <polygon points="56,192 144,192 130,238 70,238" fill="rgba(159,197,207,0.12)" />
+        <polygon points="56,192 144,192 130,238 70,238" fill={WATER} fillOpacity="0.7" />
 
         {/* Water lines */}
-        <g clipPath="url(#bucket-clip)" stroke={PALE} strokeWidth="1" opacity="0.3">
+        <g clipPath="url(#bucket-clip)" stroke={RIM} strokeWidth="1" opacity="0.3">
           <line x1="50" y1="200" x2="150" y2="200" />
           <line x1="50" y1="209" x2="150" y2="209" />
           <line x1="50" y1="218" x2="150" y2="218" />
@@ -146,17 +151,20 @@ export function ScaleArt({ kg }: { kg: number }) {
         {/* Fish */}
         <g clipPath="url(#bucket-clip)">
           {SLOTS.slice(0, n).map(([x, y], i) => (
-            <Fish key={i} x={x} y={y} color={i % 2 === 0 ? PALE : CORAL} flip={i % 3 === 0} />
+            <Fish key={i} x={x} y={y} color={i % 2 === 0 ? RIM : CORAL} flip={i % 3 === 0} />
           ))}
         </g>
 
         {/* Bucket outline and rim */}
-        <polygon points="56,192 144,192 130,238 70,238" fill="none" stroke={PALE} strokeWidth="2.5" strokeLinejoin="round" />
-        <rect x="52" y="188" width="96" height="6" rx="3" fill="#1d4a58" stroke={PALE} strokeWidth="2.5" />
+        <polygon points="56,192 144,192 130,238 70,238" fill="none" stroke={RIM} strokeWidth="2.5" strokeLinejoin="round" />
+        <rect x="52" y="188" width="96" height="6" rx="3" fill={FACE} stroke={RIM} strokeWidth="2.5" />
       </g>
     </svg>
   )
 }
+
+const roundBtn =
+  'grid size-14 place-items-center rounded-full border-2 border-teal/40 bg-card text-teal shadow-rest transition hover:bg-seafoam active:scale-95 disabled:opacity-30 disabled:shadow-none disabled:hover:bg-card'
 
 export default function KilosScaleStep({ draft, set }: { draft: Draft; set: (patch: Partial<Draft>) => void }) {
   const kg = draft.kg
@@ -165,33 +173,24 @@ export default function KilosScaleStep({ draft, set }: { draft: Draft; set: (pat
   const dec = () => set({ kg: clamp(kg - stepOf(kg - 1)) })
   const inc = () => set({ kg: clamp(kg + stepOf(kg)) })
 
+  // how far along the slider the thumb is, used to paint the filled part of the track
+  const fill = ((Math.min(kg, MAX_DIAL) - 1) / (MAX_DIAL - 1)) * 100
+
   return (
     <div className="space-y-6">
-      {/* No white card: the scale sits on the app background */}
+      {/* No card: the scale sits on the app background */}
       <ScaleArt kg={kg} />
 
       <div className="flex items-center justify-center gap-6">
-        <button
-          type="button"
-          onClick={dec}
-          disabled={kg <= 1}
-          aria-label="Decrease kilos"
-          className="grid size-14 place-items-center rounded-full border-2 border-[#86c5da]/40 text-white transition active:scale-95 disabled:opacity-30"
-        >
+        <button type="button" onClick={dec} disabled={kg <= 1} aria-label="Decrease kilos" className={roundBtn}>
           <Minus size={24} strokeWidth={2.2} />
         </button>
 
-        <p className="min-w-32 text-center font-display text-5xl font-bold text-white" aria-live="polite">
-          {kg} <span className="text-xl font-semibold text-[#86c5da]">kg</span>
+        <p className="min-w-32 text-center font-display text-5xl font-bold text-navy" aria-live="polite">
+          {kg} <span className="text-xl font-semibold text-teal">kg</span>
         </p>
 
-        <button
-          type="button"
-          onClick={inc}
-          disabled={kg >= MAX_KG}
-          aria-label="Increase kilos"
-          className="grid size-14 place-items-center rounded-full border-2 border-[#86c5da]/40 text-white transition active:scale-95 disabled:opacity-30"
-        >
+        <button type="button" onClick={inc} disabled={kg >= MAX_KG} aria-label="Increase kilos" className={roundBtn}>
           <Plus size={24} strokeWidth={2.2} />
         </button>
       </div>
@@ -203,11 +202,13 @@ export default function KilosScaleStep({ draft, set }: { draft: Draft; set: (pat
           max={MAX_DIAL}
           value={Math.min(kg, MAX_DIAL)}
           onChange={(e) => set({ kg: Number(e.target.value) })}
-          className="h-2 w-full cursor-pointer appearance-none rounded-lg bg-teal-900/60 accent-[#86c5da]"
+          style={{ '--fill': `${fill}%` } as CSSProperties}
+          className="kilo-range w-full cursor-pointer"
           aria-label="Kilos slider"
         />
       </div>
 
+      {/* Quick picks: one line each, centered, wrapping onto a new row only when they run out of space */}
       <div className="flex flex-wrap justify-center gap-2 pt-1">
         {QUICK.map((q) => {
           const active = kg === q
@@ -216,10 +217,11 @@ export default function KilosScaleStep({ draft, set }: { draft: Draft; set: (pat
               key={q}
               type="button"
               onClick={() => set({ kg: q })}
-              className={`min-h-11 min-w-16 rounded-full border px-4 text-sm font-semibold transition ${
+              aria-pressed={active}
+              className={`min-h-11 min-w-20 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition ${
                 active
-                  ? 'border-[#86c5da] bg-[#86c5da] text-[#09222B]'
-                  : 'border-teal-800/60 bg-[#0c2e38] text-teal-100 hover:bg-[#113d4b]'
+                  ? 'border-teal bg-teal text-on-accent'
+                  : 'border-line bg-card text-navy hover:border-teal/50 hover:bg-seafoam'
               }`}
             >
               {q} kg

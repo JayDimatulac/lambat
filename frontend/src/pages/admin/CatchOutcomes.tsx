@@ -31,7 +31,7 @@ export default function CatchOutcomes({ outcomes }: { outcomes: Outcomes }) {
 
   return (
     <section className="rounded-lg border border-line bg-card p-5 shadow-rest">
-      <h2 className="font-display text-xl font-bold">Where the catch went</h2>
+      <h2 className="font-display text-xl font-bold">Catch by Outcome</h2>
       <p className="text-sm text-ink-soft">Share of everything landed, by outcome</p>
 
       <div className="relative mx-auto mt-4 size-48">

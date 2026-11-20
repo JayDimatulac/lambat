@@ -13,6 +13,15 @@ const TO: Record<AdminActivity['kind'], string> = {
   catch: '/admin/listings',
 }
 
+// Catch rows all said "Catch logged", so the useful part (species and weight) leads and the landing area follows.
+// "Bigeye scad · 10 kg · Balayan" becomes the title "Bigeye scad · 10 kg" with "Balayan" underneath.
+function lines(a: AdminActivity): { main: string; second: string } {
+  if (a.kind !== 'catch') return { main: a.title, second: a.sub }
+  const parts = a.sub.split(' · ')
+  if (parts.length < 2) return { main: a.title, second: a.sub }
+  return { main: `${parts[0]} · ${parts[1]}`, second: parts.slice(2).join(' · ') || a.title }
+}
+
 // The latest things that happened in the harbor, newest first. Each row opens the page it belongs to.
 export default function RecentActivity({ activity }: { activity: AdminActivity[] }) {
   return (
@@ -22,6 +31,7 @@ export default function RecentActivity({ activity }: { activity: AdminActivity[]
       <ul className="-my-1.5 divide-y divide-line">
         {activity.map((a) => {
           const I = ICON[a.kind]
+          const { main, second } = lines(a)
           return (
             <li key={a.kind + a.title + a.sub + a.at}>
               <Link to={TO[a.kind]} className="flex min-h-14 items-center gap-3 rounded-xl py-2 transition hover:bg-seafoam/40">
@@ -29,8 +39,8 @@ export default function RecentActivity({ activity }: { activity: AdminActivity[]
                   <I size={20} strokeWidth={1.8} />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <b className="block text-[15px] leading-tight">{a.title}</b>
-                  <span className="block truncate text-sm text-ink-soft">{a.sub}</span>
+                  <b className="block truncate text-[15px] leading-tight">{main}</b>
+                  <span className="block truncate text-sm text-ink-soft">{second}</span>
                 </span>
                 <time dateTime={a.at} className="shrink-0 text-xs font-semibold text-ink-soft">{whenLabel(a.at)}</time>
               </Link>

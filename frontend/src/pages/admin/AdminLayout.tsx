@@ -1,6 +1,6 @@
 import { useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Bell, Fish, Hourglass, LayoutDashboard, LogOut, Megaphone, UserCheck } from 'lucide-react'
+import { Fish, Hourglass, LayoutDashboard, LogOut, Megaphone, UserCheck } from 'lucide-react'
 import Sheet from '../../components/ui/Sheet'
 import LogoutSheet from '../../components/auth/LogoutSheet'
 import LangToggle from '../../components/layout/LangToggle'
@@ -165,11 +165,6 @@ export default function AdminLayout() {
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <ParolaToggle night={night} onToggle={() => setTheme(night ? 'day' : 'night')} />
                 <LangToggle />
-                <Link to="/admin/verifications" aria-label={pending > 0 ? t('adm.waiting', { n: pending }) : 'Notifications'}
-                  className="relative grid size-11 place-items-center rounded-full border border-line transition hover:bg-seafoam/60">
-                  <Bell size={22} strokeWidth={1.8} />
-                  {pending > 0 && <span aria-hidden="true" className="absolute right-2 top-2 size-2.5 rounded-full bg-coral ring-2 ring-card" />}
-                </Link>
                 <span aria-hidden="true" className="mx-1 hidden h-8 w-px bg-line sm:block" />
                 <button
                   type="button"

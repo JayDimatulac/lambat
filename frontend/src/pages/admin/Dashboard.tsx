@@ -4,7 +4,6 @@ import { ArrowDownRight, ArrowRight, ArrowUpRight, Fish, Megaphone, UserCheck, W
 import { BuoyIcon } from '../../components/icons'
 import { LostFishIcon } from '../../components/home/HomeIcons'
 import BuoyRack from './BuoyRack'
-import CatchOutcomes from './CatchOutcomes'
 import HarborScene from './HarborScene'
 import RecentActivity from './RecentActivity'
 import TideChart from './TideChart'
@@ -120,17 +119,14 @@ export default function Dashboard() {
         <Task to="/admin/advisories" icon={Megaphone} title="Send an advisory" sub={lastSent ? `Last sent: ${lastSent}` : 'None sent yet'} />
       </section>
 
-      {/* Weekly tide and what just happened (live from the overview) */}
+      {/* Weekly tide (with the outcome tiles) and what just happened, live from the overview */}
       <div className="grid gap-4 xl:grid-cols-[1.7fr_1fr]">
         <TideChart weeks={data.weeks} />
         <RecentActivity activity={data.activity} />
       </div>
 
-      {/* Where the catch went, and how risky it is out there */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <CatchOutcomes outcomes={data.outcomes} />
-        <BuoyRack riskNow={data.riskNow} />
-      </div>
+      {/* How risky it is out there */}
+      <BuoyRack riskNow={data.riskNow} />
 
       {/* Where the losses are */}
       <div className="grid gap-4 md:grid-cols-2">

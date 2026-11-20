@@ -1,42 +1,39 @@
 import type { ReactNode } from 'react'
 import Boat from './Boat'
 import { RISK, type RiskLevel } from '../../lib/risk'
+import { useSettings } from '../../lib/settings'
+import dayImg from '../../assets/bg/pier-day.png'
+import nightImg from '../../assets/bg/pier-night.png'
 
-const WAVES = 'M0 118q15-6 30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0t30 0'
-
-/* The pantalan at dusk. Each boat coming in is a lot of fish for sale: its lantern shows how soon it must be sold. */
+/* The pantalan: day or night scene. Each boat coming in is a lot of fish for sale, and its lantern shows how soon it must be sold. */
 export default function PierScene({ lots, header }: { lots: { id: string; risk: RiskLevel }[]; header: ReactNode }) {
+  const { theme } = useSettings()
+  const night = theme === 'night'
   const boats = lots.slice(0, 4)
+  // If the image file is missing, the gradient shows instead
+  const fallback = night
+    ? 'linear-gradient(180deg, #05171e, #0a2f3c 55%, #0d525e)'
+    : 'linear-gradient(180deg, #8fd3e3, #d6eff1 55%, #3a9bab)'
+
   return (
-    <section className="relative overflow-hidden rounded-lg shadow-raised" style={{ background: 'linear-gradient(180deg, var(--tide-sky-0), var(--tide-sky-1) 55%, var(--tide-sky-2))' }}>
-      <div className="relative z-10 px-4 pt-3">{header}</div>
-      <svg viewBox="0 0 360 150" className="-mt-2 block w-full" aria-hidden="true">
-        <circle cx="300" cy="22" r="11" style={{ fill: 'var(--tide-sun)' }} />
-        <circle cx="300" cy="22" r="26" style={{ fill: 'var(--tide-sun-glow)' }} />
-        {[[40, 18], [90, 34], [150, 12], [210, 30]].map(([x, y], i) => (
-          <circle key={i} cx={x} cy={y} r="1.5" fill="#fff" className="anim-twinkle" style={{ animationDelay: `${i * 0.7}s` }} />
-        ))}
-        <rect x="0" y="104" width="360" height="46" style={{ fill: 'var(--tide-sea-1)' }} />
+    <section className="relative aspect-[2/1] min-h-[200px] overflow-hidden rounded-lg shadow-raised" style={{ background: fallback }}>
+      <img src={night ? nightImg : dayImg} alt="" className="absolute inset-0 size-full object-cover" />
 
-        {/* the pier */}
-        <g stroke="var(--color-deep)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M262 112V78M292 112V78M322 112V78M352 112V78" fill="none" />
-          <rect x="250" y="70" width="110" height="9" rx="2" style={{ fill: 'var(--color-cream)' }} />
-          <path d="M262 70V46M262 46H274" fill="none" />
-          <circle cx="278" cy="46" r="5" style={{ fill: 'var(--color-coral)' }} className="anim-glow" />
-        </g>
+      {/* a soft shade at the top so the white greeting is easy to read */}
+      <div className="absolute inset-x-0 top-0 h-2/5 bg-gradient-to-b from-black/40 to-transparent" aria-hidden="true" />
 
-        <g className="anim-drift"><path d={WAVES} fill="none" stroke="#fff" strokeOpacity="0.3" strokeWidth="2" /></g>
-
+      {/* the lot boats, placed in the picture's own pixels (1774 x 887) so they line up with the sea */}
+      <svg viewBox="0 0 1774 887" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 size-full" aria-hidden="true">
         {boats.map((b, i) => (
-          <g key={b.id} transform={`translate(${52 + i * 62} ${96 - (i % 2) * 6}) scale(0.5)`}>
+          <g key={b.id} transform={`translate(${330 + i * 230} ${735 + (i % 2) * 55}) scale(1.5)`}>
             <g className="anim-rock" style={{ transformOrigin: '0px 10px', animationDelay: `${i * 0.5}s` }}>
               <Boat lamp={RISK[b.risk].fill} />
             </g>
           </g>
         ))}
-        <g className="anim-drift-rev" transform="translate(0 8)"><path d={WAVES} fill="none" stroke="#fff" strokeOpacity="0.18" strokeWidth="2" /></g>
       </svg>
+
+      <div className="relative z-10 px-4 pt-3 drop-shadow-[0_1px_4px_rgba(0,0,0,0.55)]">{header}</div>
     </section>
   )
 }

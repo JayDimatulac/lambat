@@ -10,6 +10,8 @@ import { localeOf } from '../../lib/time'
 import { useSettings } from '../../lib/settings'
 import { useT } from '../../lib/i18n'
 import { useBT } from '../../lib/buyerText'
+import wxDayImg from '../../assets/bg/buyer-weather-day.png'
+import wxNightImg from '../../assets/bg/buyer-weather-night.png'
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString('en-US')}`
 const shortId = (id: string) => `#ORD-${id.slice(-4).toUpperCase()}`
@@ -29,7 +31,7 @@ function StatTile({ icon, value, label, tone }: { icon: ReactNode; value: string
 export default function BuyerHome() {
   const b = useBT()
   const t = useT()
-  const { lang } = useSettings()
+  const { lang, theme } = useSettings()
   const user = useUser()
   const m = useMarket()
   const inbox = useBuyerInbox()
@@ -83,18 +85,20 @@ export default function BuyerHome() {
     </>
   )
 
-  const action = 'flex min-h-24 flex-col items-center justify-center gap-2 rounded-lg border border-line p-3 text-center text-sm font-semibold shadow-rest transition active:scale-[0.98]'
+  const action = 'flex min-h-32 flex-col items-center justify-center gap-3 rounded-lg border border-line p-4 text-center text-base font-semibold shadow-rest transition active:scale-[0.98]'
 
   return (
     <div className="space-y-5">
       <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
         <PierScene lots={open.map((l) => ({ id: l.id, risk: riskOf(l, m.now) }))} header={header} />
-        <section aria-label={t('home.wx.title')} className="flex flex-col justify-between gap-4 rounded-lg bg-gradient-to-b from-[var(--tide-sky-0)] to-[var(--tide-sea-1)] p-5 text-white shadow-raised">
-          <div>
+        <section aria-label={t('home.wx.title')} className="relative flex flex-col justify-between gap-4 overflow-hidden rounded-lg bg-gradient-to-b from-[var(--tide-sky-0)] to-[var(--tide-sea-1)] p-5 text-white shadow-raised">
+          <img src={theme === 'night' ? wxNightImg : wxDayImg} alt="" className="absolute inset-0 size-full object-cover object-right" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" aria-hidden="true" />
+          <div className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
             <p className="font-numeral text-5xl font-bold leading-none">{loading ? '–' : temp}<span className="align-top text-2xl">°C</span></p>
             <p className="mt-1 text-sm font-semibold">{t(`sky.${today.sky}`)}</p>
           </div>
-          <ul className="space-y-2 text-sm font-medium">
+          <ul className="relative z-10 space-y-2 text-sm font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
             <li className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><Wind size={16} aria-hidden="true" />{t('home.wx.wind')}</span><span>{loading ? '–' : `${wind} km/h`}</span></li>
             <li className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><Waves size={16} aria-hidden="true" />{t('home.wx.waves')}</span><span>{loading ? '–' : `${wave} m`}</span></li>
             {now?.humidity !== undefined && <li className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><Droplet size={16} aria-hidden="true" />{t('home.wx.humidity')}</span><span>{now.humidity}%</span></li>}
@@ -109,7 +113,17 @@ export default function BuyerHome() {
         <StatTile icon={<Receipt size={24} aria-hidden="true" />} value={peso(spentThisMonth)} label="Total Spent This Month" tone="bg-cream text-deep" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
+        <section className="flex flex-col rounded-lg border border-line bg-card/90 p-5 shadow-rest">
+          <h2 className="mb-4 text-2xl">Quick Actions</h2>
+          <div className="grid flex-1 grid-cols-2 gap-4 xl:grid-cols-4">
+            <Link to="/buyer/pier" className={`${action} bg-seafoam text-teal`}><Fish size={34} strokeWidth={1.8} aria-hidden="true" />Browse Offers</Link>
+            <Link to="/buyer/needs?new=1" className={`${action} bg-cream text-deep`}><Plus size={34} strokeWidth={1.8} aria-hidden="true" />Post a Need</Link>
+            <Link to="/buyer/orders" className={`${action} bg-seafoam text-teal`}><PackageCheck size={34} strokeWidth={1.8} aria-hidden="true" />Track Orders</Link>
+            <Link to="/buyer/stall" className={`${action} bg-cream text-deep`}><Store size={34} strokeWidth={1.8} aria-hidden="true" />Manage Stall</Link>
+          </div>
+        </section>
+
         <section className="rounded-lg border border-line bg-card/90 p-4 shadow-rest">
           <div className="mb-3 flex items-center justify-between gap-3">
             <h2 className="flex items-center gap-2 text-xl"><Clock size={22} strokeWidth={1.8} className="text-teal" aria-hidden="true" />Recent Activity</h2>
@@ -130,16 +144,6 @@ export default function BuyerHome() {
               ))}
             </ul>
           )}
-        </section>
-
-        <section className="rounded-lg border border-line bg-card/90 p-4 shadow-rest">
-          <h2 className="mb-3 text-xl">Quick Actions</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <Link to="/buyer/pier" className={`${action} bg-seafoam text-teal`}><Fish size={26} strokeWidth={1.8} aria-hidden="true" />Browse Offers</Link>
-            <Link to="/buyer/needs?new=1" className={`${action} bg-cream text-deep`}><Plus size={26} strokeWidth={1.8} aria-hidden="true" />Post a Need</Link>
-            <Link to="/buyer/orders" className={`${action} bg-seafoam text-teal`}><PackageCheck size={26} strokeWidth={1.8} aria-hidden="true" />Track Orders</Link>
-            <Link to="/buyer/stall" className={`${action} bg-cream text-deep`}><Store size={26} strokeWidth={1.8} aria-hidden="true" />Manage Stall</Link>
-          </div>
         </section>
       </div>
     </div>

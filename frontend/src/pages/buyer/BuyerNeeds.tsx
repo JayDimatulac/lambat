@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Minus, Plus, X } from 'lucide-react'
+import { Fish, Minus, Plus, X } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import Chip from '../../components/ui/Chip'
 import Segmented from '../../components/ui/Segmented'
@@ -168,6 +168,17 @@ export default function BuyerNeeds() {
   const open = openListings(m)
   const close = () => setParams({})
 
+  type NeedTab = 'open' | 'accepted' | 'closed'
+  const [tab, setTab] = useState<NeedTab>('open')
+  const kindOf = (n: (typeof mine)[number]): NeedTab =>
+    inbox.offers.some((o) => o.needId === n.id && o.status === 'accepted') ? 'accepted' : n.open ? 'open' : 'closed'
+  const NEED_TABS: { id: NeedTab; label: string }[] = [
+    { id: 'open', label: 'Open' },
+    { id: 'accepted', label: 'Accepted' },
+    { id: 'closed', label: 'Closed' },
+  ]
+  const shown = mine.filter((n) => kindOf(n) === tab)
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3">
@@ -187,40 +198,62 @@ export default function BuyerNeeds() {
         </section>
       )}
 
-      {mine.length === 0 ? <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{b('needs.empty')}</p> : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {mine.map((n) => {
+            <div role="tablist" aria-label="Needs" className="flex flex-wrap gap-2">
+        {NEED_TABS.map((x) => (
+          <button key={x.id} type="button" role="tab" aria-selected={tab === x.id} onClick={() => setTab(x.id)}
+            className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition ${tab === x.id ? 'border-teal bg-teal text-on-accent' : 'border-line bg-card/80 text-navy hover:bg-seafoam'}`}>
+            {x.label} ({mine.filter((n) => kindOf(n) === x.id).length})
+          </button>
+        ))}
+      </div>
+
+      {shown.length === 0 ? (
+        <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">
+          {mine.length === 0 ? b('needs.empty') : 'No needs here yet.'}
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {shown.map((n) => {
             const k = open.filter((l) => l.species === n.species && (!n.maxPrice || l.ask <= n.maxPrice)).length
             const waiting = pending.filter((o) => o.needId === n.id)
             const accepted = inbox.offers.find((o) => o.needId === n.id && o.status === 'accepted')
             return (
-              <article key={n.id} className={`space-y-3 rounded-lg border bg-card p-4 shadow-rest ${n.open || accepted ? 'border-line' : 'border-line opacity-60'}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-numeral text-xl font-bold">{n.species}</h3>
-                    <p className="text-sm text-ink-soft">{b('needs.line', { kg: n.kg, when: b(`when.${n.when}` as 'when.today') })}{n.maxPrice ? ` · ${b('needs.upto', { n: n.maxPrice })}` : ''}</p>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${!n.open ? 'bg-mint text-ink-soft' : k ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft'}`}>{!n.open ? b('needs.closed') : k ? b('home.needs.match', { n: k }) : b('home.needs.nomatch')}</span>
+              <li key={n.id} className={`rounded-lg border border-line bg-card/90 p-4 shadow-rest ${n.open || accepted ? '' : 'opacity-60'}`}>
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="grid size-12 shrink-0 place-items-center rounded-full bg-seafoam text-teal"><Fish size={24} strokeWidth={1.8} aria-hidden="true" /></span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-numeral text-lg font-bold leading-tight">{n.species} · {n.kg} kg</span>
+                    <span className="block truncate text-sm text-ink-soft">{b(`when.${n.when}` as 'when.today')}</span>
+                  </span>
+                  <span className="text-right">
+                    <span className="block font-numeral text-lg font-bold text-teal">{n.maxPrice ? `₱${n.maxPrice}/kg` : b('needs.nomax')}</span>
+                    <span className="block text-xs text-ink-soft">Max price</span>
+                  </span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${!n.open ? 'bg-mint text-ink-soft' : k ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft'}`}>
+                    {!n.open ? b('needs.closed') : k ? b('home.needs.match', { n: k }) : b('home.needs.nomatch')}
+                  </span>
+                  {n.open && (
+                    <span className="flex gap-2">
+                      {k > 0 && <Link to="/buyer/offers" className="inline-flex min-h-11 items-center rounded-full bg-teal px-5 text-sm font-semibold text-on-accent transition active:scale-[0.98]">{b('needs.view')}</Link>}
+                      <button type="button" onClick={() => { cancelNeed(n.id).then(reload).catch(() => reload()) }} className="min-h-11 rounded-full border-2 border-coral px-5 text-sm font-semibold text-coral-dark transition active:scale-[0.98]">{b('needs.close')}</button>
+                    </span>
+                  )}
                 </div>
 
-                {n.open && (
-                  <div className="flex flex-wrap gap-2">
-                    {k > 0 && <Link to="/buyer/offers" className="inline-flex min-h-12 items-center rounded-full bg-coral px-4 text-sm font-semibold text-deep">{b('needs.view')}</Link>}
-                    <button type="button" onClick={() => { cancelNeed(n.id).then(reload).catch(() => reload()) }} className="min-h-12 rounded-full border-2 border-line px-4 text-sm font-semibold">{b('needs.close')}</button>
+                {(waiting.length > 0 || accepted) && (
+                  <div className="mt-3 space-y-2">
+                    {waiting.map((o) => <OfferRow key={o.id} o={o} act={act} />)}
+                    {accepted && (
+                      <Link to="/buyer/orders" className="block rounded-md bg-seafoam p-3 text-sm font-semibold text-teal">
+                        Offer accepted from {accepted.fisher}. See it in Orders.
+                      </Link>
+                    )}
                   </div>
                 )}
-
-                {/* Offers from fisherfolk who have this fish */}
-                {waiting.map((o) => <OfferRow key={o.id} o={o} act={act} />)}
-                {accepted && (
-                  <Link to="/buyer/orders" className="block rounded-md bg-seafoam p-3 text-sm font-semibold text-teal">
-                    Offer accepted from {accepted.fisher}. See it in Orders.
-                  </Link>
-                )}
-              </article>
+              </li>
             )
           })}
-        </div>
+        </ul>
       )}
 
       <CenterModal open={params.get('new') === '1'} onClose={close} title={b('needs.new')}>

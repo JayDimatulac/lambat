@@ -110,7 +110,7 @@ export default function AdminLayout() {
             <Logo size={48} className="size-12 shrink-0" />
             <span className={`flex flex-col leading-none ${label}`}>
               <span className="font-display text-xl font-bold tracking-widest text-white">LAMBAT</span>
-              <span className="mt-1 text-xs font-bold tracking-[0.25em] text-seafoam">ADMIN</span>
+              <span className="mt-1 text-xs font-bold tracking-[0.25em] text-[#cdeef0]">ADMIN</span>
             </span>
           </Link>
 

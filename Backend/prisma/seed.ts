@@ -1,9 +1,8 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../src/db";
 
-const prisma = new PrismaClient();
 
-// l0Min / l0Max: shelf life in hours at 0°C (from the frontend species.ts).
+// l0Min / l0Max: shelf life in hours at 0Â°C (from the frontend species.ts).
 // histamine: tuna and mackerel get a narrow, cautious range.
 const species = [
   { code: "skipjack", englishName: "Skipjack tuna", scientificName: "Katsuwonus pelamis", localNames: ["Gulyasan"], l0Min: 192, l0Max: 192, histamine: true },

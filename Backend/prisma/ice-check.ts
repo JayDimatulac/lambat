@@ -1,8 +1,7 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../src/db";
 import { assess } from "../src/lib/engine";
 
-const prisma = new PrismaClient();
 
 async function main() {
   const [code = "skipjack", kilosArg = "10", hoursArg = "0", iceArg = "0"] = process.argv.slice(2);

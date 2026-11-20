@@ -1,7 +1,6 @@
 import "dotenv/config";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../src/db";
 
-const prisma = new PrismaClient();
 
 async function main() {
   const apply = process.argv.includes("--yes");

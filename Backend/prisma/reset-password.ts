@@ -1,8 +1,7 @@
 import "dotenv/config";
 import bcrypt from "bcrypt";
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../src/db";
 
-const prisma = new PrismaClient();
 
 async function main() {
   const mobile = process.argv[2];

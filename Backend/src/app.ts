@@ -17,6 +17,7 @@ import { ordersRouter } from "./routes/orders";
 import otpAuthRouter from "./routes/auth.routes";
 import smsRouter from "./routes/sms.routes";
 import catchSyncRouter from "./routes/catches.routes";
+import { internalRouter } from "./routes/internal";
 
 export const app = express();
 
@@ -72,6 +73,7 @@ app.use("/api/notifications", notificationsRouter);
 app.use("/api/needs", needsRouter);
 app.use("/api/offers", offersRouter);
 app.use("/api/orders", ordersRouter);
+app.use("/api/internal", internalRouter);
 
 // Unknown API address: answer in JSON instead of an HTML page
 app.use("/api", (_req, res) => {

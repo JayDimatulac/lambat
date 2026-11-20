@@ -75,8 +75,47 @@ function parseSections(raw: string): Sections | null {
   if (out.why.length === 0 || out.factors.length + out.know.length + out.next.length === 0) return null;
   return out;
 }
+// ---------- cache ----------
+// The same catch in the same state gets the same explanation, so we keep the AI's answer for a few
+// minutes instead of asking again on every tap. If the provider just failed, we skip it for a minute
+// and answer with the template straight away, instead of making the fisher wait on a busy server.
+const CACHE_MS = 10 * 60 * 1000;
+const COOLDOWN_MS = 60 * 1000;
+const MAX_ENTRIES = 500;
+const cache = new Map<string, { at: number; value: Explanation }>();
+let busyUntil = 0;
+
+// Only things that change what the AI would say. The minute-by-minute clock is left out on purpose.
+function cacheKey(ctx: ExplainContext): string {
+  const a = ctx.assessment;
+  return [
+    ctx.catch.id,
+    ctx.language,
+    a.riskLevel,
+    ctx.catch.quantityKg,
+    ctx.catch.iceCondition,
+    a.sellByText,
+    ctx.allowedNextActions.join(","),
+  ].join("|");
+}
 
 export async function explain(ctx: ExplainContext): Promise<Explanation> {
+  const key = cacheKey(ctx);
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.value;
+
+  if (Date.now() < busyUntil) return finish(template(ctx), ctx.language, "template");
+
+  const out = await askModel(ctx);
+  if (out.source === "ai") {
+    cache.set(key, { at: Date.now(), value: out });
+    if (cache.size > MAX_ENTRIES) cache.delete(cache.keys().next().value as string);
+  }
+  return out;
+}
+
+
+  async function askModel(ctx: ExplainContext): Promise<Explanation> {
   const fallback = finish(template(ctx), ctx.language, "template");
 
   const key = process.env.LLM_API_KEY;
@@ -117,6 +156,7 @@ export async function explain(ctx: ExplainContext): Promise<Explanation> {
     }
     if (!res || !res.ok) {
       console.error("LLM gave no answer, status", res?.status);
+      busyUntil = Date.now() +COOLDOWN_MS;
       return fallback;
     }
     const data = (await res.json()) as { choices?: { message?: { content?: string }; finish_reason?: string }[] };
@@ -138,6 +178,7 @@ export async function explain(ctx: ExplainContext): Promise<Explanation> {
     return finish(sections, ctx.language, "ai");
   } catch (e) {
     console.error("LLM call failed:", e instanceof Error ? e.message : e);
+    busyUntil = Date.now() + COOLDOWN_MS;
     return fallback;
   }
 }

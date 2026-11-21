@@ -101,9 +101,8 @@ export default function BuyerShell() {
       <Rail />
       <div className="min-w-0 flex-1">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between gap-2 border-b border-line bg-card/90 px-4 backdrop-blur lg:px-8">
-          <Link to="/buyer" className="flex items-center gap-2 lg:invisible">
+          <Link to="/buyer" aria-label="LAMBAT" className="flex items-center lg:invisible">
             <Logo size={40} />
-            <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
           </Link>
           <div className="flex items-center gap-2">
             <LangToggle />

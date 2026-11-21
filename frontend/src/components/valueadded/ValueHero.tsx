@@ -44,7 +44,6 @@ export function ValueHero({ c }: { c: Catch | null }) {
         <div>
           <h1 className="font-display text-4xl font-semibold leading-tight sm:text-5xl">
             {t('va.h.title')}
-            <span className={`block ${sub}`}>{t('va.h.title2')}</span>
           </h1>
           <p className={`mt-3 max-w-xl ${sub}`}>{t('va.h.sub')}</p>
         </div>

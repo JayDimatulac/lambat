@@ -122,12 +122,11 @@ export default function BuyerLayout() {
         <aside
           className="pointer-events-auto fixed bottom-3 left-3 top-3 z-40 flex w-[72px] flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card via-card to-seafoam px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] group-hover/dock:w-60 group-has-[:focus-visible]/dock:w-60"
         >
-          <Link to="/buyer" aria-label="LAMBAT" className="mb-5 flex h-12 shrink-0 items-center gap-3">
-            <Logo size={48} className="size-12" />
-            <span className={`flex flex-col leading-none ${label}`}>
-              <span className="font-display text-xl font-bold tracking-widest text-navy">LAMBAT</span>
-              <span className="mt-1 text-xs font-bold tracking-[0.25em] text-teal">{t('byr.role').toUpperCase()}</span>
+          <Link to="/buyer" aria-label="LAMBAT" className="mb-5 flex h-12 shrink-0 items-center gap-2">
+            <span className="block h-12 w-12 shrink-0 overflow-hidden transition-[width] duration-300 group-hover/dock:w-36 group-has-[:focus-visible]/dock:w-36">
+              <Logo size={48} className="block max-w-none" />
             </span>
+            <span className={`min-w-0 truncate text-xs font-bold tracking-[0.25em] text-teal ${label}`}>{t('byr.role').toUpperCase()}</span>
           </Link>
 
           <Link
@@ -174,9 +173,8 @@ export default function BuyerLayout() {
         <header className="sticky top-0 z-30 pt-3">
           <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
             <div className="flex h-16 items-center justify-between gap-3 rounded-3xl border border-line bg-card/80 pl-4 pr-2 shadow-rest backdrop-blur-md">
-              <Link to="/buyer" aria-label="LAMBAT" className="flex items-center gap-2.5 lg:hidden">
-                <Logo size={40} className="size-10" />
-                <span className="font-display text-xl font-bold tracking-wider">LAMBAT</span>
+              <Link to="/buyer" aria-label="LAMBAT" className="flex items-center lg:hidden">
+                <Logo size={40} />
               </Link>
               <div className="hidden items-center gap-3 lg:flex">
                 <span aria-hidden="true" className="h-9 w-1 rounded-full bg-coral" />

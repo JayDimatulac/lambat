@@ -72,10 +72,9 @@ function Rail({ open }: { open: boolean }) {
         id="app-rail"
         className={`fixed bottom-3 left-3 top-3 z-40 flex flex-col overflow-y-auto overflow-x-hidden rounded-[28px] border border-line bg-gradient-to-b from-card to-ice px-3 py-4 shadow-raised transition-[width] duration-300 ease-out [scrollbar-width:none] ${open ? 'w-60' : 'w-[88px]'}`}
       >
-        {/* Brand: the emblem and the LAMBAT wordmark */}
-        <Link to="/home" aria-label="LAMBAT" className={`mb-4 flex shrink-0 items-center ${open ? 'gap-3 px-1' : 'flex-col gap-1'}`}>
-          <Logo size={48} className="size-12" />
-          <span className={`font-display font-bold tracking-wider text-navy ${open ? 'text-xl' : 'text-[13px] leading-none'}`}>LAMBAT</span>
+        {/* Brand: the full logo when open, just the emblem when slim */}
+        <Link to="/home" className={`mb-4 flex shrink-0 items-center ${open ? 'px-1' : 'justify-center'}`}>
+          <Logo size={48} emblemOnly={!open} />
         </Link>
 
         {/* The one primary action: a perfect circle when the dock is slim, a pill when it is open */}
@@ -333,9 +332,8 @@ export default function AppShell() {
           <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
             <div className="flex h-16 items-center justify-between gap-2 rounded-3xl border border-line bg-card/80 pl-3 pr-2 shadow-rest backdrop-blur-md sm:gap-3 sm:pl-4">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
-              <Link to="/home" aria-label="LAMBAT" className="flex shrink-0 items-center gap-2 lg:hidden">
-                <Logo size={40} className="size-10" />
-                <span className="hidden font-display text-xl font-bold tracking-wider min-[420px]:inline">LAMBAT</span>
+              <Link to="/home" aria-label="LAMBAT" className="flex shrink-0 items-center lg:hidden">
+                <Logo size={40} />
               </Link>
               <div className="hidden items-center gap-3 lg:flex">
                 <button

@@ -80,12 +80,12 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <AuthLighthouse />
         <div className="absolute inset-0 flex flex-col p-6 lg:p-12">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-4">
-              <Logo size={64} className="lg:size-20" />
-              <div className="hidden lg:block">
-                <p className={`font-display text-4xl font-semibold tracking-[0.08em] ${ink}`}>LAMBAT</p>
-                <p className={`text-sm ${inkSoft}`}>{c.tag}</p>
-              </div>
+            <div className="flex flex-col items-start gap-2">
+              {/* phones: emblem only, so the theme and language buttons fit */}
+              <span className="lg:hidden"><Logo size={56} emblemOnly /></span>
+              {/* desktop: the full logo, with the tagline under it */}
+              <span className="hidden lg:block"><Logo size={72} /></span>
+              <p className={`hidden text-sm lg:block ${inkSoft}`}>{c.tag}</p>
             </div>
             <div className="flex shrink-0 items-center gap-2 lg:hidden">
               <ThemeButton />

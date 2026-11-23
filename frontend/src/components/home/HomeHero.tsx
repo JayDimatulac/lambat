@@ -1,8 +1,8 @@
 import { MapPin } from 'lucide-react'
 import { useSettings } from '../../lib/settings'
 // To use the bangka + lighthouse art: drop your images into assets/bg and change these two imports.
-import dayImg from '../../assets/bg/parola-day.png'
-import nightImg from '../../assets/bg/parola-night.png'
+import dayImg from '../../assets/bg/parola-day.webp'
+import nightImg from '../../assets/bg/parola-night.webp'
 
 /* Phone-only hero: greeting, place, and the harbor picture. Desktop keeps the sea chart instead. */
 export default function HomeHero({ greeting, name, place }: { greeting: string; name: string; place?: string }) {

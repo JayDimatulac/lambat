@@ -6,8 +6,8 @@ import { RISK, type RiskLevel } from '../../lib/risk'
 import { RISK_ICON } from '../ui/RiskBadge'
 import { useBT } from '../../lib/buyerText'
 import { useSettings } from '../../lib/settings'
-import dayImg from '../../assets/bg/buoy-day.png'
-import nightImg from '../../assets/bg/buoy-night.png'
+import dayImg from '../../assets/bg/buoy-day.webp'
+import nightImg from '../../assets/bg/buoy-night.webp'
 
 /* The buyer's hero. Same picture and buoys as the fisherfolk Home, but each buoy is a lot FOR SALE.
    The lower a buoy has sunk, the less time is left to sell it, so the lowest buoys are the ones worth buying first. */

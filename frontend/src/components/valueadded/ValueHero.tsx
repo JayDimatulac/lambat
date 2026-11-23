@@ -7,10 +7,10 @@ import RiskBadge from '../ui/RiskBadge'
 
 // Finds the pictures anywhere under src/, so it works from src/bg/ or src/assets/bg/.
 // If one is missing, the gradient below shows instead of breaking the build.
-const pictures = import.meta.glob('../../**/value-added-*.png', { eager: true, import: 'default' }) as Record<string, string>
+const pictures = import.meta.glob('../../**/value-added-*.webp', { eager: true, import: 'default' }) as Record<string, string>
 const pick = (name: string) => Object.entries(pictures).find(([path]) => path.endsWith(`/${name}`))?.[1]
-const dayImg = pick('value-added-day.png')
-const nightImg = pick('value-added-night.png')
+const dayImg = pick('value-added-day.webp')
+const nightImg = pick('value-added-night.webp')
 
 export function ValueHero({ c }: { c: Catch | null }) {
   const t = useT()

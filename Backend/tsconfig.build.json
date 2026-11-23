@@ -4,6 +4,5 @@
     "rootDir": "src",
     "outDir": "dist"
   },
-  "include": ["src/**/*"],
-  "exclude": ["src/lib/supabase.ts", "src/middleware/requireAuth.ts"]
+  "include": ["src/**/*"]
 }

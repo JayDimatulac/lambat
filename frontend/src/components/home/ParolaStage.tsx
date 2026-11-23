@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
-import dayImg from '../../assets/bg/parola-day.png'
-import nightImg from '../../assets/bg/parola-night.png'
+import dayImg from '../../assets/bg/parola-day.webp'
+import nightImg from '../../assets/bg/parola-night.webp'
 
 // All coordinates below are in the picture's own pixels (1672 x 941), so the SVG always lines up with the art.
 const W = 1672

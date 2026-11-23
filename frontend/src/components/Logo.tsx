@@ -1,5 +1,5 @@
-import logoLight from '../assets/lambat-logo-light.png'
-import logoDark from '../assets/lambat-logo-dark.png'
+import logoLight from '../assets/lambat-logo-light.webp'
+import logoDark from '../assets/lambat-logo-dark.webp'
 
 type Props = {
   size?: number

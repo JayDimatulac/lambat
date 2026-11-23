@@ -7,8 +7,8 @@ import { RISK_ICON } from '../ui/RiskBadge'
 import { useT } from '../../lib/i18n'
 import { rangeText } from '../../lib/time'
 import { useSettings } from '../../lib/settings'
-import dayImg from '../../assets/bg/buoy-day.png'
-import nightImg from '../../assets/bg/buoy-night.png'
+import dayImg from '../../assets/bg/buoy-day.webp'
+import nightImg from '../../assets/bg/buoy-night.webp'
 
 // Scene geometry (px). The sea is a fixed-height strip; each buoy sinks along TRAVEL as time runs out.
 const SEABED = 34

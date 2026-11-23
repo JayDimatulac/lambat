@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import Boat from './Boat'
 import { RISK, type RiskLevel } from '../../lib/risk'
 import { useSettings } from '../../lib/settings'
-import dayImg from '../../assets/bg/pier-day.png'
-import nightImg from '../../assets/bg/pier-night.png'
+import dayImg from '../../assets/bg/pier-day.webp'
+import nightImg from '../../assets/bg/pier-night.webp'
 
 /* The pantalan: day or night scene. Each boat coming in is a lot of fish for sale, and its lantern shows how soon it must be sold. */
 export default function PierScene({ lots, header }: { lots: { id: string; risk: RiskLevel }[]; header: ReactNode }) {

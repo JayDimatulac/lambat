@@ -10,8 +10,8 @@ import { localeOf } from '../../lib/time'
 import { useSettings } from '../../lib/settings'
 import { useT } from '../../lib/i18n'
 import { useBT } from '../../lib/buyerText'
-import wxDayImg from '../../assets/bg/buyer-weather-day.png'
-import wxNightImg from '../../assets/bg/buyer-weather-night.png'
+import wxDayImg from '../../assets/bg/buyer-weather-day.webp'
+import wxNightImg from '../../assets/bg/buyer-weather-night.webp'
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString('en-US')}`
 const shortId = (id: string) => `#ORD-${id.slice(-4).toUpperCase()}`

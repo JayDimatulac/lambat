@@ -2,8 +2,8 @@ import { Clock, MapPin, type LucideIcon } from 'lucide-react'
 import { useSettings } from '../../lib/settings'
 import type { Sky } from '../../lib/weather'
 import WeatherLayers from './WeatherLayers'
-import dayImg from '../../assets/bg/weather-day.png'
-import nightImg from '../../assets/bg/weather-night.png'
+import dayImg from '../../assets/bg/weather-day.webp'
+import nightImg from '../../assets/bg/weather-night.webp'
 
 export type HeroStat = { Icon: LucideIcon; label: string; value: string }
 

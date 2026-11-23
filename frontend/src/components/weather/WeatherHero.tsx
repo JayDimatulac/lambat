@@ -76,7 +76,7 @@ export default function WeatherHero({ place, tags = [], temp, SkyIcon, skyLabel,
         {/* keeps the text readable on top of any image */}
         <div aria-hidden="true" className={`absolute inset-0 ${shade}`} />
 
-        <div className={`relative z-10 flex min-h-[17rem] flex-col p-5 sm:min-h-[15rem] sm:p-6 lg:min-h-[13rem] lg:p-7 ${ink}`}>
+        <div className={`relative z-10 flex min-h-[13rem] flex-col p-5 sm:min-h-[15rem] sm:p-6 lg:min-h-[13rem] lg:p-7 ${ink}`}>
           <div className="min-w-0 space-y-2">
             <p className="flex flex-wrap items-center gap-2 text-sm font-semibold">
               <MapPin size={16} aria-hidden="true" className="shrink-0" />

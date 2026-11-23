@@ -31,6 +31,11 @@ export const user = { name: 'Mang Ramon', initials: 'MR', place: 'Balayan' }
 export const isActive = (c: Catch) => !c.outcome
 export const byUrgency = (a: Catch, b: Catch) => a.hoursMin - b.hoursMin
 
+// A catch "needs attention" when it is still active and either its risk is high or it is in the last day of the tide scale.
+export const PRIORITY_HOURS = 24
+export const needsAttention = (c: Catch) =>
+  isActive(c) && (c.risk === 'high' || c.risk === 'critical' || c.hoursMin <= PRIORITY_HOURS)
+
 // Earlier this week (not in the list above). Catches you close in the app are added on top of this.
 export const weekBase: Record<Outcome, { n: number; kg: number }> = {
   sold: { n: 6, kg: 88 },

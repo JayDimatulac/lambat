@@ -71,10 +71,11 @@ export default function Weather() {
   const message = `${t(L.why)}${strong ? ` ${t('wx.window', { from: hour12(strong.from), to: hour12(strong.to) })}` : ''}`
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <h1 className="sr-only">{t('nav.weather')}</h1>
 
       {/* ONE CALM ANSWER: is it good to go out? */}
+      <div className="order-1">
       <WeatherHero
         place={place ?? user.fisher?.landing ?? user.barangay}
         tags={tags}
@@ -94,11 +95,14 @@ export default function Weather() {
           { Icon: Droplet, label: t('home.wx.humidity'), value: humidity !== undefined ? `${humidity}%` : '–' },
         ]}
       />
+      </div>
 
       {/* THE WEEK: tap a day to see it above */}
-      <WeekStrip week={week} selected={sel} onSelect={setSel} />
+      <div className="order-3 min-w-0">
+        <WeekStrip week={week} selected={sel} onSelect={setSel} />
+      </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-stretch">
+      <div className="order-4 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-stretch">
         {/* TODAY, HOUR BY HOUR */}
         {sel === 0 ? (
           <DayRibbon hours={hours} nowHour={hour} />
@@ -158,7 +162,7 @@ export default function Weather() {
 
       {/* WEATHER ADVISORY (real forecast only) */}
       {live && (
-        <section className={`flex flex-col gap-3 rounded-2xl border px-5 py-4 sm:flex-row sm:items-center sm:gap-5 ${L.box}`}>
+        <section className={`order-2 flex flex-col gap-2 rounded-2xl border px-4 py-3 sm:flex-row sm:items-center sm:gap-5 sm:px-5 sm:py-4 lg:order-5 ${L.box}`}>
           <div className={`flex shrink-0 items-center gap-3 ${L.title}`}>
             {level === 'good' ? <CircleCheck size={32} strokeWidth={1.8} aria-hidden="true" /> : <TriangleAlert size={32} strokeWidth={1.8} aria-hidden="true" />}
             <h2 className="font-numeral text-lg font-bold">{t('wx.adv.title')}</h2>
@@ -168,7 +172,7 @@ export default function Weather() {
         </section>
       )}
 
-      <p className="px-2 text-center text-sm text-ink-soft">{t('wx.official')}</p>
+      <p className="order-6 px-2 text-center text-sm text-ink-soft">{t('wx.official')}</p>
     </div>
   )
 }

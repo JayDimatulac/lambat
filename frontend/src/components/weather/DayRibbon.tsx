@@ -25,6 +25,8 @@ export default function DayRibbon({ hours, nowHour }: { hours: Hour[]; nowHour: 
   const ahead = hours.filter((x) => x.h >= nowHour)
   const calm = ahead.length ? calmWindow(ahead) : null
   const slots = SLOTS.map((h) => hours.find((x) => x.h === h)).filter((x): x is Hour => !!x)
+  // phones: every hour from now on as a swipeable strip
+  const strip = ahead.length ? ahead : hours
 
   return (
     <section className="min-w-0 space-y-5 rounded-lg border border-line bg-card p-5 shadow-rest lg:h-full">
@@ -33,8 +35,27 @@ export default function DayRibbon({ hours, nowHour }: { hours: Hour[]; nowHour: 
         {t('wx.hourly')}
       </h2>
 
+      {strip.length > 0 && (
+        <ul className="-mx-5 flex snap-x gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:hidden">
+          {strip.map((x) => {
+            const Icon = SKY_ICON[x.sky]
+            const on = x.h === nowHour
+            return (
+              <li
+                key={x.h}
+                className={`flex w-[68px] shrink-0 snap-start flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 text-center ${on ? 'border-teal bg-seafoam' : 'border-line bg-ice/60'}`}
+              >
+                <span className="text-xs font-semibold text-ink-soft">{hour12(x.h)}</span>
+                <Icon size={24} strokeWidth={1.6} aria-hidden="true" className={SKY_TONE[x.sky]} />
+                <span className="font-numeral text-sm font-bold">{x.temp !== undefined ? `${x.temp}°C` : '–'}</span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+
       {slots.length > 0 && (
-        <ul className="grid divide-x divide-line rounded-2xl border border-line bg-ice/60 py-3" style={{ gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))` }}>
+        <ul className="hidden divide-x divide-line rounded-2xl border border-line bg-ice/60 py-3 lg:grid" style={{ gridTemplateColumns: `repeat(${slots.length}, minmax(0, 1fr))` }}>
           {slots.map((x) => {
             const Icon = SKY_ICON[x.sky]
             return (

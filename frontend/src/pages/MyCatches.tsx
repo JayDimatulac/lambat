@@ -1,16 +1,17 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Waves } from 'lucide-react'
 import { BuoyIcon, RowsIcon, TrayIcon } from '../components/icons'
 import TideScene from '../components/tide/TideScene'
 import { ListView, TrayView } from '../components/catch/views'
 import Chip from '../components/ui/Chip'
 import Segmented from '../components/ui/Segmented'
-import { byUrgency, isActive } from '../data/mock'
+import { byUrgency, isActive, needsAttention } from '../data/mock'
 import { useCatches } from '../data/store'
 import { useT } from '../lib/i18n'
 
 type View = 'tide' | 'tray' | 'list'
-type Filter = 'all' | 'active' | 'sold' | 'shared'
+type Filter = 'all' | 'attention' | 'active' | 'sold' | 'shared'
 
 const readView = (): View => {
   try {
@@ -25,7 +26,10 @@ export default function MyCatches() {
   const t = useT()
   const { catches } = useCatches()
   const [view, setViewState] = useState<View>(readView)
-  const [filter, setFilter] = useState<Filter>('all')
+  const [params, setParams] = useSearchParams()
+  const raw = params.get('filter')
+  const filter: Filter = raw === 'attention' || raw === 'active' || raw === 'sold' || raw === 'shared' ? raw : 'all'
+  const setFilter = (f: Filter) => setParams(f === 'all' ? {} : { filter: f }, { replace: true })
 
   const setView = (v: View) => {
     setViewState(v)
@@ -34,16 +38,22 @@ export default function MyCatches() {
 
   const sorted = [...catches].sort((a, b) => Number(!isActive(a)) - Number(!isActive(b)) || byUrgency(a, b))
   const shown = sorted.filter((c) =>
-    filter === 'all' ? true : filter === 'active' ? isActive(c) : c.outcome === filter,
+    filter === 'all' ? true : filter === 'active' ? isActive(c) : filter === 'attention' ? needsAttention(c) : c.outcome === filter,
   )
   const active = catches.filter(isActive)
   const atRisk = active.filter((c) => c.risk === 'high' || c.risk === 'critical').length
   const kg = active.reduce((s, c) => s + c.kg, 0)
   const tideItems = shown.filter(isActive)
 
-  const countOf = (f: Filter) => (f === 'all' ? catches.length : f === 'active' ? active.length : catches.filter((c) => c.outcome === f).length)
+  // Phones: the Tide shows only the two catches that need attention most (same as Home). The rest are in Bandeha and Listahan.
+  const rank = (c: (typeof catches)[number]) => (c.risk === 'critical' ? 2 : c.risk === 'high' ? 1 : 0)
+  const phoneTide = tideItems.filter(needsAttention).sort((a, b) => rank(b) - rank(a) || a.hoursMin - b.hoursMin).slice(0, 2)
+
+  const countOf = (f: Filter) =>
+    f === 'all' ? catches.length : f === 'active' ? active.length : f === 'attention' ? catches.filter(needsAttention).length : catches.filter((c) => c.outcome === f).length
   const filters: { value: Filter; label: string }[] = [
     { value: 'all', label: t('filter.all') },
+    ...(countOf('attention') > 0 || filter === 'attention' ? [{ value: 'attention' as Filter, label: t('filter.attention') }] : []),
     { value: 'active', label: t('filter.active') },
     { value: 'sold', label: t('filter.sold') },
     { value: 'shared', label: t('filter.shared') },
@@ -87,7 +97,29 @@ export default function MyCatches() {
       {shown.length === 0 ? (
         <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('catches.empty')}</p>
       ) : view === 'tide' ? (
-        tideItems.length > 0 ? <TideScene catches={tideItems} /> : <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('catches.tideonly')}</p>
+        tideItems.length > 0 ? (
+          <>
+            {/* phones: the two most urgent buoys, no swiping */}
+            <div className="space-y-2 lg:hidden">
+              <TideScene compact catches={phoneTide} emptyText={t('home.calm')} />
+              {tideItems.length > phoneTide.length && (
+                <button
+                  type="button"
+                  onClick={() => setView('tray')}
+                  className="flex min-h-11 w-full items-center justify-center rounded-full border border-line bg-card px-4 text-sm font-semibold text-teal"
+                >
+                  {t('home.seeall')} ({tideItems.length})
+                </button>
+              )}
+            </div>
+            {/* desktop: the full sea scene with every buoy */}
+            <div className="hidden lg:block">
+              <TideScene catches={tideItems} />
+            </div>
+          </>
+        ) : (
+          <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">{t('catches.tideonly')}</p>
+        )
       ) : view === 'tray' ? (
         <TrayView items={shown} />
       ) : (

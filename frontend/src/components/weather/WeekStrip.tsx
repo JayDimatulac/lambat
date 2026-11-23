@@ -28,7 +28,7 @@ export default function WeekStrip({ week, selected, onSelect }: { week: Day[]; s
         </p>
       </div>
 
-      <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [contain:inline-size] lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0 lg:[contain:none]">
+      <div className="relative -mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [contain:inline-size] lg:mx-0 lg:grid lg:grid-cols-7 lg:overflow-visible lg:px-0 lg:[contain:none]">
         {week.map((d, i) => {
           const Icon = SKY_ICON[d.sky]
           const level = sailLevel(d.wind, d.gust, d.wave, d.rain)

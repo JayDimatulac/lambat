@@ -1,6 +1,6 @@
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowUp, Info } from 'lucide-react'
+import { ArrowUp, Info } from 'lucide-react'
 import { HORIZON_H, type Catch } from '../../data/mock'
 import { RISK } from '../../lib/risk'
 import { RISK_ICON } from '../ui/RiskBadge'
@@ -14,6 +14,16 @@ import nightImg from '../../assets/bg/buoy-night.png'
 const SEABED = 34
 const TRAVEL = 88
 const LANE = 84
+
+// Compact version (phone Home hero): a shorter sea so the catch strip sits higher on the screen.
+const C_SKY = 100
+const C_TRAVEL = 60
+const C_SEABED = 24
+const C_PAD = 12
+
+// Narrow containers (phones) get their own layout: one full catch and a peek of the next, swiping sideways.
+const PHONE_MAX = 560 // container width in px below which the scene swipes
+const PHONE_LANE = 0.64 // each catch takes this share of the width, so the next one peeks in
 const FLOAT_CY = 42 // y of the buoy's float centre inside its 44x68 drawing
 
 // The picture is 2:1 and its horizon sits 49.49% down. It is placed so the horizon lands on the waterline (skyH).
@@ -56,18 +66,39 @@ function WaveLine({ top, wl = 120, dur, opacity, className = '' }: { top: number
   )
 }
 
-type Props = { catches: Catch[]; header?: ReactNode }
+type Props = { catches: Catch[]; header?: ReactNode; emptyText?: string; compact?: boolean }
 
-export default function TideScene({ catches, header }: Props) {
+export default function TideScene({ catches, header, emptyText, compact = false }: Props) {
   const t = useT()
   const navigate = useNavigate()
   const { theme } = useSettings()
   const night = theme === 'night'
   const n = catches.length
-  const skyH = header ? 140 : 64
-  const H = skyH + 6 + TRAVEL + 20 + SEABED
-  const yFor = (u: number) => skyH + 6 + u * TRAVEL
-  const cols = { gridTemplateColumns: `repeat(${Math.max(n, 1)}, minmax(${LANE}px, 1fr))` }
+  const skyH = compact ? (header ? C_SKY : 56) : header ? 140 : 64
+  const travel = compact ? C_TRAVEL : TRAVEL
+  const H = skyH + 6 + travel + (compact ? C_PAD : 20) + (compact ? C_SEABED : SEABED)
+  const yFor = (u: number) => skyH + 6 + u * travel
+
+  // Measure the section. In a narrow one, every catch gets a wide lane and the scene scrolls sideways with snapping.
+  const box = useRef<HTMLElement>(null)
+  const [w, setW] = useState(0)
+  useLayoutEffect(() => {
+    const el = box.current
+    if (!el) return
+    const read = () => setW(Math.round(el.getBoundingClientRect().width))
+    read()
+    const ro = new ResizeObserver(read)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const phone = w > 0 && w < PHONE_MAX
+  const lane = phone ? Math.max(Math.round(w * PHONE_LANE), 176) : LANE
+  // Only 3 or more catches swipe. One or two share the width evenly.
+  const swipes = phone && n > 2 && n * lane > w
+  const cols = {
+    gridTemplateColumns: swipes ? `repeat(${n}, ${lane}px)` : `repeat(${Math.max(n, 1)}, minmax(${LANE}px, 1fr))`,
+  }
+  const snap = swipes ? 'snap-start' : ''
 
   // Buoys start at the surface and settle to their depth after the first paint
   const [settled, setSettled] = useState(false)
@@ -76,9 +107,8 @@ export default function TideScene({ catches, header }: Props) {
     return () => cancelAnimationFrame(id)
   }, [])
 
-  // Which buoy shows its card. Mouse: hover. Touch: first tap shows the card, second tap opens the catch.
+  // Which buoy is highlighted (mouse hover or keyboard focus on its label). A tap opens the catch.
   const [active, setActive] = useState<number | null>(null)
-  const lastPointer = useRef('mouse')
   const hideTimer = useRef<number | undefined>(undefined)
   useEffect(() => () => window.clearTimeout(hideTimer.current), [])
   const show = (i: number, autoHide = false) => {
@@ -89,10 +119,10 @@ export default function TideScene({ catches, header }: Props) {
   const hide = (i: number) => setActive((a) => (a === i ? null : a))
 
   return (
-    <section aria-label={t('tide.hint')} className="overflow-hidden rounded-lg border border-line bg-card shadow-rest">
+    <section ref={box} aria-label={t('tide.hint')} className="overflow-hidden rounded-lg border border-line bg-card shadow-rest">
       <div className="relative">
-        <div className="overflow-x-auto">
-          <div style={{ minWidth: Math.max(n, 1) * LANE }}>
+        <div className={`overflow-x-auto ${swipes ? 'snap-x snap-mandatory overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden' : ''}`}>
+          <div style={{ minWidth: swipes ? n * lane : Math.max(n, 1) * LANE }}>
             {/* THE SCENE */}
             <div className="relative overflow-hidden" style={{ height: H, containerType: 'inline-size', background: night ? '#001335' : '#015672' }}>
               {/* BACKGROUND: sky, mountains, sun or moon and the sea, as one picture. Buoys and waves are drawn on top. */}
@@ -104,7 +134,7 @@ export default function TideScene({ catches, header }: Props) {
                 style={{ width: IMG_W, left: '50%', transform: 'translateX(-50%)', top: `calc(${skyH}px - ${(HORIZON / 2).toFixed(5)} * ${IMG_W})` }}
               />
               <WaveLine top={skyH + 26} dur={8} opacity={night ? 0.22 : 0.3} />
-              <div className="absolute inset-x-0 bottom-0 h-10 border-t-2 border-dashed border-white/30" style={{ background: 'var(--tide-seabed)' }} />
+              <div className={`absolute inset-x-0 bottom-0 border-t-2 border-dashed border-white/30 ${compact ? 'h-7' : 'h-10'}`} style={{ background: 'var(--tide-seabed)' }} />
 
               {/* BUOYS */}
               <div className="absolute inset-0 grid" style={cols}>
@@ -114,15 +144,10 @@ export default function TideScene({ catches, header }: Props) {
                   const cy = yFor(settled ? mid : 0)
                   const fill = RISK[c.risk].fill
                   const urgent = c.risk === 'high' || c.risk === 'critical'
-                  const r = RISK[c.risk]
-                  const RiskIcon = RISK_ICON[c.risk]
-                  const range = rangeText(c.hoursMin, c.hoursMax)
                   const isActive = active === i
-                  const above = cy - FLOAT_CY - 96 > 4 // flip the card below the buoy when there is no room above
-                  const justify = n > 1 && i === 0 ? 'justify-start' : n > 1 && i === n - 1 ? 'justify-end' : 'justify-center'
                   const move = `top 1.6s cubic-bezier(0.22, 0.9, 0.3, 1) ${i * 120}ms`
                   return (
-                    <div key={c.id} className="relative">
+                    <div key={c.id} className={`relative ${snap}`}>
                       {/* the rope hangs from the buoy down to the earliest it could sink: its length shows the uncertainty */}
                       {(() => {
                         const ropeTop = cy + 16
@@ -154,13 +179,9 @@ export default function TideScene({ catches, header }: Props) {
                           type="button"
                           tabIndex={-1}
                           aria-hidden="true"
-                          onPointerDown={(e) => { lastPointer.current = e.pointerType }}
                           onPointerEnter={(e) => { if (e.pointerType === 'mouse') show(i) }}
                           onPointerLeave={(e) => { if (e.pointerType === 'mouse') hide(i) }}
-                          onClick={() => {
-                            if (lastPointer.current === 'touch' && active !== i) show(i, true)
-                            else navigate(`/catches/${c.id}`)
-                          }}
+                          onClick={() => navigate(`/catches/${c.id}`)}
                           className="anim-bob pointer-events-auto block w-full cursor-pointer"
                           style={{ '--bob': `${3 * (1 - mid)}px`, animationDelay: `${i * 450}ms` } as CSSProperties}
                         >
@@ -169,24 +190,6 @@ export default function TideScene({ catches, header }: Props) {
                           </span>
                         </button>
                       </div>
-
-                      {/* the card: species, quantity, risk and time left. Hover or tap a buoy to see it, click to open the catch. */}
-                      {isActive && (
-                        <div aria-hidden="true" className={`pointer-events-none absolute inset-x-0 z-30 flex px-1 ${justify}`} style={{ top: above ? cy - FLOAT_CY - 8 : cy + 26 }}>
-                          <div className={`w-44 rounded-md border border-line bg-card p-2.5 text-navy shadow-raised ${above ? '-translate-y-full' : ''}`}>
-                            <div className="flex items-start justify-between gap-2">
-                              <p className="font-numeral text-base font-bold leading-tight">{c.species}</p>
-                              <ArrowRight size={16} strokeWidth={2.2} className="mt-0.5 shrink-0 text-teal" />
-                            </div>
-                            <p className="mt-0.5 text-sm text-ink-soft">{c.kg} kg</p>
-                            <span className={`mt-1.5 inline-flex items-center gap-1 rounded-full border-[1.5px] px-2 py-0.5 text-xs font-bold ${r.text} ${r.bg} ${r.line}`}>
-                              <RiskIcon size={13} strokeWidth={2.4} />
-                              {t(`risk.${c.risk}`)}
-                            </span>
-                            <p className="mt-1.5 text-sm font-semibold">{t('time.left', { range })}</p>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )
                 })}
@@ -197,8 +200,8 @@ export default function TideScene({ catches, header }: Props) {
               <WaveLine top={skyH + 56} dur={6} opacity={night ? 0.16 : 0.26} className="pointer-events-none" />
 
               {n === 0 && (
-                <p className="absolute inset-x-0 text-center text-base font-semibold text-white" style={{ top: yFor(0.45) }}>
-                  {t('tide.empty')}
+                <p className="absolute inset-x-0 px-4 text-center text-base font-semibold text-white" style={{ top: yFor(0.45) }}>
+                  {emptyText ?? t('tide.empty')}
                 </p>
               )}
             </div>
@@ -210,7 +213,7 @@ export default function TideScene({ catches, header }: Props) {
                 const Icon = c.risk === 'low' ? ArrowUp : RISK_ICON[c.risk]
                 const range = rangeText(c.hoursMin, c.hoursMax)
                 return (
-                  <div key={c.id} className="relative">
+                  <div key={c.id} className={`relative ${snap}`}>
                     {/* thin divider between catches */}
                     {i > 0 && <span aria-hidden="true" className="absolute inset-y-3 left-0 w-px bg-line" />}
                     <Link
@@ -220,11 +223,20 @@ export default function TideScene({ catches, header }: Props) {
                       onMouseLeave={() => hide(i)}
                       onFocus={() => show(i)}
                       onBlur={() => hide(i)}
-                      className="flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 py-3 text-center hover:bg-seafoam/50"
+                      className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-2' : 'py-3'}`}
                     >
-                      <span className="text-base font-bold leading-tight">{c.species}</span>
-                      <span className="text-sm text-ink-soft">{c.kg} kg</span>
-                      <span className={`inline-flex items-center gap-1 rounded-full border-[1.5px] px-3 py-1 text-sm font-bold ${r.text} ${r.bg} ${r.line}`}>
+                      {compact ? (
+                        <span className="flex max-w-full items-baseline justify-center gap-1.5">
+                          <span className="truncate text-base font-bold leading-tight">{c.species}</span>
+                          <span className="shrink-0 text-sm text-ink-soft">{c.kg} kg</span>
+                        </span>
+                      ) : (
+                        <>
+                          <span className="max-w-full truncate text-base font-bold leading-tight">{c.species}</span>
+                          <span className="text-sm text-ink-soft">{c.kg} kg</span>
+                        </>
+                      )}
+                      <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-3 py-1 text-sm font-bold ${r.text} ${r.bg} ${r.line}`}>
                         <Icon size={14} strokeWidth={2.4} aria-hidden />
                         {range}h
                       </span>
@@ -255,10 +267,13 @@ export default function TideScene({ catches, header }: Props) {
         {header && <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-4 [&_a]:pointer-events-auto">{header}</div>}
       </div>
 
-      <p className="simple-hide flex items-center justify-center gap-2 border-t border-line px-4 py-3 text-sm font-medium text-teal">
-        <Info size={16} strokeWidth={2} aria-hidden="true" className="shrink-0" />
-        {t('tide.hint')}
-      </p>
+      {/* the hint line is left out of the compact hero: the buoys and their labels already say it */}
+      {(!compact || swipes) && (
+        <p className="simple-hide flex items-center justify-center gap-2 border-t border-line px-4 py-3 text-sm font-medium text-teal">
+          <Info size={16} strokeWidth={2} aria-hidden="true" className="shrink-0" />
+          {swipes ? t('tide.swipe') : t('tide.hint')}
+        </p>
+      )}
     </section>
   )
 }

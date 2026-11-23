@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentType } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Check, ChevronDown, CloudSun, LogOut, MapPin, PanelLeftClose, PanelLeftOpen, Plus, Send, Sparkles, Wifi, WifiLow, WifiOff } from 'lucide-react'
+import { Check, ChevronDown, CloudSun, LogOut, MapPin, MoreHorizontal, PanelLeftClose, PanelLeftOpen, Plus, Send, Sparkles, Wifi, WifiLow, WifiOff } from 'lucide-react'
 import { FishIcon, KnotPlusIcon, PierIcon, TideIcon } from '../icons'
 import { useT, type Key } from '../../lib/i18n'
 import { useSettings, type Connection } from '../../lib/settings'
@@ -10,18 +10,20 @@ import MenuSheet from './MenuSheet'
 import NotificationsMenu from './NotificationsMenu'
 import LogoutSheet from '../auth/LogoutSheet'
 import Logo from '../Logo'
+import emblem from '../../assets/lambat-emblem.png'
 
 
 type Icon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
 type Item = { to: string; label: Key; icon: Icon; end?: boolean }
 
-const tabs: Item[] = [
-  { to: '/home', label: 'nav.home', icon: TideIcon, end: true },
-  { to: '/catches', label: 'nav.catches', icon: FishIcon },
-  { to: '/weather', label: 'nav.weather', icon: CloudSun },
-  { to: '/buyers', label: 'nav.buyers', icon: PierIcon },
-]
-const railItems: Item[] = [...tabs, { to: '/value-added', label: 'nav.value', icon: Sparkles }]
+const home: Item = { to: '/home', label: 'nav.home', icon: TideIcon, end: true }
+const catches: Item = { to: '/catches', label: 'nav.catches', icon: FishIcon }
+const weather: Item = { to: '/weather', label: 'nav.weather', icon: CloudSun }
+const buyers: Item = { to: '/buyers', label: 'nav.buyers', icon: PierIcon }
+const value: Item = { to: '/value-added', label: 'nav.value', icon: Sparkles }
+const railItems: Item[] = [home, catches, weather, buyers, value]
+/* pages that live under "Iba pa" on phones */
+const morePaths = ['/weather', '/value-added', '/profile', '/settings']
 
 /* What the top bar calls the current page */
 const pageTitles: { to: string; label: Key }[] = [
@@ -151,33 +153,43 @@ function Rail({ open }: { open: boolean }) {
   )
 }
 
-function BottomBar() {
+const cell = 'relative flex min-h-16 min-w-0 flex-col items-center justify-center gap-0.5 text-[12px] font-semibold min-[390px]:text-[13px]'
+
+function TabLook({ active, icon: Icon, label }: { active: boolean; icon: Icon; label: string }) {
+  return (
+    <>
+      {/* knot on the net line; the active one is pulled up taut */}
+      <span aria-hidden="true" className={`absolute left-1/2 -translate-x-1/2 rounded-full ${active ? '-top-1 size-2.5 bg-teal' : '-top-0.5 size-1.5 bg-line'}`} />
+      {active && <span aria-hidden="true" className="absolute left-1/2 top-0 h-2 w-0.5 -translate-x-1/2 bg-teal" />}
+      <span className={`grid h-8 w-14 place-items-center rounded-full transition ${active ? 'bg-seafoam text-teal' : 'text-navy'}`}>
+        <Icon size={24} strokeWidth={1.8} />
+      </span>
+      <span className={`max-w-full truncate px-0.5 ${active ? 'text-teal' : 'text-navy'}`}>{label}</span>
+    </>
+  )
+}
+
+function BottomBar({ moreOpen, onMore }: { moreOpen: boolean; onMore: () => void }) {
   const t = useT()
   const { pathname } = useLocation()
-  const tab = (item: Item) => {
-    const active = isActive(item, pathname)
-    return (
-      <NavLink key={item.to} to={item.to} end={item.end} className="relative flex min-h-16 flex-col items-center justify-center gap-0.5 text-[13px] font-semibold">
-        {/* knot on the net line; the active one is pulled up taut */}
-        <span aria-hidden="true" className={`absolute left-1/2 -translate-x-1/2 rounded-full ${active ? '-top-1 size-2.5 bg-teal' : '-top-0.5 size-1.5 bg-line'}`} />
-        {active && <span aria-hidden="true" className="absolute left-1/2 top-0 h-2 w-0.5 -translate-x-1/2 bg-teal" />}
-        <span className={`grid h-8 w-14 place-items-center rounded-full transition ${active ? 'bg-seafoam text-teal' : 'text-navy'}`}>
-          <item.icon size={24} strokeWidth={1.8} />
-        </span>
-        <span className={active ? 'text-teal' : 'text-navy'}>{t(item.label)}</span>
-      </NavLink>
-    )
-  }
+  const link = (item: Item) => (
+    <NavLink key={item.to} to={item.to} end={item.end} className={cell}>
+      <TabLook active={isActive(item, pathname)} icon={item.icon} label={t(item.label)} />
+    </NavLink>
+  )
+  const moreActive = moreOpen || morePaths.some((p) => pathname.startsWith(p))
   return (
-    <nav aria-label="Main" className="net-mesh fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
-      {tab(tabs[0])}
-      {tab(tabs[1])}
-      <div className="relative flex flex-col items-center justify-end pb-1.5">
-        <div className="-mt-8"><FloatButton size="lg" /></div>
-        <span className="mt-1 text-[13px] font-semibold">{t('nav.log')}</span>
+    <nav aria-label={t('nav.main')} className="net-mesh fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-line bg-card pb-[env(safe-area-inset-bottom)] lg:hidden">
+      {link(home)}
+      {link(catches)}
+      {/* the float: a small round button, the label is for screen readers only */}
+      <div className="relative flex min-h-16 items-start justify-center">
+        <div className="-mt-6"><FloatButton size="sm" /></div>
       </div>
-      {tab(tabs[2])}
-      {tab(tabs[3])}
+      {link(buyers)}
+      <button type="button" onClick={onMore} aria-haspopup="dialog" aria-expanded={moreOpen} className={cell}>
+        <TabLook active={moreActive} icon={MoreHorizontal} label={t('menu.more')} />
+      </button>
     </nav>
   )
 }
@@ -257,7 +269,7 @@ function ParolaToggle() {
       aria-label={t('menu.night')}
       title={t('menu.night')}
       onClick={() => setTheme(night ? 'day' : 'night')}
-      className="hidden size-11 place-items-center rounded-full border border-line transition hover:bg-seafoam/60 sm:grid"
+      className="grid size-11 place-items-center rounded-full border border-line transition hover:bg-seafoam/60"
     >
       <svg viewBox="0 0 28 28" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M11 25 L12.2 12 H15.8 L17 25 Z" />
@@ -310,6 +322,8 @@ export default function AppShell() {
   const user = useUser()
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  // close the menu whenever the page changes (Back button, links, etc.)
+  useEffect(() => { setMenuOpen(false) }, [pathname])
   // the sidebar is slim by default; the person's choice is remembered
   const [railOpen, setRailOpen] = useState(() => {
     try { return localStorage.getItem('lambat.rail') === 'open' } catch { return false }
@@ -330,11 +344,16 @@ export default function AppShell() {
         {/* Top bar: a floating glass bar that lines up with the page content */}
         <header className="sticky top-0 z-30 pt-3">
           <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
-            <div className="flex h-16 items-center justify-between gap-2 rounded-3xl border border-line bg-card/80 pl-3 pr-2 shadow-rest backdrop-blur-md sm:gap-3 sm:pl-4">
+            <div className="relative flex h-16 items-center justify-between gap-2 rounded-3xl border border-line bg-card/80 pl-3 pr-2 shadow-rest backdrop-blur-md sm:gap-3 sm:pl-4">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
-              <Link to="/home" aria-label="LAMBAT" className="flex shrink-0 items-center lg:hidden">
-                <Logo size={40} />
+              <Link to="/home" aria-label="LAMBAT" className="flex shrink-0 items-center gap-2 lg:hidden">
+                <img src={emblem} alt="" width={40} height={40} draggable={false} className="size-10 shrink-0 rounded-full" />
+                <span className="hidden font-display text-xl font-bold tracking-wide sm:inline">LAMBAT</span>
               </Link>
+              {/* phones: the name sits in the middle of the bar */}
+              <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 text-center font-display text-lg font-bold tracking-wide sm:hidden">
+                LAMBAT
+              </span>
               <div className="hidden items-center gap-3 lg:flex">
                 <button
                   type="button"
@@ -363,14 +382,14 @@ export default function AppShell() {
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <ConnectionMenu />
                 <ParolaToggle />
-                <LangToggle />
+                <div className="hidden sm:block"><LangToggle /></div>
                 <span aria-hidden="true" className="mx-1 hidden h-8 w-px bg-line sm:block" />
                 <NotificationsMenu />
                 <button
                   type="button"
                   onClick={() => setMenuOpen(true)}
                   aria-label={t('hdr.menu')}
-                  className="flex items-center gap-2 rounded-full bg-seafoam p-1 transition hover:brightness-95 lg:pr-3"
+                  className="hidden items-center gap-2 rounded-full bg-seafoam p-1 transition hover:brightness-95 lg:flex lg:pr-3"
                 >
                   <span className="grid size-10 place-items-center rounded-full bg-teal text-sm font-bold text-on-accent">{user.initials}</span>
                   <span className="hidden text-sm font-semibold lg:block">{user.shortName}</span>
@@ -381,11 +400,11 @@ export default function AppShell() {
           </div>
         </header>
         <ConnectionBar />
-        <main className="mx-auto max-w-[1440px] px-4 pb-32 pt-5 lg:px-8 lg:pb-10">
+        <main className="mx-auto max-w-[1440px] px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-5 lg:px-8 lg:pb-10">
           <Outlet />
         </main>
       </div>
-      <BottomBar />
+      <BottomBar moreOpen={menuOpen} onMore={() => setMenuOpen(true)} />
       <MenuSheet open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>
   )

@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Accessibility, LogOut, Moon, RotateCcw, Settings, Sparkles, UserRound, X } from 'lucide-react'
+import { Accessibility, CloudSun, LogOut, Moon, RotateCcw, Settings, Sparkles, UserRound, X } from 'lucide-react'
 import { useSettings, type Connection } from '../../lib/settings'
 import { useT } from '../../lib/i18n'
 import { useUser } from '../../lib/auth'
@@ -41,21 +41,28 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
   }, [open, onClose])
 
   if (!open) return null
 
+  /* phoneOnly: already in the desktop sidebar, so only listed here on phones and tablets */
   const links = [
-    { to: '/value-added', label: t('nav.value'), icon: <Sparkles size={22} strokeWidth={1.8} aria-hidden /> },
-    { to: '/profile', label: t('nav.profile'), icon: <UserRound size={22} strokeWidth={1.8} aria-hidden /> },
-    { to: '/settings', label: t('nav.settings'), icon: <Settings size={22} strokeWidth={1.8} aria-hidden /> },
+    { to: '/weather', label: t('nav.weather'), icon: <CloudSun size={22} strokeWidth={1.8} aria-hidden />, phoneOnly: true },
+    { to: '/value-added', label: t('nav.value'), icon: <Sparkles size={22} strokeWidth={1.8} aria-hidden />, phoneOnly: false },
+    { to: '/profile', label: t('nav.profile'), icon: <UserRound size={22} strokeWidth={1.8} aria-hidden />, phoneOnly: false },
+    { to: '/settings', label: t('nav.settings'), icon: <Settings size={22} strokeWidth={1.8} aria-hidden />, phoneOnly: false },
   ]
 
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={t('hdr.menu')}>
       <button type="button" className="absolute inset-0 bg-deep/50" aria-label={t('menu.close')} onClick={onClose} />
-      <div className="absolute inset-x-0 bottom-0 max-h-[88dvh] space-y-5 overflow-y-auto rounded-t-lg bg-card p-5 shadow-raised lg:inset-y-0 lg:left-auto lg:right-0 lg:max-h-none lg:w-[380px] lg:rounded-none">
+      <div className="anim-rise absolute inset-x-0 bottom-0 max-h-[88dvh] space-y-5 overflow-y-auto rounded-t-lg bg-card p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] shadow-raised lg:inset-y-0 lg:left-auto lg:right-0 lg:max-h-none lg:w-[380px] lg:rounded-none">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="grid size-12 place-items-center rounded-full bg-teal font-bold text-on-accent">{user.initials}</span>
@@ -67,6 +74,21 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
           <button type="button" onClick={onClose} aria-label={t('menu.close')} className="grid size-12 place-items-center rounded-full hover:bg-seafoam">
             <X size={24} strokeWidth={1.8} aria-hidden />
           </button>
+        </div>
+
+        {/* Pages first: this is what people open "Iba pa" for */}
+        <div>
+          <p className="mb-2 text-sm font-semibold text-ink-soft">{t('menu.more')}</p>
+          <ul className="divide-y divide-line overflow-hidden rounded-md border border-line">
+            {links.map((l) => (
+              <li key={l.to} className={l.phoneOnly ? 'lg:hidden' : undefined}>
+                <Link to={l.to} onClick={onClose} className="flex min-h-14 items-center gap-3 px-4 hover:bg-seafoam/50">
+                  <span className="text-teal">{l.icon}</span>
+                  {l.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
 
         <div className="space-y-3">
@@ -93,23 +115,10 @@ export default function MenuSheet({ open, onClose }: { open: boolean; onClose: (
           />
         </div>
 
-        <div>
-          <p className="mb-2 text-sm font-semibold text-ink-soft">{t('menu.more')}</p>
-          <button type="button" onClick={() => { resetDemo(); onClose() }} className="mb-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-dashed border-line px-4 text-sm font-semibold text-ink-soft hover:bg-seafoam/50">
-            <RotateCcw size={18} strokeWidth={1.8} aria-hidden />
-            {t('menu.reset')}
-          </button>
-          <ul className="divide-y divide-line overflow-hidden rounded-md border border-line">
-            {links.map((l) => (
-              <li key={l.to}>
-                <Link to={l.to} onClick={onClose} className="flex min-h-14 items-center gap-3 px-4 hover:bg-seafoam/50">
-                  <span className="text-teal">{l.icon}</span>
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <button type="button" onClick={() => { resetDemo(); onClose() }} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-dashed border-line px-4 text-sm font-semibold text-ink-soft hover:bg-seafoam/50">
+          <RotateCcw size={18} strokeWidth={1.8} aria-hidden />
+          {t('menu.reset')}
+        </button>
 
         <button type="button" onClick={() => setAskLogout(true)} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-full border-2 border-teal text-base font-semibold text-teal">
           <LogOut size={22} strokeWidth={1.8} aria-hidden />

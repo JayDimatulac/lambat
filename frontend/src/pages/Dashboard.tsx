@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarDays, Info, MapPin } from 'lucide-react'
+import { ArrowRight, CalendarDays, ChevronRight, Info, MapPin } from 'lucide-react'
 import TideScene from '../components/tide/TideScene'
+import BuoyStrip from '../components/home/BuoyStrip'
 import NetTally from '../components/home/NetTally'
 import ParolaPanel from '../components/home/ParolaPanel'
 import WeatherCard from '../components/home/WeatherCard'
 import { PennantIcon } from '../components/home/HomeIcons'
-import { byUrgency, isActive, weekBase, type Outcome } from '../data/mock'
+import { byUrgency, isActive, needsAttention, weekBase, type Catch, type Outcome } from '../data/mock'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
 import { useT } from '../lib/i18n'
@@ -16,6 +17,9 @@ import weatherIcon from '../assets/icons/quick-weather.png'
 import buyersIcon from '../assets/icons/quick-buyers.png'
 import valueIcon from '../assets/icons/quick-value.png'
 import logIcon from '../assets/icons/quick-log.png'
+
+// Critical first, then high, then everything else that needs attention. Ties go to the least time left.
+const riskRank = (c: Catch) => (c.risk === 'critical' ? 2 : c.risk === 'high' ? 1 : 0)
 
 export default function Dashboard() {
   const t = useT()
@@ -41,6 +45,11 @@ export default function Dashboard() {
   const active = catches.filter(isActive).sort(byUrgency)
   const urgent = active.filter((c) => c.risk === 'high' || c.risk === 'critical').slice(0, 2)
   const next = active.find((c) => !urgent.includes(c))
+
+  // Phones: the hero shows the two catches that need attention most. The strip below lists every catch.
+  const priority = active.filter(needsAttention).sort((a, b) => riskRank(b) - riskRank(a) || a.hoursMin - b.hoursMin)
+  const heroCatches = priority.slice(0, 2)
+  const stripCatches = [...active, ...catches.filter((c) => !isActive(c))]
 
   const sum = (outcome: Outcome) => {
     const closed = catches.filter((c) => c.outcome === outcome)
@@ -102,9 +111,10 @@ export default function Dashboard() {
           </p>
         </div>
 
+        {/* the wind pill is left out on small phones: the weather preview sits right below the strip */}
         <Link
           to="/weather"
-          className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full border border-white/20 bg-deep/50 px-3 text-xs font-semibold text-white sm:text-sm"
+          className="hidden min-h-11 shrink-0 items-center gap-2 rounded-full border border-white/20 bg-deep/50 px-3 text-xs font-semibold text-white sm:inline-flex sm:text-sm"
         >
           <PennantIcon size={18} />
           {windText}
@@ -118,17 +128,55 @@ export default function Dashboard() {
     </>
   )
 
+  // Phones: just the greeting and place. The date and wind pill are left out to keep the hero short.
+  const phoneHeader = (
+    <>
+      <h1 className="font-numeral text-xl font-bold leading-tight text-white">
+        {greet}, {user.shortName} <span aria-hidden="true">👋</span>
+      </h1>
+      <p className="mt-0.5 flex items-center gap-1.5 text-sm font-semibold text-white/95">
+        <MapPin size={15} aria-hidden="true" className="shrink-0" />
+        {place}
+      </p>
+    </>
+  )
+
   return (
     <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
       {/* LEFT: timeline, the one primary action, quick actions, weekly utilization */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        <div className="order-1 lg:order-1">
+        {/* Phones: the sea hero with only the two catches that need attention most. */}
+        <div className="order-1 lg:hidden">
+          <TideScene
+            compact
+            catches={heroCatches}
+            header={phoneHeader}
+            emptyText={active.length > 0 ? t('home.calm') : undefined}
+          />
+        </div>
+
+        {/* Desktop: the full sea scene with every buoy (up to 4). */}
+        <div className="hidden lg:order-1 lg:block">
           <TideScene catches={active.slice(0, 4)} header={header} />
         </div>
 
+        {/* Only when more catches need attention than the hero can show */}
+        {priority.length > 2 && (
+          <Link
+            to="/catches?filter=attention"
+            className="order-2 flex min-h-14 items-center gap-3 rounded-2xl border border-risk-moderate-line bg-risk-moderate-bg px-4 font-semibold text-risk-moderate transition active:scale-[0.98] lg:hidden"
+          >
+            <PennantIcon size={22} />
+            <span className="min-w-0 flex-1">{t('home.priority', { n: priority.length })}</span>
+            <ChevronRight size={22} aria-hidden="true" />
+          </Link>
+        )}
+
+        <BuoyStrip catches={stripCatches} />
+
         <Link
           to="/catches/new"
-          className="order-3 flex min-h-14 items-center gap-3 rounded-full border border-white/70 bg-linear-to-r from-[#ffb78d] via-[#ff925f] to-[#ff7946] px-2 pr-4 text-deep shadow-raised transition hover:brightness-105 active:scale-[0.98] lg:order-2 xl:min-h-16"
+          className="hidden min-h-14 items-center gap-3 rounded-full border border-white/70 bg-linear-to-r from-[#ffb78d] via-[#ff925f] to-[#ff7946] px-2 pr-4 text-deep shadow-raised transition hover:brightness-105 active:scale-[0.98] lg:order-2 lg:flex xl:min-h-16"
         >
           <span className="grid size-12 shrink-0 place-items-center">
             <img src={logIcon} alt="" aria-hidden="true" draggable={false} className="size-14 object-contain drop-shadow-md" />
@@ -143,7 +191,7 @@ export default function Dashboard() {
         </Link>
 
         {/* Quick actions: equal-height tiles, same icon box, same 2-line title box, so everything lines up */}
-        <div className="order-4 grid grid-cols-3 items-stretch gap-2 sm:gap-3 lg:order-3">
+        <div className="order-5 hidden grid-cols-3 items-stretch gap-2 sm:gap-3 lg:order-3 lg:grid">
           {shortcuts.map(({ to, icon, title, description, color }) => (
             <Link
               key={to}
@@ -161,21 +209,21 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="order-6 lg:order-4">
+        <div className="order-7 lg:order-4">
           <NetTally sold={sum('sold')} shared={sum('shared')} lost={sum('lost')} />
         </div>
       </div>
 
-      {/* RIGHT: needs action + weather share the left column's height. On a phone, the buoys come first, then needs action. */}
+      {/* RIGHT: needs action + weather share the left column's height. On a phone: hero, strip, weather, shortcuts, tally. */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        <div className="order-2 lg:flex-1 [&>*]:h-full">
+        <div className="hidden lg:block lg:flex-1 [&>*]:h-full">
           <ParolaPanel urgent={urgent} next={next} />
         </div>
-        <div className="order-5 lg:flex-1 [&>*]:h-full">
+        <div className="order-4 lg:flex-1 [&>*]:h-full">
           <WeatherCard forecast={forecast} />
         </div>
 
-        <p className="order-7 flex items-center gap-2 px-1 text-xs font-medium text-ink-soft lg:justify-end">
+        <p className="order-8 flex items-center gap-2 px-1 text-xs font-medium text-ink-soft lg:justify-end">
           <Info size={14} aria-hidden="true" className="shrink-0" />
           {t('disc.guide')}
         </p>

@@ -68,6 +68,7 @@ const en = {
   'tally.lost': 'Lost',
   'tally.summary': '{pct}% of this week\u2019s catch was put to use',
   'tide.hint': 'Buoys sink as time runs out',
+  'tide.swipe': 'Swipe to see more catches',
   'tide.empty': 'No active catches',
   'time.left': '{range} hours left',
   'ago.h': '{n}h ago',
@@ -280,6 +281,10 @@ const en = {
   'home.hours': 'hrs',
   'home.urgent': 'Act before time runs out',
   'home.next': 'Next up',
+  'home.priority': 'Handle {n} first',
+  'home.catches': 'Catches',
+  'home.seeall': 'See all',
+  'filter.attention': 'Priority',
   'ui.sample': 'Sample data',
   'sky.sun': 'Sunny',
   'sky.partly': 'Partly cloudy',
@@ -572,6 +577,8 @@ const en = {
   'wx.adv.good': 'Light winds and small waves are expected. Always follow the official updates from PAGASA and the Coast Guard.',
   'wx.adv.caution': 'Moderate to strong winds and rough seas are expected. Fisherfolk are advised to exercise caution and monitor updates from PAGASA.',
   'wx.adv.danger': 'Very strong winds and very high waves are expected. Fisherfolk are advised to stay in port and follow the warnings of PAGASA and the Coast Guard.',
+  'nav.more': 'More',
+  'nav.close': 'Close',
 } as const
 
 export type Key = keyof typeof en
@@ -643,6 +650,7 @@ const fil: Record<Key, string> = {
   'tally.lost': 'Nasayang',
   'tally.summary': '{pct}% ng huli ngayong linggo ay napakinabangan',
   'tide.hint': 'Lumulubog ang boya habang nauubos ang oras',
+  'tide.swipe': 'I-swipe para makita ang iba pang huli',
   'tide.empty': 'Walang aktibong huli',
   'time.left': '{range} oras ang natitira',
   'ago.h': '{n} oras na ang nakalipas',
@@ -855,6 +863,10 @@ const fil: Record<Key, string> = {
   'home.hours': 'oras',
   'home.urgent': 'Kumilos bago maubos ang oras',
   'home.next': 'Susunod',
+  'home.priority': '{n} huli ang unahin',
+  'home.catches': 'Mga huli',
+  'home.seeall': 'Tingnan lahat',
+  'filter.attention': 'Unahin',
   'ui.sample': 'Halimbawang datos',
   'sky.sun': 'Maaraw',
   'sky.partly': 'Bahagyang maulap',
@@ -1147,6 +1159,8 @@ const fil: Record<Key, string> = {
   'wx.adv.good': 'Inaasahan ang mahinang hangin at maliit na alon. Sundin pa rin ang opisyal na abiso ng PAGASA at ng Coast Guard.',
   'wx.adv.caution': 'Inaasahan ang katamtaman hanggang malakas na hangin at magaspang na dagat. Pinapayuhan ang mga mangingisda na mag-ingat at bantayan ang mga abiso ng PAGASA.',
   'wx.adv.danger': 'Inaasahan ang napakalakas na hangin at napakataas na alon. Pinapayuhan ang mga mangingisda na manatili sa pantalan at sundin ang mga babala ng PAGASA at ng Coast Guard.',
+  'nav.more': 'Iba pa',
+  'nav.close': 'Isara',
 }
 
 const dict: Record<'en' | 'fil', Record<Key, string>> = { en, fil }

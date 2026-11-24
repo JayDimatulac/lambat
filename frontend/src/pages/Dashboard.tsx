@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarDays, ChevronRight, Info, MapPin } from 'lucide-react'
+import { ArrowRight, CalendarDays, ChevronRight, Info, MapPin, TriangleAlert } from 'lucide-react'
 import TideScene from '../components/tide/TideScene'
 import BuoyStrip from '../components/home/BuoyStrip'
 import NetTally from '../components/home/NetTally'
 import ParolaPanel from '../components/home/ParolaPanel'
 import WeatherCard from '../components/home/WeatherCard'
+import WeatherStrip from '../components/home/WeatherStrip'
+import TatlongBanyera from '../components/home/TatlongBanyera'
 import { PennantIcon } from '../components/home/HomeIcons'
 import { byUrgency, isActive, needsAttention, weekBase, type Outcome } from '../data/mock'
 import { pickHeroCatches } from '../lib/heroCatches'
@@ -13,7 +15,7 @@ import { useUser } from '../lib/auth'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 import { localeOf } from '../lib/time'
-import { hour12, useForecast, windOutlook } from '../lib/weather'
+import { hour12, sailLevel, useForecast, windOutlook } from '../lib/weather'
 import weatherIcon from '../assets/icons/quick-weather.png'
 import buyersIcon from '../assets/icons/quick-buyers.png'
 import valueIcon from '../assets/icons/quick-value.png'
@@ -58,6 +60,9 @@ export default function Dashboard() {
       kg: base.kg + closed.reduce((total, c) => total + c.kg, 0),
     }
   }
+
+  const today = forecast.week[0]
+  const advisory = forecast.status === 'live' ? sailLevel(today.wind, today.gust, today.wave, today.rain) : 'good'
 
   const outlook = forecast.live ? windOutlook(forecast.hours, hour) : null
   let windText = t('nav.weather')
@@ -129,7 +134,7 @@ export default function Dashboard() {
   // Phones: just the greeting and place. The date and wind pill are left out to keep the hero short.
   const phoneHeader = (
     <>
-      <h1 className="font-numeral text-xl font-bold leading-tight text-white">
+      <h1 className="font-numeral text-lg font-bold leading-tight text-white">
         {greet}, {user.shortName} <span aria-hidden="true">👋</span>
       </h1>
       <p className="mt-0.5 flex items-center gap-1.5 text-sm font-semibold text-white/95">
@@ -143,7 +148,22 @@ export default function Dashboard() {
     <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
       {/* LEFT: timeline, the one primary action, quick actions, weekly utilization */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        {/* Phones: the sea hero with only the two catches that need attention most. */}
+        {/* Phones: an active sea advisory comes first, so it is seen without scrolling. */}
+        {advisory !== 'good' && (
+          <Link
+            to="/weather"
+            className={`order-first flex items-center gap-3 rounded-2xl border px-4 py-3 lg:hidden ${advisory === 'danger' ? 'border-risk-critical-line bg-risk-critical-bg text-risk-critical' : 'border-risk-moderate-line bg-risk-moderate-bg text-risk-moderate'}`}
+          >
+            <TriangleAlert size={24} strokeWidth={1.8} aria-hidden="true" className="shrink-0" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold leading-tight">{t('home.adv.title')}</span>
+              <span className="mt-0.5 block text-xs font-medium leading-snug">{t(`home.adv.${advisory}`)}</span>
+            </span>
+            <ChevronRight size={20} aria-hidden="true" className="shrink-0" />
+          </Link>
+        )}
+
+        {/* Phones: the sea hero with up to two active catches. */}
         <div className="order-1 lg:hidden">
           <TideScene
             compact
@@ -216,7 +236,10 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="order-7 lg:order-4">
+        <div className="order-4 lg:hidden">
+          <TatlongBanyera sold={sum('sold')} shared={sum('shared')} lost={sum('lost')} />
+        </div>
+        <div className="hidden lg:order-4 lg:block">
           <NetTally sold={sum('sold')} shared={sum('shared')} lost={sum('lost')} />
         </div>
       </div>
@@ -226,7 +249,10 @@ export default function Dashboard() {
         <div className="hidden lg:block lg:flex-1 [&>*]:h-full">
           <ParolaPanel urgent={urgent} next={next} />
         </div>
-        <div className="order-4 lg:flex-1 [&>*]:h-full">
+        <div className="order-5 lg:hidden">
+          <WeatherStrip forecast={forecast} />
+        </div>
+        <div className="hidden lg:block lg:flex-1 [&>*]:h-full">
           <WeatherCard forecast={forecast} />
         </div>
 

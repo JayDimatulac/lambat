@@ -210,6 +210,7 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
             </div>
 
             {/* LABELS: one per buoy, always readable on a plain surface */}
+            {compact && n > 0 && <p className="border-t border-line px-4 pt-2 text-center text-xs text-ink-soft">{t('home.hours.left')}</p>}
             <div className="grid px-0" style={cols}>
               {catches.map((c, i) => {
                 const r = RISK[c.risk]
@@ -231,20 +232,24 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
                       {compact ? (
                         <>
                           {flagFirst && needsAttention(c) && (
-                            <span className={`text-xs font-semibold leading-none ${r.text}`}>{t('home.first')}</span>
+                            <span className="text-xs font-semibold leading-none text-risk-moderate">{t('home.first')}</span>
                           )}
-                          <span className="max-w-full truncate text-sm font-semibold leading-tight">{c.species}</span>
+                          <span className="max-w-full truncate text-[15px] font-semibold leading-tight">{c.species}</span>
+                          <span className={`inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold leading-tight ${r.text}`}>
+                            <Icon size={13} strokeWidth={2.4} aria-hidden />
+                            {range} {t('unit.hours')}
+                          </span>
                         </>
                       ) : (
                         <>
                           <span className="max-w-full truncate text-base font-bold leading-tight">{c.species}</span>
                           <span className="text-sm text-ink-soft">{c.kg} kg</span>
+                          <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-3 py-1 text-sm font-bold ${r.text} ${r.bg} ${r.line}`}>
+                            <Icon size={14} strokeWidth={2.4} aria-hidden />
+                            {range}h
+                          </span>
                         </>
                       )}
-                      <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] font-bold ${compact ? 'px-2.5 py-0.5 text-xs' : 'px-3 py-1 text-sm'} ${r.text} ${r.bg} ${r.line}`}>
-                        <Icon size={compact ? 12 : 14} strokeWidth={2.4} aria-hidden />
-                        {range}h
-                      </span>
                     </Link>
                   </div>
                 )
@@ -253,8 +258,8 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
           </div>
         </div>
 
-        {/* depth scale: stays put while the scene scrolls */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10" style={{ height: H }} aria-hidden="true">
+        {/* depth scale: stays put while the scene scrolls. Left off the phone hero: each buoy carries its own estimate. */}
+        {!compact && <div className="pointer-events-none absolute inset-x-0 top-0 z-10" style={{ height: H }} aria-hidden="true">
           {[
             { u: 0, label: '24h' },
             { u: 0.5, label: '12h' },
@@ -267,7 +272,7 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
               <span className="absolute left-12 right-0 border-t border-dashed border-white/25" />
             </div>
           ))}
-        </div>
+        </div>}
 
         {header && <div className="pointer-events-none absolute inset-x-0 top-0 z-20 p-4 [&_a]:pointer-events-auto">{header}</div>}
       </div>

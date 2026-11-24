@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowUp, Info } from 'lucide-react'
-import { HORIZON_H, type Catch } from '../../data/mock'
+import { HORIZON_H, needsAttention, type Catch } from '../../data/mock'
 import { RISK } from '../../lib/risk'
 import { RISK_ICON } from '../ui/RiskBadge'
 import { useT } from '../../lib/i18n'
@@ -66,9 +66,11 @@ function WaveLine({ top, wl = 120, dur, opacity, className = '' }: { top: number
   )
 }
 
-type Props = { catches: Catch[]; header?: ReactNode; emptyText?: string; compact?: boolean }
+// flagFirst: phone hero only. Marks the catches that need attention with a small "Unahin" label.
+// emptyAction: an optional button shown under the empty text.
+type Props = { catches: Catch[]; header?: ReactNode; emptyText?: string; emptyAction?: ReactNode; compact?: boolean; flagFirst?: boolean }
 
-export default function TideScene({ catches, header, emptyText, compact = false }: Props) {
+export default function TideScene({ catches, header, emptyText, emptyAction, compact = false, flagFirst = false }: Props) {
   const t = useT()
   const navigate = useNavigate()
   const { theme } = useSettings()
@@ -200,9 +202,10 @@ export default function TideScene({ catches, header, emptyText, compact = false 
               <WaveLine top={skyH + 56} dur={6} opacity={night ? 0.16 : 0.26} className="pointer-events-none" />
 
               {n === 0 && (
-                <p className="absolute inset-x-0 px-4 text-center text-base font-semibold text-white" style={{ top: yFor(0.45) }}>
-                  {emptyText ?? t('tide.empty')}
-                </p>
+                <div className="absolute inset-x-0 flex flex-col items-center px-4 text-center" style={{ top: compact ? yFor(0.05) : yFor(0.45) }}>
+                  <p className={`font-semibold text-white ${compact ? 'text-sm' : 'text-base'}`}>{emptyText ?? t('tide.empty')}</p>
+                  {emptyAction}
+                </div>
               )}
             </div>
 
@@ -226,18 +229,20 @@ export default function TideScene({ catches, header, emptyText, compact = false 
                       className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-2' : 'py-3'}`}
                     >
                       {compact ? (
-                        <span className="flex max-w-full items-baseline justify-center gap-1.5">
-                          <span className="truncate text-base font-bold leading-tight">{c.species}</span>
-                          <span className="shrink-0 text-sm text-ink-soft">{c.kg} kg</span>
-                        </span>
+                        <>
+                          {flagFirst && needsAttention(c) && (
+                            <span className={`text-xs font-semibold leading-none ${r.text}`}>{t('home.first')}</span>
+                          )}
+                          <span className="max-w-full truncate text-sm font-semibold leading-tight">{c.species}</span>
+                        </>
                       ) : (
                         <>
                           <span className="max-w-full truncate text-base font-bold leading-tight">{c.species}</span>
                           <span className="text-sm text-ink-soft">{c.kg} kg</span>
                         </>
                       )}
-                      <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-3 py-1 text-sm font-bold ${r.text} ${r.bg} ${r.line}`}>
-                        <Icon size={14} strokeWidth={2.4} aria-hidden />
+                      <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] font-bold ${compact ? 'px-2.5 py-0.5 text-xs' : 'px-3 py-1 text-sm'} ${r.text} ${r.bg} ${r.line}`}>
+                        <Icon size={compact ? 12 : 14} strokeWidth={2.4} aria-hidden />
                         {range}h
                       </span>
                     </Link>

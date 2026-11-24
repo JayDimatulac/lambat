@@ -6,7 +6,8 @@ import NetTally from '../components/home/NetTally'
 import ParolaPanel from '../components/home/ParolaPanel'
 import WeatherCard from '../components/home/WeatherCard'
 import { PennantIcon } from '../components/home/HomeIcons'
-import { byUrgency, isActive, needsAttention, weekBase, type Catch, type Outcome } from '../data/mock'
+import { byUrgency, isActive, needsAttention, weekBase, type Outcome } from '../data/mock'
+import { pickHeroCatches } from '../lib/heroCatches'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
 import { useT } from '../lib/i18n'
@@ -17,9 +18,6 @@ import weatherIcon from '../assets/icons/quick-weather.png'
 import buyersIcon from '../assets/icons/quick-buyers.png'
 import valueIcon from '../assets/icons/quick-value.png'
 import logIcon from '../assets/icons/quick-log.png'
-
-// Critical first, then high, then everything else that needs attention. Ties go to the least time left.
-const riskRank = (c: Catch) => (c.risk === 'critical' ? 2 : c.risk === 'high' ? 1 : 0)
 
 export default function Dashboard() {
   const t = useT()
@@ -46,9 +44,9 @@ export default function Dashboard() {
   const urgent = active.filter((c) => c.risk === 'high' || c.risk === 'critical').slice(0, 2)
   const next = active.find((c) => !urgent.includes(c))
 
-  // Phones: the hero shows the two catches that need attention most. The strip below lists every catch.
-  const priority = active.filter(needsAttention).sort((a, b) => riskRank(b) - riskRank(a) || a.hoursMin - b.hoursMin)
-  const heroCatches = priority.slice(0, 2)
+  // Phones: the hero shows up to two active catches (Unahin first, then the least time left). The strip below lists every catch.
+  const priorityCount = active.filter(needsAttention).length
+  const heroCatches = pickHeroCatches(catches)
   const stripCatches = [...active, ...catches.filter((c) => !isActive(c))]
 
   const sum = (outcome: Outcome) => {
@@ -151,7 +149,16 @@ export default function Dashboard() {
             compact
             catches={heroCatches}
             header={phoneHeader}
-            emptyText={active.length > 0 ? t('home.calm') : undefined}
+            flagFirst
+            emptyText={t('home.none')}
+            emptyAction={
+              <Link
+                to="/catches/new"
+                className="pointer-events-auto mt-2 inline-flex min-h-11 items-center rounded-full bg-white/90 px-4 text-sm font-semibold text-deep active:scale-[0.98]"
+              >
+                {t('home.log')}
+              </Link>
+            }
           />
         </div>
 
@@ -161,13 +168,13 @@ export default function Dashboard() {
         </div>
 
         {/* Only when more catches need attention than the hero can show */}
-        {priority.length > 2 && (
+        {priorityCount > 2 && (
           <Link
             to="/catches?filter=attention"
             className="order-2 flex min-h-14 items-center gap-3 rounded-2xl border border-risk-moderate-line bg-risk-moderate-bg px-4 font-semibold text-risk-moderate transition active:scale-[0.98] lg:hidden"
           >
             <PennantIcon size={22} />
-            <span className="min-w-0 flex-1">{t('home.priority', { n: priority.length })}</span>
+            <span className="min-w-0 flex-1">{t('home.priority', { n: priorityCount })}</span>
             <ChevronRight size={22} aria-hidden="true" />
           </Link>
         )}

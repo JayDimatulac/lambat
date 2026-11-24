@@ -4,14 +4,7 @@ A post-catch loss prevention platform for fisherfolk. LAMBAT estimates how long 
 
 Roles: **fisherfolk**, **buyers**, and **admins**.
 
-## Live deployment
 
-| Part | Address |
-|---|---|
-| Website | https://lambat-app.onrender.com |
-| API | https://lambat-api.onrender.com (health check: `/api/health`) |
-
-Both run on Render's free plan. The API goes to sleep after a period with no traffic, so the first request after a quiet spell can take up to a minute. Open the health check address before a demo.
 
 ## Tech stack
 

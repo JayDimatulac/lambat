@@ -29,7 +29,7 @@ advisoriesRouter.get("/", requireAuth, async (_req, res) => {
 });
 
 // Admin: every advisory, including old and switched-off ones
-advisoriesRouter.get("/all", requireAuth, requireRole("ADMIN"), async (_req, res) => {
+advisoriesRouter.get("/all", requireAuth, requireRole("ADMIN", "SUPER_ADMIN"), async (_req, res) => {
   const advisories = await prisma.advisory.findMany({
     orderBy: { createdAt: "desc" },
     include: { createdBy: { select: { id: true, name: true } } },
@@ -38,7 +38,7 @@ advisoriesRouter.get("/all", requireAuth, requireRole("ADMIN"), async (_req, res
 });
 
 // Admin: post an advisory and notify everyone it is meant for
-advisoriesRouter.post("/", requireAuth, requireRole("ADMIN"), async (req, res) => {
+advisoriesRouter.post("/", requireAuth, requireRole("ADMIN", "SUPER_ADMIN"), async (req, res) => {
   const { userId } = res.locals.auth as { userId: string };
   const { title, body, severity, audience, expiresAt } = req.body ?? {};
 
@@ -104,7 +104,7 @@ advisoriesRouter.post("/", requireAuth, requireRole("ADMIN"), async (req, res) =
 });
 
 // Admin: switch an advisory off (people keep the notification they already got)
-advisoriesRouter.patch("/:id/deactivate", requireAuth, requireRole("ADMIN"), async (req, res) => {
+advisoriesRouter.patch("/:id/deactivate", requireAuth, requireRole("ADMIN", "SUPER_ADMIN"), async (req, res) => {
   const id = String(req.params.id);
   const found = await prisma.advisory.findUnique({ where: { id } });
   if (!found) {

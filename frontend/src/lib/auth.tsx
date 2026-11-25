@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [waiting, refresh])
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin'
   const loadAdminList = useCallback(async () => {
     const list = await apiAdminUsers()
     if (list) setAdminList(list)
@@ -123,9 +123,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // only an admin may change who is approved (the server enforces this too)
   const setStatus = useCallback(
     (id: string, status: Status, note?: string) => {
-      if (user?.role !== 'admin') return
+      if (user?.role !== 'admin' && user?.role !== 'super_admin') return
       setAdminList((prev) =>
-        prev.map((a) => (a.id === id && a.role !== 'admin' ? { ...a, status, note: status === 'REJECTED' ? note : undefined } : a)),
+        prev.map((a) => (a.id === id && a.role !== 'admin' && a.role !== 'super_admin' ? { ...a, status, note: status === 'REJECTED' ? note : undefined } : a)),
       )
       // show the change at once, then reload so a refused change snaps back
       apiSetStatus(id, status, note).then(() => loadAdminList())

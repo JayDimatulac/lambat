@@ -24,6 +24,12 @@ import Verifications from './pages/admin/Verifications'
 import Listings from './pages/admin/Listings'
 import Advisories from './pages/admin/Advisories'
 import Reference from './pages/admin/Reference'
+import AdvisoryReview from './pages/admin/AdvisoryReview'
+import AdminAccounts from './pages/admin/AdminAccounts'
+import Reports from './pages/admin/Reports'
+import ActivityLog from './pages/admin/ActivityLog'
+import AdminAccount from './pages/admin/AdminAccount'
+import AdminSettings from './pages/admin/AdminSettings'
 import BuyerWaiting from './pages/buyer/BuyerWaiting'
 import BuyerHome from './pages/buyer/BuyerHome'
 import BuyerOffers from './pages/buyer/BuyerOffers'
@@ -45,11 +51,16 @@ function Ph({ k }: { k: Key }) {
 
 // Only the right role gets in. Anyone else is sent to the login or to their own home.
 // This is for the screen only. The real rule is enforced by the server.
-function Guard({ role, children }: { role: Role; children?: ReactNode }) {
+function Guard({ role, children }: { role: Role | Role[]; children?: ReactNode }) {
   const { user } = useAuth()
   if (!user) return <Navigate to="/" replace />
-  if (user.role !== role) return <Navigate to={ROLE_HOME[user.role]} replace />
+  const allowed = Array.isArray(role) ? role : [role]
+  if (!allowed.includes(user.role)) return <Navigate to={ROLE_HOME[user.role]} replace />
   return <>{children ?? <Outlet />}</>
+}
+function SuperOnly({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  return user?.role === 'super_admin' ? <>{children}</> : <Navigate to="/admin" replace />
 }
 
 // The buyer's pier opens only for an approved buyer. Anyone still waiting (or not approved) is sent to the waiting page.
@@ -97,12 +108,20 @@ export default function App() {
         </Route>
         <Route path="/org" element={<Guard role="organization"><Soon /></Guard>} />
 
-        <Route path="/admin" element={<Guard role="admin"><AdminLayout /></Guard>}>
+        <Route path="/admin" element={<Guard role={['admin', 'super_admin']}><AdminLayout /></Guard>}>
           <Route index element={<AdminDashboard />} />
           <Route path="verifications" element={<Verifications />} />
           <Route path="listings" element={<Listings />} />
           <Route path="advisories" element={<Advisories />} />
-          <Route path="reference" element={<Reference />} />
+          <Route path="reference" element={<Reference />} />          
+          
+            <Route path="history" element={<Soon />} />
+            <Route path="account" element={<AdminAccount />} />
+            <Route path="settings" element={<SuperOnly><AdminSettings /></SuperOnly>} />
+            <Route path="advisory-review" element={<SuperOnly><AdvisoryReview /></SuperOnly>} />
+            <Route path="admins" element={<SuperOnly><AdminAccounts /></SuperOnly>} />
+            <Route path="reports" element={<SuperOnly><Reports /></SuperOnly>} />
+            <Route path="activity" element={<SuperOnly><ActivityLog /></SuperOnly>} />
         </Route>
 
         <Route element={<Guard role="fisherfolk" />}>

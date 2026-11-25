@@ -11,9 +11,9 @@ import type { CatchStatus, NeedStatus, OfferStatus, OrderStatus } from "@prisma/
 export const adminRouter = Router();
 
 // every route in this file is admin-only
-adminRouter.use(requireAuth, requireRole("ADMIN"));
+adminRouter.use(requireAuth, requireRole("ADMIN", "SUPER_ADMIN"));
 
-const ROLES: Role[] = ["FISHERFOLK", "BUYER", "ADMIN", "ORGANIZATION"];
+const ROLES: Role[] = ["FISHERFOLK", "BUYER", "ADMIN", "SUPER_ADMIN", "ORGANIZATION"];
 const STATUSES: AccountStatus[] = ["ACTIVE", "PENDING", "SUSPENDED", "REJECTED"];
 
 // List users (optional ?role=BUYER&status=PENDING)
@@ -45,7 +45,7 @@ adminRouter.get("/users", async (req, res) => {
 // Approve (ACTIVE) or reject/suspend (SUSPENDED) an account
 // Approve (ACTIVE), reject a buyer application (REJECTED, with a note) or suspend
 adminRouter.patch("/users/:id/status", async (req, res) => {
-  const { userId } = res.locals.auth as { userId: string };
+  const { userId, role: callerRole } = res.locals.auth as { userId: string; role: Role };
   const { status, note } = req.body ?? {};
   const id = String(req.params.id);
 
@@ -69,6 +69,14 @@ adminRouter.patch("/users/:id/status", async (req, res) => {
   const found = await prisma.user.findUnique({ where: { id } });
   if (!found) {
     res.status(404).json({ error: "User not found" });
+    return;
+  }
+  if (found.role === "SUPER_ADMIN") {
+    res.status(403).json({ error: "Super Admin accounts can't be changed here" });
+    return;
+  }
+  if (found.role === "ADMIN" && callerRole !== "SUPER_ADMIN") {
+    res.status(403).json({ error: "Only a Super Admin can change an Admin account" });
     return;
   }
   if (status === "REJECTED" && found.role !== "BUYER") {
@@ -103,6 +111,11 @@ adminRouter.post("/users", async (req, res) => {
 
   if (role !== "ADMIN" && role !== "ORGANIZATION") {
     res.status(400).json({ error: "Role must be ADMIN or ORGANIZATION" });
+    return;
+  }
+  const { role: callerRole } = res.locals.auth as { role: Role };
+  if (role === "ADMIN" && callerRole !== "SUPER_ADMIN") {
+    res.status(403).json({ error: "Only a Super Admin can create Admin accounts" });
     return;
   }
   const cleanMobile = normalizeMobile(mobile);
@@ -191,7 +204,7 @@ adminRouter.get("/overview", async (_req, res) => {
         where: { status: "COMPLETED" },
         select: { kilos: true, pricePerKg: true },
       }),
-      prisma.user.count({ where: { status: "PENDING", role: { not: "ADMIN" } } }),
+      prisma.user.count({ where: { status: "PENDING", role: { notIn: ["ADMIN", "SUPER_ADMIN"] } } }),
       prisma.user.findMany({
         where: { role: { in: ["FISHERFOLK", "BUYER"] } },
         orderBy: { createdAt: "desc" },
@@ -541,8 +554,9 @@ adminRouter.patch("/users/:id/password", async (req, res) => {
     res.status(404).json({ error: "User not found" });
     return;
   }
-  if (found.role === "ADMIN") {
-    res.status(403).json({ error: "Admin passwords are reset with the create-admin script" });
+  const { role: callerRole } = res.locals.auth as { role: Role };
+  if (found.role === "SUPER_ADMIN" || (found.role === "ADMIN" && callerRole !== "SUPER_ADMIN")) {
+    res.status(403).json({ error: "Only a Super Admin can reset an Admin password" });
     return;
   }
 

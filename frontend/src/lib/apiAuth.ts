@@ -2,7 +2,7 @@ import { api, ApiError, getToken, setToken } from './api'
 import { initialsOf, shortName, type Account, type BuyerProfile, type BuyerType, type FisherProfile, type Role, type SessionUser, type Status } from './accounts'
 type ApiUser = {
   id: string
-  role: 'FISHERFOLK' | 'BUYER' | 'ADMIN' | 'ORGANIZATION'
+  role: 'FISHERFOLK' | 'BUYER' | 'ADMIN' | 'SUPER_ADMIN' | 'ORGANIZATION'
   status: Status
   name: string
   mobile: string
@@ -19,6 +19,7 @@ const ROLE_FROM_API: Record<ApiUser['role'], Role> = {
   FISHERFOLK: 'fisherfolk',
   BUYER: 'buyer',
   ADMIN: 'admin',
+SUPER_ADMIN: 'super_admin',
   ORGANIZATION: 'organization',
 }
 

@@ -4,10 +4,15 @@ import { prisma } from "../src/db";
 
 
 async function main() {
-  const [mobile, name, password] = process.argv.slice(2);
+  const [mobile, name, password, roleArg = "ADMIN"] = process.argv.slice(2);
+  const role = roleArg.toUpperCase() as "ADMIN" | "SUPER_ADMIN";
 
   if (!mobile || !name || !password) {
-    console.error('Usage: npx ts-node prisma\\create-admin.ts 09XXXXXXXXX "Full Name" "password"');
+    console.error('Usage: npx tsx prisma\\create-admin.ts 09XXXXXXXXX "Full Name" "password" [ADMIN|SUPER_ADMIN]');
+    process.exit(1);
+  }
+  if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
+    console.error("Role must be ADMIN or SUPER_ADMIN");
     process.exit(1);
   }
   if (!/^09\d{9}$/.test(mobile)) {
@@ -23,8 +28,8 @@ async function main() {
   const existing = await prisma.user.findUnique({ where: { mobile } });
 
   if (existing) {
-    if (existing.role !== "ADMIN") {
-      console.error("That mobile number belongs to a non-admin account. Use a different number.");
+    if (existing.role !== role) {
+      console.error(`That mobile number belongs to a ${existing.role} account, not ${role}. Use a different number.`);
       process.exit(1);
     }
     await prisma.user.update({
@@ -37,7 +42,7 @@ async function main() {
 
   await prisma.user.create({
     data: {
-      role: "ADMIN",
+      role,
       status: "ACTIVE",
       name,
       mobile,

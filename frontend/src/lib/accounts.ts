@@ -4,7 +4,7 @@
 // can be shown before the backend is ready. The real version lives on the server: bcrypt for passwords, tokens
 // in secure cookies, and the role and PENDING rules enforced there. Nothing in the browser can be trusted.
 
-export type Role = 'fisherfolk' | 'buyer' | 'organization' | 'admin'
+export type Role = 'fisherfolk' | 'buyer' | 'organization' | 'admin' | 'super_admin'
 export type Status = 'ACTIVE' | 'PENDING' | 'REJECTED' | 'SUSPENDED'
 export type Boat = 'motor' | 'paddle' | 'shore'
 export type Gear = 'net' | 'line' | 'trap' | 'other'
@@ -35,7 +35,7 @@ export type Account = {
 export type SessionUser = Omit<Account, 'salt' | 'hash'> & { initials: string; shortName: string }
 
 // Where each role lands after login
-export const ROLE_HOME: Record<Role, string> = { fisherfolk: '/home', buyer: '/buyer', organization: '/org', admin: '/admin' }
+export const ROLE_HOME: Record<Role, string> = { fisherfolk: '/home', buyer: '/buyer', organization: '/org', admin: '/admin', super_admin: '/admin' }
 
 /* ---------- names ---------- */
 const HONORIFICS = ['mang', 'aling', 'ate', 'kuya', 'tatay', 'nanay', 'ka', 'mam', 'sir']

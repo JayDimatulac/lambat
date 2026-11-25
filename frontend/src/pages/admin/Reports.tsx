@@ -6,7 +6,7 @@ import { fmtPeso, fmtWeight, useAdminOverview, type AdminOverview } from '../../
 import { useSettings } from '../../lib/settings'
 import { localeOf } from '../../lib/time'
 import { Badge, Panel, Stat, btnGhost } from './AdminBits'
-import { StackedBars } from './Charts'
+import { WaveLines } from './Charts'
 import { ROLE_KEY, useA } from './adminText'
 import { Bar } from './ui'
 
@@ -80,15 +80,17 @@ export default function Reports() {
 
       <div className="grid gap-4 xl:grid-cols-[1.5fr_1fr]">
         <Panel icon={BarChart3} title={A('rp.weekly')}>
-          <StackedBars
+          <WaveLines
             data={data.weeks.map((w) => ({
               label: new Date(w.weekStart).toLocaleDateString(loc, { month: 'short', day: 'numeric' }),
-              parts: [n(w.kg.SOLD), n(w.kg.REDISTRIBUTED), n(w.kg.PROCESSED), n(w.kg.DISCARDED)],
+              values: [n(w.kg.SOLD), n(w.kg.REDISTRIBUTED), n(w.kg.PROCESSED), n(w.kg.DISCARDED)],
             }))}
-            colors={['var(--color-teal)', 'var(--color-peach)', 'var(--color-risk-low-line)', 'var(--color-coral)']}
+            colors={['var(--color-teal)', 'var(--color-risk-low-line)', 'var(--color-risk-moderate-line)', 'var(--color-coral)']}
             names={[A('rp.sold'), A('rp.shared'), A('rp.processed'), A('rp.lost')]}
             unit=" kg"
-            height={190}
+            dots
+            fillSeries={[0, 3]}
+            height={210}
           />
         </Panel>
 

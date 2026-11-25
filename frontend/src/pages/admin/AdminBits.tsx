@@ -32,10 +32,11 @@ export function Pick({ icon: Icon, value, onChange, label, children }: { icon: L
 }
 
 // the standard card: an icon, a title, an optional action, then the content
-export function Panel({ icon: Icon, title, sub, action, children, flush }: { icon?: LIcon; title?: string; sub?: string; action?: ReactNode; children: ReactNode; flush?: boolean }) {
+// the standard card: an icon, a title, an optional action, then the content
+export function Panel({ icon: Icon, title, sub, action, children, flush, center }: { icon?: LIcon; title?: string; sub?: string; action?: ReactNode; children: ReactNode; flush?: boolean; center?: boolean }) {
   const head = !!(title || action)
   return (
-    <section className="min-w-0 overflow-hidden rounded-xl border border-line bg-card shadow-rest">
+    <section className="flex min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-card shadow-rest">
       {head && (
         <header className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
           <div className="flex min-w-0 items-center gap-3">
@@ -50,7 +51,7 @@ export function Panel({ icon: Icon, title, sub, action, children, flush }: { ico
           {action}
         </header>
       )}
-      <div className={flush ? (head ? 'mt-4' : '') : head ? 'p-5 pt-4' : 'p-5'}>{children}</div>
+      <div className={`flex-1 ${center ? 'flex flex-col justify-center' : ''} ${flush ? (head ? 'mt-4' : '') : head ? 'p-5 pt-4' : 'p-5'}`}>{children}</div>
     </section>
   )
 }

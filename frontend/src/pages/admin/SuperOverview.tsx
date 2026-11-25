@@ -52,9 +52,9 @@ export default function SuperOverview() {
   const o = data.outcomes
   const kg = (n: number) => { const f = fmtWeight(n); return `${f.value} ${f.unit}` }
   const parts = [
-    { name: A('rp.sold'), n: o.SOLD, style: { background: 'var(--color-teal)' } },
-    { name: A('rp.shared'), n: o.REDISTRIBUTED, style: { background: 'var(--color-teal)', opacity: 0.45 } },
-    { name: A('rp.lost'), n: o.DISCARDED, style: { background: 'var(--color-coral)' } },
+    { name: A('rp.sold'), n: o.SOLD, color: 'var(--color-teal)' },
+    { name: A('rp.shared'), n: o.REDISTRIBUTED, color: 'var(--color-risk-low-line)' },
+    { name: A('rp.lost'), n: o.DISCARDED, color: 'var(--color-coral)' },
   ]
   const total = parts.reduce((s, p) => s + p.n, 0)
 
@@ -122,18 +122,20 @@ export default function SuperOverview() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_1.3fr]">
-        <Panel icon={Fish} title={A('ov.outcomes')}>
-          <div className="flex h-2.5 overflow-hidden rounded-full bg-line/60">
-            {total > 0 && parts.map((p) => <div key={p.name} style={{ ...p.style, width: `${(p.n / total) * 100}%` }} />)}
+        <Panel icon={Fish} title={A('ov.outcomes')} center>
+          <div className="flex h-3 overflow-hidden rounded-full bg-line/60">
+            {total > 0 && parts.map((p) => <div key={p.name} style={{ background: p.color, width: `${(p.n / total) * 100}%` }} />)}
           </div>
-          <dl className="mt-4 grid grid-cols-3 gap-3">
+          <ul className="mt-5 divide-y divide-line">
             {parts.map((p) => (
-              <div key={p.name} className="min-w-0">
-                <dt className="flex items-center gap-1.5 truncate text-sm text-ink-soft"><i className="size-2.5 shrink-0 rounded-full" style={p.style} />{p.name}</dt>
-                <dd className="font-numeral text-xl font-bold tabular-nums">{kg(p.n)}</dd>
-              </div>
+              <li key={p.name} className="flex items-center gap-3 py-3.5">
+                <i className="size-2.5 shrink-0 rounded-full" style={{ background: p.color }} />
+                <span className="flex-1 font-semibold">{p.name}</span>
+                <b className="font-numeral text-lg tabular-nums">{kg(p.n)}</b>
+                <span className="w-12 text-right text-sm tabular-nums text-ink-soft">{total > 0 ? Math.round((p.n / total) * 100) : 0}%</span>
+              </li>
             ))}
-          </dl>
+          </ul>
         </Panel>
 
         <Panel

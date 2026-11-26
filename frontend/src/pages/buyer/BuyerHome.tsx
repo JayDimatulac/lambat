@@ -1,43 +1,24 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Check, ClipboardList, Clock, Droplet, Fish, PackageCheck, Plus, Receipt, ShoppingBasket, Store, Waves, Wind } from 'lucide-react'
-import PierScene from '../../components/buyer/PierScene'
-import { useUser } from '../../lib/auth'
+import { ArrowRight, Check, ClipboardList, Clock, Fish, PackageCheck, Plus, Receipt, ShoppingBasket, Store, TrendingUp } from 'lucide-react'
 import { useBuyerInbox } from '../../lib/buyerInbox'
-import { openListings, riskOf, useMarket } from '../../lib/market'
-import { useForecast } from '../../lib/weather'
 import { localeOf } from '../../lib/time'
 import { useSettings } from '../../lib/settings'
-import { useT } from '../../lib/i18n'
-import { useBT } from '../../lib/buyerText'
-import wxDayImg from '../../assets/bg/buyer-weather-day.webp'
-import wxNightImg from '../../assets/bg/buyer-weather-night.webp'
+import { Badge, Empty, Panel, Tile } from '../admin/AdminBits'
+import { WaveLines } from '../admin/Charts'
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString('en-US')}`
 const shortId = (id: string) => `#ORD-${id.slice(-4).toUpperCase()}`
+const WEEK = 7 * 24 * 60 * 60 * 1000
+const WEEKS = 8
 
-function StatTile({ icon, value, label, tone }: { icon: ReactNode; value: string | number; label: string; tone: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-line bg-card/90 p-4 shadow-rest">
-      <span className={`grid size-12 shrink-0 place-items-center rounded-full ${tone}`}>{icon}</span>
-      <div className="min-w-0">
-        <p className="font-numeral text-2xl font-bold leading-none">{value}</p>
-        <p className="mt-1 text-xs font-semibold text-ink-soft">{label}</p>
-      </div>
-    </div>
-  )
-}
+const action = 'flex min-h-28 flex-col items-center justify-center gap-3 rounded-lg border border-line p-4 text-center text-base font-semibold shadow-rest transition hover:-translate-y-0.5 hover:shadow-raised active:scale-[0.98]'
 
 export default function BuyerHome() {
-  const b = useBT()
-  const t = useT()
-  const { lang, theme } = useSettings()
-  const user = useUser()
-  const m = useMarket()
+  const { lang } = useSettings()
   const inbox = useBuyerInbox()
-  const forecast = useForecast(user.barangay)
 
-  const open = openListings(m)
+  const now = Date.now()
   const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime()
   const activeOrders = inbox.orders.filter((o) => o.status === 'confirmed' || o.status === 'onway')
   const done = inbox.orders.filter((o) => o.status === 'received')
@@ -45,90 +26,62 @@ export default function BuyerHome() {
   const kgBought = done.reduce((n, o) => n + o.kg, 0)
   const spentThisMonth = done.filter((o) => o.updatedAt >= monthStart).reduce((n, o) => n + o.price * o.kg, 0)
 
-  const date = new Date().toLocaleDateString(localeOf(lang), { weekday: 'long', month: 'long', day: 'numeric' })
+  // kilos received per week, the last eight weeks (real completed orders only)
+  const weeks = Array.from({ length: WEEKS }, (_, i) => {
+    const end = now - (WEEKS - 1 - i) * WEEK
+    const start = end - WEEK
+    const kg = done.filter((o) => o.updatedAt > start && o.updatedAt <= end).reduce((n, o) => n + o.kg, 0)
+    return { label: new Date(end).toLocaleDateString(localeOf(lang), { month: 'short', day: 'numeric' }), values: [Math.round(kg * 10) / 10] }
+  })
+  const anyKg = weeks.some((w) => w.values[0] > 0)
 
-  type Row = { id: string; at: number; icon: ReactNode; title: string; sub: string; pill: string; pillCls: string; to: string }
+  type Row = { id: string; at: number; icon: ReactNode; title: string; sub: string; pill: string; tone: 'teal' | 'green' | 'red' | 'slate'; to: string }
+  const when = (t: number) => new Date(t).toLocaleString(localeOf(lang), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
   const rows: Row[] = [
     ...inbox.orders.map((o): Row => {
       const finished = o.status === 'received'
       const cancelled = o.status === 'declined'
       return {
         id: `o-${o.id}`, at: o.updatedAt, to: '/buyer/orders',
-        icon: finished ? <Check size={20} aria-hidden="true" /> : <ShoppingBasket size={20} aria-hidden="true" />,
+        icon: finished ? <Check size={20} strokeWidth={1.8} aria-hidden="true" /> : <ShoppingBasket size={20} strokeWidth={1.8} aria-hidden="true" />,
         title: `Order ${shortId(o.id)} · ${o.species} · ${o.kg} kg`,
-        sub: new Date(o.updatedAt).toLocaleString(localeOf(lang), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
+        sub: when(o.updatedAt),
         pill: finished ? 'Completed' : cancelled ? 'Cancelled' : 'Active',
-        pillCls: finished ? 'bg-risk-low-bg text-risk-low' : cancelled ? 'bg-risk-critical-bg text-risk-critical' : 'bg-cream text-deep',
+        tone: finished ? 'green' : cancelled ? 'red' : 'teal',
       }
     }),
     ...inbox.needs.map((n): Row => ({
       id: `n-${n.id}`, at: n.createdAt, to: '/buyer/needs',
-      icon: <Fish size={20} aria-hidden="true" />,
+      icon: <Fish size={20} strokeWidth={1.8} aria-hidden="true" />,
       title: `Need request · ${n.species} · ${n.kg} kg`,
-      sub: new Date(n.createdAt).toLocaleString(localeOf(lang), { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
-      pill: n.open ? 'Open' : 'Closed', pillCls: n.open ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft',
+      sub: when(n.createdAt),
+      pill: n.open ? 'Open' : 'Closed', tone: n.open ? 'teal' : 'slate',
     })),
-  ].sort((a, b2) => b2.at - a.at).slice(0, 3)
-
-  const today = forecast.week[0]
-  const now = forecast.now
-  const temp = now?.temp ?? today.tMax
-  const wind = now?.wind ?? today.wind
-  const wave = now?.wave ?? today.wave
-  const loading = forecast.status === 'loading'
-
-  const header = (
-    <>
-      <p className="pt-1 text-sm font-medium text-white">{date}{user.barangay ? ` | ${user.barangay}` : ''}</p>
-      <p className="mt-1 font-numeral text-[28px] font-bold leading-tight text-white">{b('home.hello')}, {user.shortName}!</p>
-      <p className="max-w-xs text-sm text-white/90">{b('home.sub')}</p>
-    </>
-  )
-
-  const action = 'flex min-h-32 flex-col items-center justify-center gap-3 rounded-lg border border-line p-4 text-center text-base font-semibold shadow-rest transition active:scale-[0.98]'
+  ].sort((a, b) => b.at - a.at).slice(0, 5)
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
-        <PierScene lots={open.map((l) => ({ id: l.id, risk: riskOf(l, m.now) }))} header={header} />
-        <section aria-label={t('home.wx.title')} className="relative flex flex-col justify-between gap-4 overflow-hidden rounded-lg bg-gradient-to-b from-[var(--tide-sky-0)] to-[var(--tide-sea-1)] p-5 text-white shadow-raised">
-          <img src={theme === 'night' ? wxNightImg : wxDayImg} alt="" className="absolute inset-0 size-full object-cover object-right" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" aria-hidden="true" />
-          <div className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
-            <p className="font-numeral text-5xl font-bold leading-none">{loading ? '–' : temp}<span className="align-top text-2xl">°C</span></p>
-            <p className="mt-1 text-sm font-semibold">{t(`sky.${today.sky}`)}</p>
-          </div>
-          <ul className="relative z-10 space-y-2 text-sm font-medium drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
-            <li className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><Wind size={16} aria-hidden="true" />{t('home.wx.wind')}</span><span>{loading ? '–' : `${wind} km/h`}</span></li>
-            <li className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><Waves size={16} aria-hidden="true" />{t('home.wx.waves')}</span><span>{loading ? '–' : `${wave} m`}</span></li>
-            {now?.humidity !== undefined && <li className="flex items-center justify-between gap-2"><span className="flex items-center gap-2"><Droplet size={16} aria-hidden="true" />{t('home.wx.humidity')}</span><span>{now.humidity}%</span></li>}
-          </ul>
-        </section>
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <Tile icon={ShoppingBasket} label="Active Orders" value={activeOrders.length} tone="blue" to="/buyer/orders" />
+        <Tile icon={ClipboardList} label="Open Needs" value={openNeeds.length} tone="amber" to="/buyer/needs" />
+        <Tile icon={Fish} label="Total Purchased" value={`${kgBought} kg`} tone="green" />
+        <Tile icon={Receipt} label="Spent This Month" value={peso(spentThisMonth)} tone="red" />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatTile icon={<ShoppingBasket size={24} aria-hidden="true" />} value={activeOrders.length} label="Active Orders" tone="bg-seafoam text-teal" />
-        <StatTile icon={<ClipboardList size={24} aria-hidden="true" />} value={openNeeds.length} label="Open Needs" tone="bg-cream text-deep" />
-        <StatTile icon={<Fish size={24} aria-hidden="true" />} value={`${kgBought} kg`} label="Total Purchased" tone="bg-seafoam text-teal" />
-        <StatTile icon={<Receipt size={24} aria-hidden="true" />} value={peso(spentThisMonth)} label="Total Spent This Month" tone="bg-cream text-deep" />
-      </div>
+      <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
+        <Panel icon={TrendingUp} title="Weekly Purchases" sub="Kilos received, last 8 weeks">
+          {anyKg ? (
+            <WaveLines data={weeks} colors={['var(--color-teal)']} names={['Kilos received']} height={230} unit=" kg" />
+          ) : (
+            <Empty icon={TrendingUp} text="No completed orders yet. Your weekly kilos will show here." />
+          )}
+        </Panel>
 
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-        <section className="flex flex-col rounded-lg border border-line bg-card/90 p-5 shadow-rest">
-          <h2 className="mb-4 text-2xl">Quick Actions</h2>
-          <div className="grid flex-1 grid-cols-2 gap-4 xl:grid-cols-4">
-            <Link to="/buyer/pier" className={`${action} bg-seafoam text-teal`}><Fish size={34} strokeWidth={1.8} aria-hidden="true" />Browse Offers</Link>
-            <Link to="/buyer/needs?new=1" className={`${action} bg-cream text-deep`}><Plus size={34} strokeWidth={1.8} aria-hidden="true" />Post a Need</Link>
-            <Link to="/buyer/orders" className={`${action} bg-seafoam text-teal`}><PackageCheck size={34} strokeWidth={1.8} aria-hidden="true" />Track Orders</Link>
-            <Link to="/buyer/stall" className={`${action} bg-cream text-deep`}><Store size={34} strokeWidth={1.8} aria-hidden="true" />Manage Stall</Link>
-          </div>
-        </section>
-
-        <section className="rounded-lg border border-line bg-card/90 p-4 shadow-rest">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="flex items-center gap-2 text-xl"><Clock size={22} strokeWidth={1.8} className="text-teal" aria-hidden="true" />Recent Activity</h2>
-            <Link to="/buyer/orders" className="inline-flex items-center gap-1 text-sm font-semibold text-teal">See All <ArrowRight size={16} aria-hidden="true" /></Link>
-          </div>
+        <Panel
+          icon={Clock}
+          title="Recent Activity"
+          action={<Link to="/buyer/orders" className="inline-flex items-center gap-1 text-sm font-semibold text-teal">See all <ArrowRight size={16} aria-hidden="true" /></Link>}
+        >
           {rows.length === 0 ? (
             <p className="rounded-md border border-dashed border-line p-6 text-center text-sm text-ink-soft">Nothing yet. Post a need or browse the pier to get started.</p>
           ) : (
@@ -138,14 +91,23 @@ export default function BuyerHome() {
                   <Link to={r.to} className="flex items-center gap-3 py-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-full bg-seafoam text-teal">{r.icon}</span>
                     <span className="min-w-0 flex-1"><span className="block truncate text-sm font-semibold">{r.title}</span><span className="block text-xs text-ink-soft">{r.sub}</span></span>
-                    <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${r.pillCls}`}>{r.pill}</span>
+                    <Badge tone={r.tone}>{r.pill}</Badge>
                   </Link>
                 </li>
               ))}
             </ul>
           )}
-        </section>
+        </Panel>
       </div>
+
+      <Panel icon={Plus} title="Quick Actions">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <Link to="/buyer/pier" className={`${action} bg-seafoam text-teal`}><Fish size={30} strokeWidth={1.8} aria-hidden="true" />Browse Offers</Link>
+          <Link to="/buyer/needs?new=1" className={`${action} bg-coral/20 text-deep`}><Plus size={30} strokeWidth={1.8} aria-hidden="true" />Post a Need</Link>
+          <Link to="/buyer/orders" className={`${action} bg-seafoam text-teal`}><PackageCheck size={30} strokeWidth={1.8} aria-hidden="true" />Track Orders</Link>
+          <Link to="/buyer/stall" className={`${action} bg-coral/20 text-deep`}><Store size={30} strokeWidth={1.8} aria-hidden="true" />Manage Stall</Link>
+        </div>
+      </Panel>
     </div>
   )
 }

@@ -1,12 +1,17 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ClipboardList, Package, Plus, Receipt, Store, Tag } from 'lucide-react'
+import { ArrowRight, ClipboardList, Droplet, Package, Plus, Receipt, Store, Tag, Waves, Wind } from 'lucide-react'
+import PierScene from '../../components/buyer/PierScene'
 import { answerOffer, useBuyerInbox } from '../../lib/buyerInbox'
+import { openListings, riskOf, useMarket } from '../../lib/market'
+import { useForecast } from '../../lib/weather'
 import { localeOf } from '../../lib/time'
 import { useUser } from '../../lib/auth'
 import { useSettings } from '../../lib/settings'
 import { useT } from '../../lib/i18n'
 import { useBT } from '../../lib/buyerText'
+import wxDayImg from '../../assets/bg/buyer-weather-day.webp'
+import wxNightImg from '../../assets/bg/buyer-weather-night.webp'
 import { Badge, Panel } from '../admin/AdminBits'
 
 const peso = (n: number) => `₱${Math.round(n).toLocaleString('en-US')}`
@@ -24,8 +29,10 @@ export default function BuyerHome() {
   const t = useT()
   const b = useBT()
   const user = useUser()
-  const { lang } = useSettings()
+  const { lang, theme } = useSettings()
+  const m = useMarket()
   const inbox = useBuyerInbox()
+  const forecast = useForecast(user.barangay)
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
@@ -41,11 +48,26 @@ export default function BuyerHome() {
   const kgMonth = doneMonth.reduce((n, o) => n + o.kg, 0)
   const kgAll = done.reduce((n, o) => n + o.kg, 0)
 
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
   const date = new Date().toLocaleDateString(localeOf(lang), { weekday: 'long', month: 'long', day: 'numeric' })
   const parts = [waiting.length && `${plural(waiting.length, 'offer', 'offers')} waiting for your answer`, active.length && `${plural(active.length, 'order', 'orders')} confirmed`].filter(Boolean)
   const status = !inbox.loaded ? 'Loading your activity…' : parts.length ? parts.join(' · ') : "You're all caught up."
+
+  // the sea picture's boats and the weather card
+  const open = openListings(m)
+  const today = forecast.week[0]
+  const now = forecast.now
+  const temp = now?.temp ?? today.tMax
+  const wind = now?.wind ?? today.wind
+  const wave = now?.wave ?? today.wave
+  const loading = forecast.status === 'loading'
+
+  const header = (
+    <>
+      <p className="pt-1 text-sm font-medium text-white">{date}{user.barangay ? ` | ${user.barangay}` : ''}</p>
+      <p className="mt-1 font-numeral text-[28px] font-bold leading-tight text-white">{b('home.hello')}, {user.shortName}!</p>
+      <p className="max-w-xs text-sm font-semibold text-white/95">{status}</p>
+    </>
+  )
 
   const answer = async (id: string, accept: boolean) => {
     setBusyId(id)
@@ -55,17 +77,38 @@ export default function BuyerHome() {
 
   return (
     <div className="space-y-5">
-      {/* Where things stand, in one line, with the one thing a buyer does most */}
-      <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-card p-5 shadow-rest">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-ink-soft">{date}</p>
-          <h1 className="font-display text-2xl font-bold leading-tight tracking-tight sm:text-[28px]">{greeting}, {user.shortName}</h1>
-          <p className={`mt-1 text-sm font-semibold ${waiting.length ? 'text-teal' : 'text-ink-soft'}`}>{status}</p>
-        </div>
-        <Link to="/buyer/needs?new=1" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-coral px-6 font-bold text-deep shadow-raised transition hover:bg-peach active:scale-95">
-          <Plus size={20} strokeWidth={2.6} aria-hidden="true" />Post a Need
-        </Link>
-      </section>
+      {/* The harbor and the sea outside, as before. The status line says what needs you today. */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
+        <PierScene lots={open.map((l) => ({ id: l.id, risk: riskOf(l, m.now) }))} header={header} />
+        <section
+          aria-label={t('home.wx.title')}
+          className="relative flex items-center justify-between gap-4 overflow-hidden rounded-lg bg-gradient-to-b from-[var(--tide-sky-0)] to-[var(--tide-sea-1)] p-4 text-white shadow-raised lg:flex-col lg:items-stretch lg:p-5"
+        >
+          <img src={theme === 'night' ? wxNightImg : wxDayImg} alt="" className="absolute inset-0 size-full object-cover object-right" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" aria-hidden="true" />
+          <div className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+            <p className="font-numeral text-4xl font-bold leading-none lg:text-5xl">{loading ? '–' : temp}<span className="align-top text-xl lg:text-2xl">°C</span></p>
+            <p className="mt-1 text-sm font-semibold">{t(`sky.${today.sky}`)}</p>
+          </div>
+          {/* phones: three icons with a number each. From lg: the labelled list. */}
+          <ul className="relative z-10 flex gap-4 text-sm font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] lg:block lg:space-y-2 lg:font-medium">
+            <li className="flex flex-col items-center gap-0.5 lg:flex-row lg:justify-between lg:gap-2">
+              <span className="flex items-center gap-2"><Wind size={18} aria-hidden="true" /><span className="sr-only lg:not-sr-only">{t('home.wx.wind')}</span></span>
+              <span>{loading ? '–' : `${wind} km/h`}</span>
+            </li>
+            <li className="flex flex-col items-center gap-0.5 lg:flex-row lg:justify-between lg:gap-2">
+              <span className="flex items-center gap-2"><Waves size={18} aria-hidden="true" /><span className="sr-only lg:not-sr-only">{t('home.wx.waves')}</span></span>
+              <span>{loading ? '–' : `${wave} m`}</span>
+            </li>
+            {now?.humidity !== undefined && (
+              <li className="flex flex-col items-center gap-0.5 lg:flex-row lg:justify-between lg:gap-2">
+                <span className="flex items-center gap-2"><Droplet size={18} aria-hidden="true" /><span className="sr-only lg:not-sr-only">{t('home.wx.humidity')}</span></span>
+                <span>{now.humidity}%</span>
+              </li>
+            )}
+          </ul>
+        </section>
+      </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] xl:items-start">
         <div className="space-y-4">

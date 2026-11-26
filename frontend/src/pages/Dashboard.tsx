@@ -1,21 +1,22 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, CalendarDays, ChevronRight, Info, MapPin, TriangleAlert } from 'lucide-react'
+import { ArrowRight, CalendarDays, Info, MapPin } from 'lucide-react'
 import TideScene from '../components/tide/TideScene'
 import BuoyStrip from '../components/home/BuoyStrip'
 import NetTally from '../components/home/NetTally'
 import ParolaPanel from '../components/home/ParolaPanel'
 import WeatherCard from '../components/home/WeatherCard'
-import WeatherStrip from '../components/home/WeatherStrip'
+import NextUp from '../components/home/NextUp'
+import SeaStatus from '../components/home/SeaStatus'
 import TatlongBanyera from '../components/home/TatlongBanyera'
 import { PennantIcon } from '../components/home/HomeIcons'
-import { byUrgency, isActive, needsAttention, weekBase, type Outcome } from '../data/mock'
+import { byUrgency, isActive, weekBase, type Outcome } from '../data/mock'
 import { pickHeroCatches } from '../lib/heroCatches'
 import { useCatches } from '../data/store'
 import { useUser } from '../lib/auth'
 import { useT } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 import { localeOf } from '../lib/time'
-import { hour12, sailLevel, useForecast, windOutlook } from '../lib/weather'
+import { hour12, useForecast, windOutlook } from '../lib/weather'
 import weatherIcon from '../assets/icons/quick-weather.png'
 import buyersIcon from '../assets/icons/quick-buyers.png'
 import valueIcon from '../assets/icons/quick-value.png'
@@ -47,7 +48,7 @@ export default function Dashboard() {
   const next = active.find((c) => !urgent.includes(c))
 
   // Phones: the hero shows up to two active catches (Unahin first, then the least time left). The strip below lists every catch.
-  const priorityCount = active.filter(needsAttention).length
+
   const heroCatches = pickHeroCatches(catches)
   const stripCatches = [...active, ...catches.filter((c) => !isActive(c))]
 
@@ -61,8 +62,7 @@ export default function Dashboard() {
     }
   }
 
-  const today = forecast.week[0]
-  const advisory = forecast.status === 'live' ? sailLevel(today.wind, today.gust, today.wave, today.rain) : 'good'
+
 
   const outlook = forecast.live ? windOutlook(forecast.hours, hour) : null
   let windText = t('nav.weather')
@@ -148,20 +148,10 @@ export default function Dashboard() {
     <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
       {/* LEFT: timeline, the one primary action, quick actions, weekly utilization */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        {/* Phones: an active sea advisory comes first, so it is seen without scrolling. */}
-        {advisory !== 'good' && (
-          <Link
-            to="/weather"
-            className={`order-first flex items-center gap-3 rounded-2xl border px-4 py-3 lg:hidden ${advisory === 'danger' ? 'border-risk-critical-line bg-risk-critical-bg text-risk-critical' : 'border-risk-moderate-line bg-risk-moderate-bg text-risk-moderate'}`}
-          >
-            <TriangleAlert size={24} strokeWidth={1.8} aria-hidden="true" className="shrink-0" />
-            <span className="min-w-0 flex-1">
-              <span className="block text-sm font-semibold leading-tight">{t('home.adv.title')}</span>
-              <span className="mt-0.5 block text-xs font-medium leading-snug">{t(`home.adv.${advisory}`)}</span>
-            </span>
-            <ChevronRight size={20} aria-hidden="true" className="shrink-0" />
-          </Link>
-        )}
+     {/* Phones: the sea comes first, in one row. It turns amber or red when it is not calm. */}
+     <div className="order-first lg:hidden">
+       <SeaStatus forecast={forecast} />
+     </div>
 
         {/* Phones: the sea hero with up to two active catches. */}
         <div className="order-1 lg:hidden">
@@ -187,17 +177,10 @@ export default function Dashboard() {
           <TideScene catches={active.slice(0, 4)} header={header} />
         </div>
 
-        {/* Only when more catches need attention than the hero can show */}
-        {priorityCount > 2 && (
-          <Link
-            to="/catches?filter=attention"
-            className="order-2 flex min-h-14 items-center gap-3 rounded-2xl border border-risk-moderate-line bg-risk-moderate-bg px-4 font-semibold text-risk-moderate transition active:scale-[0.98] lg:hidden"
-          >
-            <PennantIcon size={22} />
-            <span className="min-w-0 flex-1">{t('home.priority', { n: priorityCount })}</span>
-            <ChevronRight size={22} aria-hidden="true" />
-          </Link>
-        )}
+     {/* Phones: the one catch to deal with now, with one button */}
+     <div className="order-2 empty:hidden lg:hidden">
+       <NextUp catches={catches} />
+     </div>
 
         <BuoyStrip catches={stripCatches} />
 
@@ -248,9 +231,6 @@ export default function Dashboard() {
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
         <div className="hidden lg:block lg:flex-1 [&>*]:h-full">
           <ParolaPanel urgent={urgent} next={next} />
-        </div>
-        <div className="order-5 lg:hidden">
-          <WeatherStrip forecast={forecast} />
         </div>
         <div className="hidden lg:block lg:flex-1 [&>*]:h-full">
           <WeatherCard forecast={forecast} />

@@ -1,5 +1,5 @@
 import { api, ApiError, getToken, setToken } from './api'
-import { initialsOf, shortName, type Account, type BuyerProfile, type BuyerType, type FisherProfile, type Role, type SessionUser, type Status } from './accounts'
+import { initialsOf, shortName, type Account, type BuyerProfile, type BuyerReq, type BuyerType, type FisherProfile, type Role, type SessionUser, type Status } from './accounts'
 type ApiUser = {
   id: string
   role: 'FISHERFOLK' | 'BUYER' | 'ADMIN' | 'SUPER_ADMIN' | 'ORGANIZATION'
@@ -11,7 +11,7 @@ type ApiUser = {
   businessName: string | null
   buyerType: string | null
   statusNote: string | null
-  profile: { fisher?: FisherProfile; buyer?: { address?: string } } | null
+  profile: { fisher?: FisherProfile; buyer?: { address?: string; kind?: string; requirements?: BuyerReq } } | null
   createdAt: string
 }
 
@@ -37,7 +37,7 @@ export function fromApiUser(u: ApiUser): SessionUser {
     fisher: role === 'fisherfolk' ? u.profile?.fisher : undefined,
     buyer:
       role === 'buyer'
-        ? { businessName: u.businessName ?? '', buyerType: (u.buyerType as BuyerType) ?? 'market', address: u.profile?.buyer?.address ?? '' }
+        ? { businessName: u.businessName ?? '', buyerType: (u.buyerType as BuyerType) ?? 'market', address: u.profile?.buyer?.address ?? '', kind: u.profile?.buyer?.kind, requirements: u.profile?.buyer?.requirements }
         : undefined,
     note: u.statusNote ?? undefined,
     initials: initialsOf(u.name).toUpperCase(),
@@ -94,7 +94,7 @@ export async function apiRegister(input: ApiRegisterInput): Promise<ApiRegisterR
           role: 'BUYER',
           businessName: input.buyer?.businessName,
           buyerType: input.buyer?.buyerType,
-          profile: { buyer: { address: input.buyer?.address ?? '' } },
+          profile: { buyer: { address: input.buyer?.address ?? '', kind: input.buyer?.kind } },
         }
   try {
     const r = await api.post<{ token: string; user: ApiUser }>('/auth/register', body)
@@ -127,7 +127,7 @@ export async function apiReapply(buyer: BuyerProfile): Promise<SessionUser | nul
     const r = await api.patch<{ user: ApiUser }>('/auth/reapply', {
       businessName: buyer.businessName,
       buyerType: buyer.buyerType,
-      profile: { buyer: { address: buyer.address } },
+      profile: { buyer: { address: buyer.address, kind: buyer.kind, requirements: buyer.requirements } },
     })
     return fromApiUser(r.user)
   } catch {

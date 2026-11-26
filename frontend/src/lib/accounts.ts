@@ -12,7 +12,8 @@ export type Ground = 'near' | 'open'
 export type BuyerType = 'market' | 'trader' | 'restaurant' | 'smokehouse'
 
 export type FisherProfile = { boat: Boat | null; gear: Gear[]; ground: Ground | null; landing: string }
-export type BuyerProfile = { businessName: string; buyerType: BuyerType; address: string }
+export type BuyerReq = { proof?: string; number?: string; issuer?: string; validUntil?: string; regNo?: string }
+export type BuyerProfile = { businessName: string; buyerType: BuyerType; address: string; kind?: string; requirements?: BuyerReq }
 
 export type Account = {
   id: string

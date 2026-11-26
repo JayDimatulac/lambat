@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       buyer: input.buyer,
     })
     if (!res.ok) return res
-    const signedIn = res.user.status === 'ACTIVE' // buyers wait for approval and sign in later
+    const signedIn = res.user.status === 'ACTIVE' || (res.user.role === 'buyer' && res.user.status === 'PENDING') // buyers sign in right away and verify from inside
     if (signedIn) setMe(res.user)
     else apiLogout()
     return { ok: true, user: res.user, signedIn }

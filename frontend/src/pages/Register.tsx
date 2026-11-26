@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Clock, Footprints, Flame, Scale, Store, UtensilsCrossed } from 'lucide-react'
+import { ArrowLeft, Building2, Clock, Factory, Flame, Footprints, Scale, Store, Users, UtensilsCrossed } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
 import { ChoiceTile, PasswordField, TextField } from '../components/auth/Fields'
 import Chip from '../components/ui/Chip'
 import { BangkaIcon } from '../components/home/HomeIcons'
 import { PierIcon } from '../components/icons'
 import { useAuth } from '../lib/auth'
-import { ROLE_HOME, looksLikeEmail, normalizeMobile, type Boat, type BuyerType, type Gear, type Ground } from '../lib/accounts'
+import { ROLE_HOME, looksLikeEmail, normalizeMobile, type Boat, type Gear, type Ground } from '../lib/accounts'
+import { BUYER_KINDS, TIER_NOTE, legacyType, pick } from '../lib/buyerKinds'
+import { useSettings } from '../lib/settings'
 import { useT, type Key } from '../lib/i18n'
 
 // Edit this list to match the landing places you want people to pick from
-const LANDINGS = ['Balayan', 'Calatagan', 'Lemery', 'Tuy', 'Batangas City']
+const LANDINGS = ['Balayan', 'Calaca City', 'Calatagan', 'Lemery', 'Lian', 'Nasugbu', 'Taal', 'Tuy']
 const BOATS: { id: Boat; title: Key; sub: Key }[] = [
   { id: 'motor', title: 'boat.motor', sub: 'boat.motor.sub' },
   { id: 'paddle', title: 'boat.paddle', sub: 'boat.paddle.sub' },
@@ -20,10 +22,9 @@ const BOATS: { id: Boat; title: Key; sub: Key }[] = [
 const GEARS: { id: Gear; label: Key }[] = [
   { id: 'net', label: 'gear.net' }, { id: 'line', label: 'gear.line' }, { id: 'trap', label: 'gear.trap' }, { id: 'other', label: 'gear.other' },
 ]
-const BUYER_TYPES: { id: BuyerType; label: Key; icon: typeof Store }[] = [
-  { id: 'market', label: 'party.market', icon: Store }, { id: 'trader', label: 'party.trader', icon: Scale },
-  { id: 'restaurant', label: 'party.restaurant', icon: UtensilsCrossed }, { id: 'smokehouse', label: 'party.smokehouse', icon: Flame },
-]
+const KIND_ICON: Record<string, typeof Store> = {
+  vendor: Store, reseller: Scale, home: Flame, eatery: UtensilsCrossed, restaurant: Building2, processor: Factory, coop: Users,
+}
 
 type Role = 'fisherfolk' | 'buyer'
 type Errors = Partial<Record<'name' | 'mobile' | 'barangay' | 'password' | 'email' | 'landing' | 'biz' | 'type', Key>>
@@ -40,6 +41,7 @@ function Knots({ step }: { step: number }) {
 
 export default function Register() {
   const t = useT()
+  const { lang } = useSettings()
   const { user, register } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
@@ -63,7 +65,7 @@ export default function Register() {
   const [ground, setGround] = useState<Ground | null>(null)
   // step 3, buyer
   const [biz, setBiz] = useState('')
-  const [btype, setBtype] = useState<BuyerType | null>(null)
+  const [kind, setKind] = useState<string | null>(null)
   const [address, setAddress] = useState('')
 
   if (user && !done) return <Navigate to={ROLE_HOME[user.role]} replace />
@@ -85,7 +87,7 @@ export default function Register() {
     if (role === 'fisherfolk' && !landingValue) e.landing = 'reg.err.landing'
     if (role === 'buyer') {
       if (!biz.trim()) e.biz = 'reg.err.biz'
-      if (!btype) e.type = 'reg.err.biztype'
+      if (!kind) e.type = 'reg.err.biztype'
     }
     setErrors(e)
     return Object.keys(e).length === 0
@@ -103,7 +105,7 @@ export default function Register() {
       password,
       email: email.trim() || undefined,
       fisher: role === 'fisherfolk' ? { boat, gear, ground, landing: landingValue! } : undefined,
-      buyer: role === 'buyer' ? { businessName: biz.trim(), buyerType: btype!, address: address.trim() } : undefined,
+      buyer: role === 'buyer' ? { businessName: biz.trim(), buyerType: legacyType(kind!), kind: kind!, address: address.trim() } : undefined,
     })
     setBusy(false)
     if (!res.ok) {
@@ -137,6 +139,7 @@ export default function Register() {
     )
   }
 
+  const chosen = BUYER_KINDS.find((k) => k.key === kind)
   const toggleGear = (g: Gear) => setGear((cur) => (cur.includes(g) ? cur.filter((x) => x !== g) : [...cur, g]))
   const card = (on: boolean) => `relative flex w-full items-center gap-4 rounded-lg border-2 p-4 text-left transition active:scale-[0.98] ${on ? 'border-teal bg-seafoam shadow-raised' : 'border-line bg-card'}`
 
@@ -241,9 +244,18 @@ export default function Register() {
             <div className="space-y-2">
               <p className="text-lg font-semibold">{t('reg.biztype')}</p>
               <div role="radiogroup" aria-label={t('reg.biztype')} className="space-y-2">
-                {BUYER_TYPES.map((b) => <ChoiceTile key={b.id} selected={btype === b.id} onClick={() => setBtype(b.id)} icon={<b.icon size={26} strokeWidth={1.8} />} title={t(b.label)} />)}
+                {BUYER_KINDS.map((k) => { const I = KIND_ICON[k.key] ?? Store; return <ChoiceTile key={k.key} selected={kind === k.key} onClick={() => setKind(k.key)} icon={<I size={26} strokeWidth={1.8} />} title={pick(k, lang)} /> })}
               </div>
               {errors.type && <p role="alert" className="text-sm font-semibold text-risk-critical">{t(errors.type)}</p>}
+              {chosen && (
+                <div className="rounded-lg border border-teal/40 bg-seafoam/50 p-4 text-sm leading-snug">
+                  <p className="font-semibold">{pick({ en: 'After you sign in, you will be asked for:', fil: 'Pagkatapos mag-sign in, hihingin ang:' }, lang)}</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {chosen.proofs.map((p) => <li key={p.key}>{pick(p, lang)}</li>)}
+                  </ul>
+                  <p className="mt-2 font-medium text-ink-soft">{pick(TIER_NOTE[chosen.tier], lang)}</p>
+                </div>
+              )}
             </div>
             <TextField label={t('reg.address')} hint={t('reg.address.hint')} value={address} onChange={(e) => setAddress(e.target.value)} />
             <p className="flex items-start gap-2 rounded-md bg-seafoam p-3 text-sm leading-snug"><Clock size={18} strokeWidth={1.8} className="mt-0.5 shrink-0 text-teal" aria-hidden />{t('reg.buyer.tag')}: {t('reg.buyer.note')}</p>

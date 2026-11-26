@@ -1,11 +1,12 @@
-import type { Account } from './accounts'
+import type { Account, BuyerReq, BuyerType } from './accounts'
+
+export type { BuyerReq }
 
 type L = { en: string; fil: string }
 export const pick = (l: L, lang?: string | null) => (lang === 'fil' ? l.fil : l.en)
 
 export type Proof = L & { key: string }
 export type BuyerKind = L & { key: string; tier: 'business' | 'small'; hint: L; proofs: Proof[] }
-export type BuyerReq = { proof?: string; number?: string; issuer?: string; validUntil?: string; regNo?: string }
 
 const permit: Proof = { key: 'permit', en: "Mayor's / business permit", fil: 'Permit ng alkalde / negosyo' }
 const clearance: Proof = { key: 'clearance', en: 'Barangay clearance', fil: 'Barangay clearance' }
@@ -17,6 +18,11 @@ const lgu: Proof = { key: 'lgu', en: 'LGU or fisheries office confirmation', fil
 const SMALL: L = { en: 'A barangay clearance is enough to start.', fil: 'Sapat na ang barangay clearance para makapagsimula.' }
 const BUSINESS: L = { en: 'A business permit and your registration number are required.', fil: 'Kailangan ang business permit at ang registration number.' }
 
+export const TIER_NOTE: Record<BuyerKind['tier'], L> = {
+  small: { en: 'One of these is enough.', fil: 'Isa sa mga ito ay sapat na.' },
+  business: { en: 'One of these, plus your DTI / SEC / CDA registration number.', fil: 'Isa sa mga ito, kasama ang iyong DTI / SEC / CDA registration number.' },
+}
+
 export const BUYER_KINDS: BuyerKind[] = [
   { key: 'vendor', tier: 'small', en: 'Market vendor (suki)', fil: 'Nagtitinda sa palengke (suki)', hint: SMALL, proofs: [clearance, stall, lgu] },
   { key: 'reseller', tier: 'small', en: 'Reseller or trader', fil: 'Reseller o negosyante', hint: SMALL, proofs: [clearance, permit, lgu] },
@@ -27,14 +33,23 @@ export const BUYER_KINDS: BuyerKind[] = [
   { key: 'coop', tier: 'business', en: 'Cooperative or association', fil: 'Kooperatiba o samahan', hint: BUSINESS, proofs: [coop, permit] },
 ]
 
+// the old four types, still stored in buyerType so the existing screens keep working
+const LEGACY_OF: Record<string, BuyerType> = {
+  vendor: 'market', reseller: 'trader', home: 'smokehouse', eatery: 'market', restaurant: 'restaurant', processor: 'trader', coop: 'trader',
+}
+export const legacyType = (key: string): BuyerType => LEGACY_OF[key] ?? 'market'
+
 // accounts made before this list used these four types
-const LEGACY: Record<string, string> = { market: 'vendor', trader: 'reseller', smokehouse: 'home', restaurant: 'restaurant' }
+const LEGACY_KIND: Record<string, string> = { market: 'vendor', trader: 'reseller', smokehouse: 'home', restaurant: 'restaurant' }
 
 export function kindOf(type?: string | null): BuyerKind | undefined {
   if (!type) return undefined
-  const key = LEGACY[type] ?? type
+  const key = LEGACY_KIND[type] ?? type
   return BUYER_KINDS.find((k) => k.key === key)
 }
+
+// the category the buyer chose at registration, falling back to the old type
+export const kindOfAccount = (a: Account): BuyerKind | undefined => kindOf(a.buyer?.kind ?? a.buyer?.buyerType)
 
 const F = {
   proof: { en: 'Document', fil: 'Dokumento' },
@@ -60,6 +75,5 @@ export function requirementRows(kind: BuyerKind | undefined, r: BuyerReq | undef
 
 export const missingCount = (rows: ReqRow[]) => rows.filter((r) => r.required && !r.value).length
 
-// the requirements a buyer entered at registration (once the form collects them)
-export const reqOf = (a: Account): BuyerReq | undefined =>
-  (a.buyer as unknown as { requirements?: BuyerReq } | undefined)?.requirements
+// what the buyer submitted for verification (once the verify screen exists)
+export const reqOf = (a: Account): BuyerReq | undefined => a.buyer?.requirements

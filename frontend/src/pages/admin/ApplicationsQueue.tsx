@@ -6,7 +6,7 @@ import { useT, type Key } from '../../lib/i18n'
 import { localeOf } from '../../lib/time'
 import { useSettings } from '../../lib/settings'
 import type { Account } from '../../lib/accounts'
-import { kindOf, missingCount, pick, reqOf, requirementRows } from '../../lib/buyerKinds'
+import { kindOfAccount, missingCount, pick, reqOf, requirementRows } from '../../lib/buyerKinds'
 import { Badge, Modal, Seg } from './AdminBits'
 import { Chip } from './ui'
 import { useA } from './adminText'
@@ -84,7 +84,7 @@ export default function ApplicationsQueue({ area = '', pageSize = 8 }: { area?: 
   const reset = () => { setQ(''); setSt('all'); setRole('all'); setRange('all'); setPage(1) }
 
   // what the open application needs, and what the buyer entered
-  const openKind = open ? kindOf(open.buyer?.buyerType) : undefined
+  const openKind = open ? kindOfAccount(open) : undefined
   const openReq = open ? reqOf(open) : undefined
   const reqRows = open?.role === 'buyer' ? requirementRows(openKind, openReq, lang) : []
   const missing = missingCount(reqRows)
@@ -184,7 +184,7 @@ export default function ApplicationsQueue({ area = '', pageSize = 8 }: { area?: 
         {rows.map((a) => {
           const name = a.buyer?.businessName ?? a.name
           const I = ICON[a.role as keyof typeof ICON]
-          const k = a.role === 'buyer' ? kindOf(a.buyer?.buyerType) : undefined
+          const k = a.role === 'buyer' ? kindOfAccount(a) : undefined
           const sub = a.role === 'buyer' ? (k ? pick(k, lang) : refOf(a)) : areaOf(a)
           return (
             <li key={a.id} className={`grid items-center gap-x-4 gap-y-3 px-5 py-3.5 transition hover:bg-seafoam/30 ${COLS}`}>

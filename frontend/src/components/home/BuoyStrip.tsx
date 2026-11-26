@@ -21,15 +21,15 @@ export default function BuoyStrip({ catches }: { catches: Catch[] }) {
           <ChevronRight size={18} strokeWidth={2} aria-hidden="true" />
         </Link>
       </div>
-      <ul className="-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul className="-mx-4 flex snap-x snap-mandatory scroll-pl-4 gap-2 overflow-x-auto px-4 pb-1 scrollbar-none [&::-webkit-scrollbar]:hidden">
         {catches.slice(0, 10).map((c) => {
           const r = RISK[c.risk]
           const done = !!c.outcome
           return (
-            <li key={c.id} className="w-[54%] max-w-[240px] shrink-0 snap-start">
+            <li key={c.id} className="w-[54%] max-w-60 shrink-0 snap-start">
               <Link
                 to={`/catches/${c.id}`}
-                className={`flex h-full min-h-[84px] items-center gap-2.5 rounded-2xl border border-line bg-card px-3 py-3 shadow-rest transition active:scale-[0.98] ${done ? 'opacity-80' : ''}`}
+                className={`flex h-full min-h-21 items-center gap-2.5 rounded-2xl border border-line bg-card px-3 py-3 shadow-rest transition active:scale-[0.98] ${done ? 'opacity-80' : ''}`}
               >
                 <span className="flex shrink-0 flex-col items-center gap-0.5">
                   <span style={{ color: done ? 'var(--color-ink-soft)' : r.fill }} aria-hidden="true">

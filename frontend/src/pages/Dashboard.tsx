@@ -5,7 +5,7 @@ import BuoyStrip from '../components/home/BuoyStrip'
 import NetTally from '../components/home/NetTally'
 import ParolaPanel from '../components/home/ParolaPanel'
 import WeatherCard from '../components/home/WeatherCard'
-import NextUp from '../components/home/NextUp'
+import NextUp from '../components/home/NextUP'
 import SeaStatus from '../components/home/SeaStatus'
 import TatlongBanyera from '../components/home/TatlongBanyera'
 import { PennantIcon } from '../components/home/HomeIcons'
@@ -145,7 +145,7 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
+    <div className="mx-auto grid w-full max-w-360 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
       {/* LEFT: timeline, the one primary action, quick actions, weekly utilization */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
      {/* Phones: the sea comes first, in one row. It turns amber or red when it is not calm. */}
@@ -206,12 +206,12 @@ export default function Dashboard() {
             <Link
               key={to}
               to={to}
-              className={`shortcut-tile flex h-full min-h-[120px] flex-col items-center justify-start rounded-[20px] border border-white/80 bg-linear-to-br ${color} px-2 pb-3 pt-3 text-center text-deep shadow-rest transition hover:-translate-y-0.5 active:scale-[0.98] xl:min-h-[140px]`}
+              className={`shortcut-tile flex h-full min-h-30 flex-col items-center justify-start rounded-md border border-white/80 bg-linear-to-br ${color} px-2 pb-3 pt-3 text-center text-deep shadow-rest transition hover:-translate-y-0.5 active:scale-[0.98] xl:min-h-35`}
             >
               <span className="mb-1.5 grid size-14 shrink-0 place-items-center sm:size-16" aria-hidden="true">
                 <img src={icon} alt="" draggable={false} className="size-full object-contain" />
               </span>
-              <span className="flex min-h-[2.25rem] items-center justify-center text-sm font-bold leading-tight">
+              <span className="flex min-h-9 items-center justify-center text-sm font-bold leading-tight">
                 {title}
               </span>
               <span className="simple-hide mt-0.5 hidden text-xs leading-tight sm:block">{description}</span>
@@ -229,10 +229,10 @@ export default function Dashboard() {
 
       {/* RIGHT: needs action + weather share the left column's height. On a phone: hero, strip, weather, shortcuts, tally. */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
-        <div className="hidden lg:block lg:flex-1 [&>*]:h-full">
+        <div className="hidden lg:block lg:flex-1 *:h-full">
           <ParolaPanel urgent={urgent} next={next} />
         </div>
-        <div className="hidden lg:block lg:flex-1 [&>*]:h-full">
+        <div className="hidden lg:block lg:flex-1 *:h-full">
           <WeatherCard forecast={forecast} />
         </div>
 

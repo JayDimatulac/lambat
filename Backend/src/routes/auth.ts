@@ -122,6 +122,7 @@ authRouter.post("/login", async (req, res) => {
       : false;
 
   console.log("login debug", { cleanMobile, userFound: !!user, passwordOk, dbHost: new URL(process.env.DATABASE_URL ?? "http://none").hostname });
+  console.log("login debug", { cleanMobile, userFound: !!user, passwordOk, dbHost: new URL(process.env.DATABASE_URL ?? "http://none").hostname });
   if (!user || !passwordOk) {
     res.status(401).json({ error: "Wrong mobile number or password" });
     return;

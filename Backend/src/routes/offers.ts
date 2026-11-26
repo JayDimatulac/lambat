@@ -58,7 +58,7 @@ offersRouter.post("/", requireAuth, requireRole("FISHERFOLK"), async (req, res) 
   const { userId } = res.locals.auth as { userId: string };
   const me = await prisma.user.findUnique({ where: { id: userId } });
   if (!me || me.status !== "ACTIVE") {
-    res.status(403).json({ error: "Account not active" });
+    res.status(403).json({ error: "Your account is waiting for approval" });
     return;
   }
 

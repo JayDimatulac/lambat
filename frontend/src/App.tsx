@@ -28,7 +28,7 @@ import AdvisoryReview from './pages/admin/AdvisoryReview'
 import AdminAccounts from './pages/admin/AdminAccounts'
 import Reports from './pages/admin/Reports'
 import ActivityLog from './pages/admin/ActivityLog'
-import AdminAccount from './pages/admin/AdminAccount'
+import AdminProfile from './pages/admin/AdminProfile'
 import AdminSettings from './pages/admin/AdminSettings'
 import BuyerWaiting from './pages/buyer/BuyerWaiting'
 import BuyerHome from './pages/buyer/BuyerHome'
@@ -116,7 +116,7 @@ export default function App() {
           <Route path="reference" element={<Reference />} />          
           
             <Route path="history" element={<Soon />} />
-            <Route path="account" element={<AdminAccount />} />
+            <Route path="account" element={<AdminProfile />} />
             <Route path="settings" element={<SuperOnly><AdminSettings /></SuperOnly>} />
             <Route path="advisory-review" element={<SuperOnly><AdvisoryReview /></SuperOnly>} />
             <Route path="admins" element={<SuperOnly><AdminAccounts /></SuperOnly>} />

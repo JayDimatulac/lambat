@@ -79,6 +79,12 @@ needsRouter.get("/matches", requireAuth, requireRole("FISHERFOLK"), async (req, 
   const { userId } = res.locals.auth as { userId: string };
   const catchId = typeof req.query.catchId === "string" ? req.query.catchId : "";
 
+  const self = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
+  if (!self || self.status !== "ACTIVE") {
+    res.status(403).json({ error: "Your account is waiting for approval" });
+    return;
+  }
+
   const found = await prisma.catchBatch.findUnique({
     where: { id: catchId },
     include: { species: true },

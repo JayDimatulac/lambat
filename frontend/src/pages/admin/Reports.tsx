@@ -101,12 +101,12 @@ export default function Reports() {
               const lo = local[name]
               return (
                 <div key={name} className="flex items-center gap-3 text-sm">
-                  <span className="w-32 shrink-0 leading-tight">
+                  <span className="w-24 shrink-0 sm:w-32 leading-tight">
                     <b className="block truncate">{cap(lo ?? name)}</b>
                     {lo && lo.toLowerCase() !== name.toLowerCase() && <span className="block truncate text-xs text-ink-soft">{name}</span>}
                   </span>
                   <Bar pct={(kg / (lost[0]?.kg || 1)) * 100} color="var(--color-coral)" />
-                  <b className="w-14 text-right tabular-nums">{kg} kg</b>
+                  <b className="w-14 shrink-0 text-right tabular-nums">{kg} kg</b>
                 </div>
               )
             })}
@@ -120,9 +120,9 @@ export default function Reports() {
             {areas.length === 0 && <p className="text-sm text-ink-soft">{A('rp.none')}</p>}
             {areas.map(({ name, lossPct }) => (
               <div key={name} className="flex items-center gap-3 text-sm">
-                <span className="w-32 shrink-0 truncate">{name}</span>
+                <span className="w-24 shrink-0 sm:w-32 truncate">{name}</span>
                 <Bar pct={(lossPct / (areas[0]?.lossPct || 1)) * 100} color="var(--color-teal)" />
-                <b className="w-14 text-right tabular-nums">{lossPct}%</b>
+                <b className="w-14 shrink-0 text-right tabular-nums">{lossPct}%</b>
               </div>
             ))}
           </div>

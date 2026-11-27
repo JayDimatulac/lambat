@@ -115,7 +115,7 @@ export default function ApplicationsQueue({ area = '', pageSize = 8 }: { area?: 
 
   return (
     <section className="overflow-hidden rounded-lg border border-line bg-card shadow-rest">
-      <div className="flex items-start gap-3 px-5 pt-5">
+      <div className="flex items-start gap-3 px-4 pt-5 sm:px-5">
         <Layers size={26} strokeWidth={1.8} aria-hidden className="mt-0.5 shrink-0 text-teal" />
         <div>
           <h2 className="font-display text-2xl font-bold leading-tight">Applications Queue</h2>
@@ -124,8 +124,8 @@ export default function ApplicationsQueue({ area = '', pageSize = 8 }: { area?: 
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-3 p-5">
-        <label className="relative min-w-56 flex-1">
+      <div className="grid grid-cols-2 items-end gap-3 p-4 sm:flex sm:flex-wrap sm:p-5">
+        <label className="relative col-span-2 min-w-0 flex-1 sm:col-span-1 sm:min-w-56">
           <Search size={18} strokeWidth={1.8} aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-soft" />
           <input type="search" value={q} onChange={(e) => { setQ(e.target.value); setPage(1) }} placeholder="Search applicant or reference no."
             aria-label="Search applications" className={`${field} w-full pl-10`} />
@@ -187,8 +187,8 @@ export default function ApplicationsQueue({ area = '', pageSize = 8 }: { area?: 
           const k = a.role === 'buyer' ? kindOfAccount(a) : undefined
           const sub = a.role === 'buyer' ? (k ? pick(k, lang) : refOf(a)) : areaOf(a)
           return (
-            <li key={a.id} className={`grid items-center gap-x-4 gap-y-3 px-5 py-3.5 transition hover:bg-seafoam/30 ${COLS}`}>
-              <div className="flex min-w-0 items-center gap-3">
+            <li key={a.id} className={`grid grid-cols-2 items-center gap-x-3 gap-y-2.5 px-4 py-3.5 transition hover:bg-seafoam/30 sm:px-5 ${COLS}`}>
+              <div className="col-span-2 flex min-w-0 items-center gap-3 lg:col-span-1">
                 <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-seafoam text-teal"><I size={22} strokeWidth={1.8} aria-hidden /></span>
                 <div className="min-w-0">
                   <b className="block truncate text-[15px] leading-tight">{name}</b>
@@ -207,9 +207,9 @@ export default function ApplicationsQueue({ area = '', pageSize = 8 }: { area?: 
 
               <div><Chip tone={TONE[a.status]}>{STATUS_LABEL[a.status]}</Chip></div>
 
-              <div className="lg:text-right">
+              <div className="col-span-2 lg:col-span-1 lg:text-right">
                 <button type="button" onClick={() => { setOpen(a); setTab('details') }} aria-label={`Review ${name}`}
-                  className="inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-teal px-4 text-sm font-bold text-on-accent shadow-rest transition hover:brightness-110 active:scale-95">
+                  className="inline-flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-teal px-4 lg:w-auto text-sm font-bold text-on-accent shadow-rest transition hover:brightness-110 active:scale-95">
                   Review <ChevronRight size={16} aria-hidden />
                 </button>
               </div>

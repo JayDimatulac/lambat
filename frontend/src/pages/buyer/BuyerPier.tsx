@@ -4,6 +4,7 @@ import { ArrowRight, Heart, Search } from 'lucide-react'
 import FilterMenu from '../../components/buyer/FilterMenu'
 import FishPhoto from '../../components/buyer/FishPhoto'
 import { hoursLeft, openListings, useMarket, type Listing } from '../../lib/market'
+import { useBT, type BKey } from '../../lib/buyerText'
 
 type Sort = 'newest' | 'price' | 'kg'
 
@@ -12,15 +13,16 @@ const loadSaved = (): string[] => {
   try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]') } catch { return [] }
 }
 
-/* The little label on the photo: how fresh or how limited the lot is */
-function badgeOf(l: Listing, now: number) {
+/* The little label on the photo: how fresh or how limited the catch is */
+function badgeOf(l: Listing, now: number): { key: BKey; cls: string } {
   const hrs = hoursLeft(l, now)
-  if (hrs <= 6) return { text: 'Limited', cls: 'bg-cream text-deep' }
-  if ((now - l.postedAt) / 3_600_000 <= 2) return { text: 'New', cls: 'bg-risk-low-bg text-risk-low' }
-  return { text: 'Fresh', cls: 'bg-seafoam text-teal' }
+  if (hrs <= 6) return { key: 'offer.rescue', cls: 'bg-cream text-deep' }
+  if ((now - l.postedAt) / 3_600_000 <= 2) return { key: 'badge.new', cls: 'bg-risk-low-bg text-risk-low' }
+  return { key: 'offer.fresh', cls: 'bg-seafoam text-teal' }
 }
 
 export default function BuyerPier() {
+  const b = useBT()
   const m = useMarket()
   const navigate = useNavigate()
   const open = openListings(m)
@@ -45,57 +47,59 @@ export default function BuyerPier() {
     .filter((l) => place === 'all' || l.place === place)
     .filter((l) => !maxPrice || l.ask <= maxPrice)
     .filter((l) => !q.trim() || `${l.species} ${l.place} ${l.fisher}`.toLowerCase().includes(q.trim().toLowerCase()))
-    .sort((a, b) => (sort === 'price' ? a.ask - b.ask : sort === 'kg' ? b.kg - a.kg : b.postedAt - a.postedAt))
+    .sort((a, c) => (sort === 'price' ? a.ask - c.ask : sort === 'kg' ? c.kg - a.kg : c.postedAt - a.postedAt))
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-[28px]">Pier</h1>
-        <p className="text-sm text-ink-soft">Nearby catch from registered fisherfolk</p>
+        <h1 className="text-2xl sm:text-[28px]">{b('nav.pantalan')}</h1>
+        <p className="text-sm text-ink-soft">{b('pier.sub')}</p>
       </div>
 
-      {/* Search and filters */}
-      <div className="flex flex-wrap items-center gap-2 rounded-3xl border border-line bg-card/80 p-2 shadow-rest backdrop-blur-md">
-        <label className="flex min-h-11 min-w-48 flex-1 items-center gap-2 rounded-full bg-mint px-4">
-          <Search size={18} strokeWidth={1.8} className="text-teal" aria-hidden="true" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by fish, location, or seller..." aria-label="Search" className="w-full bg-transparent text-sm outline-none placeholder:text-ink-soft" />
+      {/* Search, then filters. On a phone the filters scroll sideways and open as a sheet from the bottom. */}
+      <div className="space-y-2 rounded-3xl border border-line bg-card/90 p-2 shadow-rest">
+        <label className="flex min-h-11 items-center gap-2 rounded-full bg-mint px-4">
+          <Search size={18} strokeWidth={1.8} className="shrink-0 text-teal" aria-hidden="true" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={b('pier.search')} aria-label={b('pier.search')} className="w-full min-w-0 bg-transparent text-base outline-none placeholder:text-ink-soft sm:text-sm" />
         </label>
-        <FilterMenu
-          title="Species"
-          value={species}
-          onChange={setSpecies}
-          buttonLabel={species === 'all' ? 'Species' : species}
-          options={[{ value: 'all', label: 'All species' }, ...speciesList.map((s) => ({ value: s, label: s }))]}
-        />
-        <FilterMenu
-          title="Location"
-          value={place}
-          onChange={setPlace}
-          buttonLabel={place === 'all' ? 'Location' : place}
-          options={[{ value: 'all', label: 'All locations' }, ...placeList.map((p) => ({ value: p, label: p }))]}
-        />
-        <FilterMenu
-          title="Price"
-          value={maxPrice}
-          onChange={setMaxPrice}
-          buttonLabel={maxPrice === 0 ? 'Price' : `Up to ₱${maxPrice}/kg`}
-          options={[{ value: 0, label: 'Any price' }, ...[100, 150, 200, 300].map((p) => ({ value: p, label: `Up to ₱${p}/kg` }))]}
-        />
-        <FilterMenu
-          title="Sort"
-          value={sort}
-          onChange={setSort}
-          align="right"
-          options={[
-            { value: 'newest' as Sort, label: 'Sort: Newest' },
-            { value: 'price' as Sort, label: 'Sort: Lowest price' },
-            { value: 'kg' as Sort, label: 'Sort: Biggest lot' },
-          ]}
-        />
+        <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:none] sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden">
+          <FilterMenu
+            title={b('pier.species')}
+            value={species}
+            onChange={setSpecies}
+            buttonLabel={species === 'all' ? b('pier.species') : species}
+            options={[{ value: 'all', label: b('pier.allspecies') }, ...speciesList.map((s) => ({ value: s, label: s }))]}
+          />
+          <FilterMenu
+            title={b('pier.place')}
+            value={place}
+            onChange={setPlace}
+            buttonLabel={place === 'all' ? b('pier.place') : place}
+            options={[{ value: 'all', label: b('pier.allplaces') }, ...placeList.map((p) => ({ value: p, label: p }))]}
+          />
+          <FilterMenu
+            title={b('pier.price')}
+            value={maxPrice}
+            onChange={setMaxPrice}
+            buttonLabel={maxPrice === 0 ? b('pier.price') : b('pier.upto', { n: maxPrice })}
+            options={[{ value: 0, label: b('pier.anyprice') }, ...[100, 150, 200, 300].map((p) => ({ value: p, label: b('pier.upto', { n: p }) }))]}
+          />
+          <FilterMenu
+            title={b('pier.sort')}
+            value={sort}
+            onChange={setSort}
+            align="right"
+            options={[
+              { value: 'newest' as Sort, label: b('sort.newest') },
+              { value: 'price' as Sort, label: b('sort.price') },
+              { value: 'kg' as Sort, label: b('sort.size') },
+            ]}
+          />
+        </div>
       </div>
 
       {list.length === 0 ? (
-        <p className="rounded-md border border-dashed border-line bg-card p-8 text-center text-ink-soft">No catch matches right now. Try clearing a filter.</p>
+        <p className="rounded-md border border-dashed border-line bg-card p-6 text-center text-sm text-ink-soft">{b('pier.empty')}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((l) => {
@@ -104,39 +108,35 @@ export default function BuyerPier() {
             return (
               <article key={l.id} className="overflow-hidden rounded-lg border border-line bg-card shadow-rest">
                 <div className="relative">
-                  <FishPhoto species={l.species} className="h-40 w-full" />
-                  <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold ${badge.cls}`}>{badge.text}</span>
+                  <FishPhoto species={l.species} className="h-36 w-full sm:h-40" />
+                  <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold ${badge.cls}`}>{b(badge.key)}</span>
                   <button
                     type="button"
                     onClick={() => toggleSaved(l.id)}
                     aria-pressed={isSaved}
-                    aria-label={isSaved ? 'Remove from saved' : 'Save this catch'}
-                    className="absolute right-3 top-3 grid size-9 place-items-center rounded-full bg-card/90 text-coral-dark shadow-rest"
+                    aria-label={isSaved ? b('pier.unsave') : b('pier.save')}
+                    className="absolute right-2 top-2 grid size-11 place-items-center rounded-full bg-card/90 text-coral-dark shadow-rest"
                   >
-                    <Heart size={18} strokeWidth={1.8} fill={isSaved ? 'currentColor' : 'none'} aria-hidden="true" />
+                    <Heart size={20} strokeWidth={1.8} fill={isSaved ? 'currentColor' : 'none'} aria-hidden="true" />
                   </button>
                 </div>
                 <div className="space-y-3 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="font-numeral text-xl font-bold leading-tight">{l.species}</h3>
-                      <p className="text-xs text-ink-soft">Fresh catch · {l.place}</p>
+                      <h3 className="truncate font-numeral text-xl font-bold leading-tight">{l.species}</h3>
+                      <p className="truncate text-sm text-ink-soft">{l.fisher} · {l.place}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-numeral text-xl font-bold leading-tight text-teal">₱{l.ask}/kg</p>
-                      <p className="text-xs text-ink-soft">{l.kg} kg available</p>
+                    <div className="shrink-0 text-right">
+                      <p className="font-numeral text-xl font-bold leading-tight text-teal">{b('c.perkg', { n: l.ask })}</p>
+                      <p className="text-xs text-ink-soft">{b('pier.kgleft', { n: l.kg })}</p>
                     </div>
                   </div>
-                  <p className="flex items-center gap-2 text-sm">
-                    <span className="grid size-8 place-items-center rounded-full bg-seafoam text-xs font-bold text-teal">{l.fisher.slice(0, 1)}</span>
-                    <span className="min-w-0"><span className="block truncate font-semibold leading-tight">{l.fisher}</span><span className="block text-xs text-ink-soft">Fisherfolk</span></span>
-                  </p>
                   <button
                     type="button"
                     onClick={() => navigate('/buyer/offers')}
                     className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full border-2 border-teal text-sm font-semibold text-teal transition active:scale-[0.98]"
                   >
-                    View Offer <ArrowRight size={16} aria-hidden="true" />
+                    {b('pier.view')} <ArrowRight size={16} aria-hidden="true" />
                   </button>
                 </div>
               </article>

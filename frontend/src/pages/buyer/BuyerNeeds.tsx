@@ -181,12 +181,12 @@ export default function BuyerNeeds() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-[26px]">{b('needs.title')}</h1>
           <p className="text-ink-soft">{b('needs.sub')}</p>
         </div>
-        <button type="button" onClick={() => setParams({ new: '1' })} className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-coral px-4 text-sm font-semibold text-deep"><KnotPlusIcon size={20} />{b('needs.new')}</button>
+        <button type="button" onClick={() => setParams({ new: '1' })} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-coral px-4 text-sm font-semibold text-deep sm:w-auto sm:shrink-0"><KnotPlusIcon size={20} />{b('needs.new')}</button>
       </div>
 
       {actErr && <p role="alert" className="rounded-md bg-risk-critical-bg p-3 text-sm font-semibold text-risk-critical">{actErr}</p>}
@@ -198,10 +198,10 @@ export default function BuyerNeeds() {
         </section>
       )}
 
-            <div role="tablist" aria-label="Needs" className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label="Needs" className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
         {NEED_TABS.map((x) => (
           <button key={x.id} type="button" role="tab" aria-selected={tab === x.id} onClick={() => setTab(x.id)}
-            className={`min-h-11 rounded-full border px-4 text-sm font-semibold transition ${tab === x.id ? 'border-teal bg-teal text-on-accent' : 'border-line bg-card/80 text-navy hover:bg-seafoam'}`}>
+            className={`min-h-11 min-w-0 rounded-full border px-2 text-sm font-semibold transition sm:px-4 ${tab === x.id ? 'border-teal bg-teal text-on-accent' : 'border-line bg-card/80 text-navy hover:bg-seafoam'}`}>
             {x.label} ({mine.filter((n) => kindOf(n) === x.id).length})
           </button>
         ))}
@@ -219,23 +219,25 @@ export default function BuyerNeeds() {
             const accepted = inbox.offers.find((o) => o.needId === n.id && o.status === 'accepted')
             return (
               <li key={n.id} className={`rounded-lg border border-line bg-card/90 p-4 shadow-rest ${n.open || accepted ? '' : 'opacity-60'}`}>
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-3">
                   <span className="grid size-12 shrink-0 place-items-center rounded-full bg-seafoam text-teal"><Fish size={24} strokeWidth={1.8} aria-hidden="true" /></span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-numeral text-lg font-bold leading-tight">{n.species} · {n.kg} kg</span>
-                    <span className="block truncate text-sm text-ink-soft">{b(`when.${n.when}` as 'when.today')}</span>
+                  <span className="min-w-0 flex-1 basis-40">
+                    <span className="block break-words font-numeral text-lg font-bold leading-tight">{n.species} · {n.kg} kg</span>
+                    <span className="block text-sm text-ink-soft">{b(`when.${n.when}` as 'when.today')}</span>
                   </span>
-                  <span className="text-right">
-                    <span className="block font-numeral text-lg font-bold text-teal">{n.maxPrice ? `₱${n.maxPrice}/kg` : b('needs.nomax')}</span>
-                    <span className="block text-xs text-ink-soft">Max price</span>
-                  </span>
-                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${!n.open ? 'bg-mint text-ink-soft' : k ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft'}`}>
-                    {!n.open ? b('needs.closed') : k ? b('home.needs.match', { n: k }) : b('home.needs.nomatch')}
-                  </span>
+                  <div className="flex w-full min-w-0 items-center justify-between gap-3 sm:contents">
+                    <span className="text-left sm:text-right">
+                      <span className="block font-numeral text-lg font-bold text-teal">{n.maxPrice ? `₱${n.maxPrice}/kg` : b('needs.nomax')}</span>
+                      <span className="block text-xs text-ink-soft">Max price</span>
+                    </span>
+                    <span className={`rounded-full px-3 py-1 text-center text-xs font-bold ${!n.open ? 'bg-mint text-ink-soft' : k ? 'bg-seafoam text-teal' : 'bg-mint text-ink-soft'}`}>
+                      {!n.open ? b('needs.closed') : k ? b('home.needs.match', { n: k }) : b('home.needs.nomatch')}
+                    </span>
+                  </div>
                   {n.open && (
-                    <span className="flex gap-2">
-                      {k > 0 && <Link to="/buyer/offers" className="inline-flex min-h-11 items-center rounded-full bg-teal px-5 text-sm font-semibold text-on-accent transition active:scale-[0.98]">{b('needs.view')}</Link>}
-                      <button type="button" onClick={() => { cancelNeed(n.id).then(reload).catch(() => reload()) }} className="min-h-11 rounded-full border-2 border-coral px-5 text-sm font-semibold text-coral-dark transition active:scale-[0.98]">{b('needs.close')}</button>
+                    <span className="flex w-full gap-2 sm:w-auto">
+                      {k > 0 && <Link to="/buyer/offers" className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full bg-teal px-5 text-sm font-semibold text-on-accent transition active:scale-[0.98] sm:flex-none">{b('needs.view')}</Link>}
+                      <button type="button" onClick={() => { cancelNeed(n.id).then(reload).catch(() => reload()) }} className="min-h-11 flex-1 rounded-full border-2 border-coral px-5 text-sm font-semibold text-coral-dark transition active:scale-[0.98] sm:flex-none">{b('needs.close')}</button>
                     </span>
                   )}
                 </div>

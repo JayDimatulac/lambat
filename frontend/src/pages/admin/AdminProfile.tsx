@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { KeyRound, UserRound } from 'lucide-react'
-import { api } from '../../lib/api'
+import { api, setToken } from '../../lib/api'
 import { useUser } from '../../lib/auth'
 import { useSettings } from '../../lib/settings'
 import { localeOf } from '../../lib/time'
@@ -31,7 +31,8 @@ export default function AdminProfile() {
     if (pw !== again) { setMsg(A('ma.mismatch')); return }
     setBusy(true); setMsg('')
     try {
-      await api.patch(CHANGE_PASSWORD_PATH, { currentPassword: cur, newPassword: pw })
+      const r = await api.post<{ token: string }>(CHANGE_PASSWORD_PATH, { currentPassword: cur, newPassword: pw })
+      setToken(r.token)
       toast(A('ma.changed')); setCur(''); setPw(''); setAgain('')
     } catch (e) {
       setMsg(e instanceof Error && e.message ? e.message : A('c.error'))

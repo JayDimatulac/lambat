@@ -1,4 +1,4 @@
-import { ArrowRight, CircleDollarSign, Recycle, ShieldCheck, Store } from 'lucide-react'
+import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Catch } from '../../data/mock'
 import { useT } from '../../lib/i18n'
@@ -31,7 +31,7 @@ export function ValueHero({ c }: { c: Catch | null }) {
   const glass = night ? 'border-white/30 bg-deep/70 text-white' : 'border-white/60 bg-white/75 text-deep'
 
   return (
-    <header className={`relative isolate overflow-hidden rounded-xl px-6 py-10 sm:px-10 ${ink}`}>
+    <header className={`relative isolate overflow-hidden rounded-xl px-5 py-6 sm:px-8 sm:py-7 ${ink}`}>
       {/* the picture; the gradient sits behind it as a fallback */}
       <div
         aria-hidden="true"
@@ -40,49 +40,22 @@ export function ValueHero({ c }: { c: Catch | null }) {
       />
       {/* keeps the text readable on top of the picture */}
       <div aria-hidden="true" className={`absolute inset-0 -z-10 ${shade}`} />
-      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div>
-          <h1 className="font-display text-4xl font-semibold leading-tight sm:text-5xl">
-            {t('va.h.title')}
-          </h1>
-          <p className={`mt-3 max-w-xl ${sub}`}>{t('va.h.sub')}</p>
+          <h1 className="font-display text-3xl font-semibold leading-tight sm:text-4xl">{t('va.h.title')}</h1>
+          <p className={`mt-2 max-w-xl text-sm sm:text-base ${sub}`}>{t('va.h.sub')}</p>
         </div>
         {c && (
-          <div className={`rounded-lg border p-4 backdrop-blur-sm ${glass}`}>
-            <p className="text-sm font-semibold opacity-85">{t('va.selected')}</p>
-            <p className="my-2 text-xl font-bold">{c.species} · {c.kg} kg</p>
+          <div className={`rounded-lg border p-3 backdrop-blur-sm ${glass}`}>
+            <p className="text-xs font-semibold opacity-85">{t('va.selected')}</p>
+            <p className="my-1 text-lg font-bold">{c.species} · {c.kg} kg</p>
             <RiskBadge level={c.risk} />
-            <Link className="mt-2 flex min-h-11 items-center gap-2 font-semibold underline" to={`/catches/${c.id}`}>
+            <Link className="mt-1.5 flex min-h-10 items-center gap-2 text-sm font-semibold underline" to={`/catches/${c.id}`}>
               {t('va.viewcatch')} <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         )}
       </div>
     </header>
-  )
-}
-
-const benefits = [
-  { icon: CircleDollarSign, title: 'va.ben1.t', description: 'va.ben1.d' },
-  { icon: Store, title: 'va.ben2.t', description: 'va.ben2.d' },
-  { icon: Recycle, title: 'va.ben3.t', description: 'va.ben3.d' },
-  { icon: ShieldCheck, title: 'va.ben4.t', description: 'va.ben4.d' },
-] as const
-
-export function BenefitStrip() {
-  const t = useT()
-
-  return (
-    <ul className="grid gap-4 rounded-lg border border-line bg-card p-4 sm:grid-cols-2 xl:grid-cols-4">
-      {benefits.map(({ icon: Icon, title, description }) => (
-        <li key={title} className="flex items-start gap-3">
-          <Icon size={22} className="shrink-0 text-teal" aria-hidden="true" />
-          <div>
-            <p className="font-semibold">{t(title)}</p>
-            <p className="text-sm text-ink-soft">{t(description)}</p>
-          </div>
-        </li>
-      ))}
-    </ul>
   )
 }

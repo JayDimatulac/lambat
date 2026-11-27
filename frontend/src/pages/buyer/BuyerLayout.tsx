@@ -20,7 +20,7 @@ type Icon = ComponentType<{ size?: number; strokeWidth?: number; className?: str
 type Item = { to: string; label?: BKey; raw?: string; icon: Icon; end?: boolean }
 
 const NEED = '/buyer/needs'
-const DASH: Item = { to: '/buyer', raw: 'Dashboard', icon: LayoutDashboard, end: true }
+const DASH: Item = { to: '/buyer', label: 'nav.home', icon: LayoutDashboard, end: true }
 const PIER: Item = { to: '/buyer/pier', label: 'nav.pantalan', icon: PierIcon }
 const OFFERS: Item = { to: '/buyer/offers', label: 'nav.offers', icon: CrateIcon }
 const NEEDS: Item = { to: NEED, label: 'nav.needs', icon: KnotPlusIcon }
@@ -266,7 +266,7 @@ export default function BuyerLayout() {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-[1440px] px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-5 lg:px-8 lg:pb-10"><Outlet /></main>
+        <main className="mx-auto w-full min-w-0 max-w-[1440px] px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-5 lg:px-8 lg:pb-10"><Outlet /></main>
       </div>
 
       {/* Phone bar: Dashboard, Pier, the float, Orders and More */}

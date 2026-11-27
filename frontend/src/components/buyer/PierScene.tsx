@@ -16,7 +16,7 @@ export default function PierScene({ lots, header }: { lots: { id: string; risk: 
     : 'linear-gradient(180deg, #8fd3e3, #d6eff1 55%, #3a9bab)'
 
   return (
-    <section className="relative aspect-[2/1] min-h-[200px] overflow-hidden rounded-lg shadow-raised" style={{ background: fallback }}>
+    <section className="relative aspect-[2/1] min-h-[200px] w-full min-w-0 max-w-full overflow-hidden rounded-lg shadow-raised" style={{ background: fallback }}>
       <img src={night ? nightImg : dayImg} alt="" className="absolute inset-0 size-full object-cover" />
 
       {/* a soft shade at the top so the white greeting is easy to read */}

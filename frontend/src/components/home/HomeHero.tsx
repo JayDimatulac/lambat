@@ -9,7 +9,7 @@ export default function HomeHero({ greeting, name, place }: { greeting: string; 
   const { theme } = useSettings()
   const night = theme === 'night'
   return (
-    <section className="relative h-[168px] overflow-hidden rounded-3xl border border-line shadow-rest">
+    <section className="relative h-42 overflow-hidden rounded-3xl border border-line shadow-rest">
       <img
         src={night ? nightImg : dayImg}
         alt=""
@@ -18,7 +18,7 @@ export default function HomeHero({ greeting, name, place }: { greeting: string; 
         className="absolute inset-0 size-full object-cover object-[50%_20%]"
       />
       {/* keeps the white text readable over the sky */}
-      <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-deep/70 via-deep/30 to-transparent" />
+      <div aria-hidden="true" className="absolute inset-0 bg-linear-to-r from-deep/70 via-deep/30 to-transparent" />
       <div className="relative z-10 p-4">
         <h1 className="font-numeral text-2xl font-bold leading-tight text-white">
           {greeting}, {name} <span aria-hidden="true">👋</span>

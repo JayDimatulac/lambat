@@ -82,10 +82,10 @@ export default function BuyerHome() {
         <PierScene lots={open.map((l) => ({ id: l.id, risk: riskOf(l, m.now) }))} header={header} />
         <section
           aria-label={t('home.wx.title')}
-          className="relative flex items-center justify-between gap-4 overflow-hidden rounded-lg bg-gradient-to-b from-[var(--tide-sky-0)] to-[var(--tide-sea-1)] p-4 text-white shadow-raised lg:flex-col lg:items-stretch lg:p-5"
+          className="relative flex items-center justify-between gap-4 overflow-hidden rounded-lg bg-linear-to-b from-(--tide-sky-0) to-(--tide-sea-1) p-4 text-white shadow-raised lg:flex-col lg:items-stretch lg:p-5"
         >
           <img src={theme === 'night' ? wxNightImg : wxDayImg} alt="" className="absolute inset-0 size-full object-cover object-right" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/55" aria-hidden="true" />
+          <div className="absolute inset-0 bg-linear-to-b from-black/30 via-transparent to-black/55" aria-hidden="true" />
           <div className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
             <p className="font-numeral text-4xl font-bold leading-none lg:text-5xl">{loading ? '–' : temp}<span className="align-top text-xl lg:text-2xl">°C</span></p>
             <p className="mt-1 text-sm font-semibold">{t(`sky.${today.sky}`)}</p>

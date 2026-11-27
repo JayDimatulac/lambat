@@ -18,11 +18,11 @@ const TINT = {
 function Tile({ icon: Icon, label, value, tone, hint }: { icon: LIcon; label: string; value: number | string; tone: keyof typeof TINT; hint?: string }) {
   const [bg, ink] = TINT[tone]
   return (
-    <div title={hint} className={`flex items-center gap-4 rounded-lg border border-line p-4 shadow-rest ${bg}`}>
-      <span className={`grid size-14 shrink-0 place-items-center rounded-full bg-card/70 ${ink}`}><Icon size={28} strokeWidth={1.8} /></span>
-      <span>
-        <span className="block font-semibold">{label}</span>
-        <b className="block font-numeral text-4xl font-bold leading-tight">{value}</b>
+    <div title={hint} className={`flex min-w-0 flex-col items-start gap-2 rounded-lg border border-line p-3 shadow-rest sm:flex-row sm:items-center sm:gap-4 sm:p-4 ${bg}`}>
+      <span className={`grid size-11 shrink-0 place-items-center rounded-full bg-card/70 sm:size-14 ${ink}`}><Icon size={28} strokeWidth={1.8} /></span>
+      <span className="min-w-0 max-w-full">
+        <span className="block text-sm font-semibold leading-tight sm:text-base">{label}</span>
+        <b className="block font-numeral text-3xl font-bold leading-tight sm:text-4xl">{value}</b>
       </span>
     </div>
   )

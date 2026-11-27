@@ -16,13 +16,13 @@ export const initialsOf = (s: string) =>
 // a select with a leading icon, used for the date and area filters
 export function Pick({ icon: Icon, value, onChange, label, children }: { icon: LIcon; value: string; onChange: (v: string) => void; label: string; children: ReactNode }) {
   return (
-    <label className="relative">
+    <label className="relative min-w-0 max-w-full">
       <Icon size={18} strokeWidth={1.8} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-teal" />
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="min-h-12 cursor-pointer appearance-none rounded-xl border border-line bg-card pl-11 pr-10 text-sm font-semibold shadow-rest outline-none transition focus:border-teal"
+        className="min-h-12 max-w-full cursor-pointer appearance-none truncate rounded-xl border border-line bg-card pl-11 pr-10 text-sm font-semibold shadow-rest outline-none transition focus:border-teal"
       >
         {children}
       </select>
@@ -31,7 +31,6 @@ export function Pick({ icon: Icon, value, onChange, label, children }: { icon: L
   )
 }
 
-// the standard card: an icon, a title, an optional action, then the content
 // the standard card: an icon, a title, an optional action, then the content
 export function Panel({ icon: Icon, title, sub, action, children, flush, center }: { icon?: LIcon; title?: string; sub?: string; action?: ReactNode; children: ReactNode; flush?: boolean; center?: boolean }) {
   const head = !!(title || action)
@@ -149,8 +148,8 @@ export function Toggle({ checked, onChange, label }: { checked: boolean; onChang
       <span className={`absolute top-1 size-6 rounded-full bg-card shadow-rest transition-all ${checked ? 'left-7' : 'left-1'}`} />
     </button>
   )
-
 }
+
 const TILE = {
   blue: ['bg-seafoam/70', 'text-teal'],
   amber: ['bg-risk-moderate-bg', 'text-risk-moderate'],
@@ -161,20 +160,19 @@ const TILE = {
 // the tinted count card used on the dashboards
 export function Tile({ icon: Icon, label, value, tone, to }: { icon: LIcon; label: string; value: ReactNode; tone: keyof typeof TILE; to?: string }) {
   const [bg, ink] = TILE[tone]
-  const cls = `flex min-w-0 items-center gap-4 rounded-lg border border-line p-4 shadow-rest ${bg}`
+  const cls = `flex min-w-0 flex-col items-start gap-2 rounded-lg border border-line p-3 shadow-rest sm:flex-row sm:items-center sm:gap-4 sm:p-4 ${bg}`
   const body = (
     <>
-      <span className={`grid size-14 shrink-0 place-items-center rounded-full bg-card/70 ${ink}`}><Icon size={28} strokeWidth={1.8} /></span>
-      <span className="min-w-0">
-        <span className="block truncate font-semibold">{label}</span>
-        <b className="block font-numeral text-4xl font-bold leading-tight tabular-nums">{value}</b>
+      <span className={`grid size-11 shrink-0 place-items-center rounded-full bg-card/70 sm:size-14 ${ink}`}><Icon size={28} strokeWidth={1.8} /></span>
+      <span className="min-w-0 max-w-full">
+        <span className="block text-sm font-semibold leading-tight sm:text-base">{label}</span>
+        <b className="block font-numeral text-3xl font-bold leading-tight tabular-nums sm:text-4xl">{value}</b>
       </span>
     </>
   )
   return to ? <Link to={to} className={`${cls} transition hover:-translate-y-0.5 hover:shadow-raised`}>{body}</Link> : <div className={cls}>{body}</div>
 }
 
-// a dialog in the middle of the screen: Esc or a tap outside closes it
 // a dialog in the middle of the screen: Esc or a tap outside closes it
 export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: ReactNode; wide?: boolean }) {
   useEffect(() => {

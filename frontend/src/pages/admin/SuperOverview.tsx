@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, CalendarDays, ChevronRight, ClipboardList, Fish, MapPin, Megaphone, ShoppingCart, UserCheck, UserPlus, Users } from 'lucide-react'
 import { api } from '../../lib/api'
-import { fmtWeight, useAdminOverview, whenLabel } from '../../lib/adminApi'
+import { fmtWeight, useAdminOverview } from '../../lib/adminApi'
 import { useAuth } from '../../lib/auth'
 import { useSettings } from '../../lib/settings'
 import { localeOf } from '../../lib/time'
@@ -95,7 +95,7 @@ export default function SuperOverview() {
           flush
           icon={Megaphone}
           title={A('ov.advisory')}
-          action={<Link to="/admin/advisory-review" className="inline-flex items-center gap-1 text-sm font-semibold text-teal hover:underline">{A('ov.all')} <ArrowRight size={15} aria-hidden /></Link>}
+          action={<Link to="/admin/advisory-review" className="type-link inline-flex items-center gap-1 hover:underline">{A('ov.all')} <ArrowRight size={15} aria-hidden /></Link>}
         >
           {live.length === 0 ? (
             <Empty icon={Megaphone} text={A('ar.empty.published')} />
@@ -106,8 +106,8 @@ export default function SuperOverview() {
                   <Link to="/admin/advisory-review" className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-seafoam/30">
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-seafoam text-teal"><Megaphone size={20} strokeWidth={1.8} /></span>
                     <span className="min-w-0 flex-1">
-                      <b className="block truncate text-[15px] leading-tight">{r.title}</b>
-                      <span className="mt-0.5 flex items-center gap-2 text-xs text-ink-soft">
+                      <b className="type-body-medium block truncate">{r.title}</b>
+                      <span className="type-caption mt-0.5 flex items-center gap-2 text-ink-soft">
                         <Badge tone="slate">{A(audKey(r.audience))}</Badge>
                         {new Date(r.createdAt).toLocaleDateString(loc, { month: 'short', day: 'numeric' })}
                       </span>
@@ -130,9 +130,9 @@ export default function SuperOverview() {
             {parts.map((p) => (
               <li key={p.name} className="flex items-center gap-3 py-3.5">
                 <i className="size-2.5 shrink-0 rounded-full" style={{ background: p.color }} />
-                <span className="flex-1 font-semibold">{p.name}</span>
-                <b className="font-numeral text-lg tabular-nums">{kg(p.n)}</b>
-                <span className="w-12 text-right text-sm tabular-nums text-ink-soft">{total > 0 ? Math.round((p.n / total) * 100) : 0}%</span>
+                <span className="type-body-medium flex-1">{p.name}</span>
+                <b className="type-body-medium tabular-nums">{kg(p.n)}</b>
+                <span className="type-caption w-12 text-right tabular-nums text-ink-soft"></span>
               </li>
             ))}
           </ul>
@@ -145,14 +145,14 @@ export default function SuperOverview() {
           action={<Link to="/admin/activity" className="inline-flex items-center gap-1 text-sm font-semibold text-teal hover:underline">{A('ov.log')} <ArrowRight size={15} aria-hidden /></Link>}
         >
           <ul className="divide-y divide-line border-t border-line">
-            {data.activity.length === 0 && <li className="px-5 py-8 text-center text-sm text-ink-soft">{A('ov.nothing')}</li>}
+            {data.activity.length === 0 && <li className="type-body px-5 py-8 text-center text-ink-soft">{A('ov.nothing')}</li>}
             {data.activity.slice(0, 5).map((a, i) => {
               const I = KIND[a.kind] ?? UserCheck
               return (
-                <li key={i} className="flex items-center gap-3 px-5 py-3 text-sm">
+                <li key={i} className="type-body flex items-center gap-3 px-5 py-3">
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-seafoam text-teal"><I size={16} strokeWidth={1.8} /></span>
-                  <span className="min-w-0 flex-1 truncate"><b>{a.title}</b> <span className="text-ink-soft">– {a.sub}</span></span>
-                  <span className="shrink-0 text-xs text-ink-soft">{whenLabel(a.at)}</span>
+                  <span className="min-w-0 flex-1 truncate"><span className="type-body-medium">{a.title}</span> <span className="text-ink-soft">– {a.sub}</span></span>
+                  <span className="type-caption shrink-0 text-ink-soft"></span>
                 </li>
               )
             })}

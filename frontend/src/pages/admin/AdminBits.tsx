@@ -5,10 +5,10 @@ import { ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 
 export type LIcon = ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
 
-export const inputCls = 'min-h-11 w-full rounded-lg border border-line bg-mint px-3.5 text-sm font-medium outline-none transition placeholder:text-ink-soft focus:border-teal focus:ring-2 focus:ring-teal/20'
-export const btnPrimary = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal px-5 text-sm font-bold text-on-accent shadow-rest transition hover:brightness-110 active:scale-[0.98] disabled:opacity-50'
-export const btnGhost = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-card px-4 text-sm font-semibold transition hover:bg-seafoam/60 active:scale-[0.98] disabled:opacity-50'
-export const btnDanger = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-risk-critical-line px-4 text-sm font-semibold text-risk-critical transition hover:bg-risk-critical-bg active:scale-[0.98] disabled:opacity-50'
+export const inputCls = 'type-body-medium min-h-11 w-full rounded-lg border border-line bg-mint px-3.5 outline-none'
+export const btnPrimary = 'type-label inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal px-5 text-on-accent'
+export const btnGhost = 'type-label inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-card px-4 transition'
+export const btnDanger = 'type-label inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-risk-critical-line px-4 text-risk-critical'
 
 export const initialsOf = (s: string) =>
   s.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || '?'
@@ -22,7 +22,7 @@ export function Pick({ icon: Icon, value, onChange, label, children }: { icon: L
         value={value}
         onChange={(e) => onChange(e.target.value)}
         aria-label={label}
-        className="min-h-12 max-w-full cursor-pointer appearance-none truncate rounded-xl border border-line bg-card pl-11 pr-10 text-sm font-semibold shadow-rest outline-none transition focus:border-teal"
+        className="min-h-12 cursor-pointer appearance-none rounded-xl border border-line bg-card pl-11 pr-10 text-sm font-semibold shadow-rest outline-none transition focus:border-teal"
       >
         {children}
       </select>
@@ -42,8 +42,8 @@ export function Panel({ icon: Icon, title, sub, action, children, flush, center 
             {Icon && <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-seafoam text-teal"><Icon size={20} strokeWidth={1.8} /></span>}
             {title && (
               <div className="min-w-0">
-                <h2 className="truncate font-display text-lg font-bold leading-tight tracking-tight">{title}</h2>
-                {sub && <p className="truncate text-sm text-ink-soft">{sub}</p>}
+                <h2 className="type-section truncate">{title}</h2>
+                {sub && <p className="type-caption truncate text-ink-soft">{sub}</p>}
               </div>
             )}
           </div>
@@ -67,12 +67,12 @@ export function Stat({ icon: Icon, label, value, unit, note, tone = 'teal' }: { 
     <div className="flex min-w-0 items-center gap-4 rounded-xl border border-line bg-card p-4 shadow-rest">
       <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${TINT[tone]}`}><Icon size={20} strokeWidth={1.8} /></span>
       <div className="min-w-0">
-        <p className="truncate text-sm font-semibold text-ink-soft">{label}</p>
-        <p className="font-numeral text-2xl font-bold leading-tight tabular-nums">
+        <p className="type-label truncate text-ink-soft">{label}</p>
+        <p className="type-number">
           {value}
-          {unit && <span className="ml-1 text-base font-semibold text-ink-soft">{unit}</span>}
+          {unit && <span className="type-label ml-1 text-ink-soft">{unit}</span>}
         </p>
-        {note && <p className="truncate text-xs text-ink-soft">{note}</p>}
+        {note && <p className="type-caption truncate text-ink-soft">{note}</p>}
       </div>
     </div>
   )
@@ -102,7 +102,7 @@ export function Empty({ icon: Icon, text }: { icon: LIcon; text: string }) {
   return (
     <div className="grid place-items-center gap-3 px-6 py-12 text-center">
       <span className="grid size-14 place-items-center rounded-full bg-seafoam text-teal"><Icon size={26} strokeWidth={1.8} /></span>
-      <p className="font-semibold text-ink-soft">{text}</p>
+      <p className="type-body-medium text-ink-soft">{text}</p>
     </div>
   )
 }
@@ -115,7 +115,7 @@ export function Seg<T extends string>({ value, onChange, items }: { value: T; on
         const on = i.k === value
         return (
           <button key={i.k} type="button" role="tab" aria-selected={on} onClick={() => onChange(i.k)}
-            className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-4 text-sm font-semibold transition ${on ? 'bg-card text-teal shadow-rest' : 'text-ink-soft hover:text-navy'}`}>
+            className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg px-4 type-label transition ${on ? 'bg-card text-teal shadow-rest' : 'text-ink-soft hover:text-navy'}`}>
             {i.label}
             {i.n !== undefined && <span className={`rounded-full px-2 py-0.5 text-xs font-bold tabular-nums ${on ? 'bg-seafoam text-teal' : 'bg-line/60'}`}>{i.n}</span>}
           </button>
@@ -163,10 +163,10 @@ export function Tile({ icon: Icon, label, value, tone, to }: { icon: LIcon; labe
   const cls = `flex min-w-0 flex-col items-start gap-2 rounded-lg border border-line p-3 shadow-rest sm:flex-row sm:items-center sm:gap-4 sm:p-4 ${bg}`
   const body = (
     <>
-      <span className={`grid size-11 shrink-0 place-items-center rounded-full bg-card/70 sm:size-14 ${ink}`}><Icon size={28} strokeWidth={1.8} /></span>
-      <span className="min-w-0 max-w-full">
-        <span className="block text-sm font-semibold leading-tight sm:text-base">{label}</span>
-        <b className="block font-numeral text-3xl font-bold leading-tight tabular-nums sm:text-4xl">{value}</b>
+      <span className={`grid size-14 shrink-0 place-items-center rounded-full bg-card/70 ${ink}`}><Icon size={28} strokeWidth={1.8} /></span>
+      <span className="min-w-0">
+        <span className="block truncate font-semibold">{label}</span>
+        <b className="block font-numeral text-4xl font-bold leading-tight tabular-nums">{value}</b>
       </span>
     </>
   )

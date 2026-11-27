@@ -80,7 +80,7 @@ export function WaveLines({ data, colors, names, height = 220, empty, unit = '',
 
   return (
     <div>
-      <div className="mb-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
+      <div className="type-label mb-2 flex flex-wrap gap-x-4 gap-y-1">
         {names.map((nm, i) => (
           <span key={nm} className="flex items-center gap-1.5"><i className="size-2.5 rounded-full" style={{ background: colors[i] }} />{nm}</span>
         ))}

@@ -262,8 +262,8 @@ export default function AdminLayout() {
                 <span aria-hidden="true" className="h-9 w-1 rounded-full bg-coral" />
                 {PageIcon && <PageIcon size={26} strokeWidth={1.8} className="shrink-0 text-teal" />}
                 <div className="leading-tight">
-                  <p className="font-display text-xl font-bold">{pageName}</p>
-                  <p className="text-sm font-medium text-ink-soft">{roleName}</p>
+                  <p className="type-topbar">{pageName}</p>
+                  <p className="type-caption text-ink-soft">{roleName}</p>
                 </div>
               </div>
 

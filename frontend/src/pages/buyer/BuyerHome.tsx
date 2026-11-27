@@ -36,6 +36,7 @@ export default function BuyerHome() {
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState('')
 
+  const lots = openListings(m).map((l) => ({ id: l.id, risk: riskOf(l, m.now) }))
   const waiting = inbox.offers.filter((o) => o.status === 'pending').sort((a, c) => c.createdAt - a.createdAt)
   const active = inbox.orders.filter((o) => o.status === 'confirmed' || o.status === 'onway').sort((a, c) => c.updatedAt - a.updatedAt)
   const needs = inbox.needs.filter((n) => n.open)

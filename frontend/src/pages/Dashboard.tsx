@@ -145,7 +145,7 @@ export default function Dashboard() {
   )
 
   return (
-    <div className="mx-auto grid w-full max-w-360 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
+    <div className="mx-auto grid w-full max-w-360 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:items-stretch lg:gap-5">
       {/* LEFT: timeline, the one primary action, quick actions, weekly utilization */}
       <div className="contents lg:flex lg:min-w-0 lg:flex-col lg:gap-4">
      {/* Phones: the sea comes first, in one row. It turns amber or red when it is not calm. */}

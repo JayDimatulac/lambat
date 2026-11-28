@@ -36,8 +36,8 @@ export default function LifebuoyTimer({ leftMins, hoursLabel, size = 96 }: Props
         <circle cx="50" cy="50" r={R - WIDTH / 2} fill="none" stroke="rgba(0,0,0,0.25)" strokeWidth="1.5" />
       </svg>
       <div className="absolute inset-0 grid place-content-center text-center text-white">
-        <span className="font-numeral text-[26px] font-bold leading-none tabular-nums">{value}</span>
-        <span className="mt-0.5 text-xs font-semibold leading-none">{unit}</span>
+        <span className="font-numeral font-bold leading-none tabular-nums" style={{ fontSize: Math.round(size * 0.31) }}>{value}</span>
+        <span className="mt-0.5 font-semibold leading-none" style={{ fontSize: Math.max(11, Math.round(size * 0.143)) }}>{unit}</span>
       </div>
     </div>
   )

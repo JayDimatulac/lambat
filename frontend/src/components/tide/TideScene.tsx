@@ -16,10 +16,10 @@ const TRAVEL = 88
 const LANE = 84
 
 // Compact version (phone Home hero): a shorter sea so the catch strip sits higher on the screen.
-const C_SKY = 100
-const C_TRAVEL = 60
-const C_SEABED = 24
-const C_PAD = 12
+const C_SKY = 92
+const C_TRAVEL = 44
+const C_SEABED = 18
+const C_PAD = 8
 
 // Narrow containers (phones) get their own layout: one full catch and a peek of the next, swiping sideways.
 const PHONE_MAX = 560 // container width in px below which the scene swipes
@@ -244,7 +244,7 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
             </div>
 
             {/* LABELS: one per buoy, always readable on a plain surface */}
-            {compact && n > 0 && <p className="border-t border-line px-4 pt-2 text-center text-xs text-ink-soft">{t('home.hours.left')}</p>}
+
             <div className="grid px-0" style={cols}>
               {catches.map((c, i) => {
                 const r = RISK[c.risk]
@@ -261,26 +261,30 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
                       onMouseLeave={() => hide(i)}
                       onFocus={() => show(i)}
                       onBlur={() => hide(i)}
-                      className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-2' : 'py-3'}`}
+                      className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-1.5' : 'py-2.5'}`}
                     >
                       {compact ? (
                         <>
                           {flagFirst && needsAttention(c) && (
-                            <span className="text-xs font-semibold leading-none text-risk-moderate">{t('home.first')}</span>
+                            <span className="rounded-full bg-cream px-2 py-1 text-xs font-bold leading-none text-deep">{t('home.first')}</span>
                           )}
-                          <span className="max-w-full truncate text-[15px] font-semibold leading-tight">{c.species}</span>
-                          <span className={`inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold leading-tight ${r.text}`}>
-                            <Icon size={13} strokeWidth={2.4} aria-hidden />
-                            {range} {t('unit.hours')}
+                          <span className="max-w-full truncate text-base font-bold leading-tight">{c.species}</span>
+                          <span className={`inline-flex items-baseline gap-1 whitespace-nowrap leading-tight tabular-nums ${r.text}`}>
+                            <Icon size={13} strokeWidth={2.6} aria-hidden className="self-center" />
+                            <span className="text-base font-bold">{range}</span>
+                            <span className="text-xs font-medium text-ink-soft">{t('unit.hours')}</span>
                           </span>
                         </>
                       ) : (
                         <>
-                          <span className="max-w-full truncate text-base font-bold leading-tight">{c.species}</span>
-                          <span className="text-sm text-ink-soft">{c.kg} kg</span>
-                          <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-3 py-1 text-sm font-bold ${r.text} ${r.bg} ${r.line}`}>
-                            <Icon size={14} strokeWidth={2.4} aria-hidden />
-                            {range}h
+                          <span aria-hidden="true" className="h-1 w-8 rounded-full" style={{ background: r.fill }} />
+                          <span className="max-w-full truncate text-[15px] font-bold leading-tight">{c.species}</span>
+                          <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-sm leading-tight">
+                            <span className={`inline-flex items-center gap-1 whitespace-nowrap font-bold tabular-nums ${r.text}`}>
+                              <Icon size={14} strokeWidth={2.6} aria-hidden />
+                              {range}<span className="text-xs font-medium text-ink-soft">h</span>
+                            </span>
+                            <span className="whitespace-nowrap text-ink-soft">{c.kg} kg</span>
                           </span>
                         </>
                       )}

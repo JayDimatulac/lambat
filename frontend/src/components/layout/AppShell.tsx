@@ -153,7 +153,7 @@ function Rail({ open }: { open: boolean }) {
   )
 }
 
-const cell = 'relative flex min-h-16 min-w-0 flex-col items-center justify-center gap-0.5 text-[12px] font-semibold min-[390px]:text-[13px]'
+const cell = 'relative flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 text-[12px] font-semibold min-[390px]:text-[13px]'
 
 function TabLook({ active, icon: Icon, label }: { active: boolean; icon: Icon; label: string }) {
   return (
@@ -183,8 +183,8 @@ function BottomBar({ moreOpen, onMore }: { moreOpen: boolean; onMore: () => void
       {link(home)}
       {link(catches)}
       {/* the float: a small round button, the label is for screen readers only */}
-      <div className="relative flex min-h-16 items-start justify-center">
-        <div className="-mt-6"><FloatButton size="sm" /></div>
+      <div className="relative flex min-h-14 items-start justify-center">
+        <div className="-mt-5"><FloatButton size="sm" /></div>
       </div>
       {link(buyers)}
       <button type="button" onClick={onMore} aria-haspopup="dialog" aria-expanded={moreOpen} className={cell}>
@@ -342,9 +342,9 @@ export default function AppShell() {
       <Rail open={railOpen} />
       <div className="min-w-0 flex-1">
         {/* Top bar: a floating glass bar that lines up with the page content */}
-        <header className="sticky top-0 z-30 pt-3">
+        <header className="sticky top-0 z-30 pt-2 lg:pt-3">
           <div className="mx-auto max-w-[1440px] px-4 lg:px-8">
-            <div className="relative flex h-16 items-center justify-between gap-2 rounded-3xl border border-line bg-card/80 pl-3 pr-2 shadow-rest backdrop-blur-md sm:gap-3 sm:pl-4">
+            <div className="relative flex h-14 items-center justify-between gap-2 rounded-3xl border border-line bg-card/80 pl-3 pr-2 shadow-rest backdrop-blur-md sm:gap-3 sm:pl-4 lg:h-16">
               {/* Phones and tablets: the logo. Desktop: where you are. */}
               <Link to="/home" aria-label="LAMBAT" className="flex shrink-0 items-center gap-2 lg:hidden">
                 <img src={emblem} alt="" width={40} height={40} draggable={false} className="size-10 shrink-0 rounded-full" />

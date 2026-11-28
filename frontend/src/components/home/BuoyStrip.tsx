@@ -30,10 +30,10 @@ export default function BuoyStrip({ catches }: { catches: Catch[] }) {
           const r = RISK[c.risk]
           const done = !!c.outcome
           return (
-            <li key={c.id} className="w-[60%] max-w-64 shrink-0 snap-start">
+            <li key={c.id} className="w-[56%] max-w-60 shrink-0 snap-start">
               <Link
                 to={`/catches/${c.id}`}
-                className={`relative flex h-full min-h-24 items-center gap-3 overflow-hidden rounded-2xl border border-line bg-card px-3 py-3 shadow-rest transition active:scale-[0.98] ${done ? 'opacity-80' : ''}`}
+                className={`relative flex h-full min-h-20 items-center gap-2.5 overflow-hidden rounded-2xl border border-line bg-card px-3 py-2.5 shadow-rest transition active:scale-[0.98] ${done ? 'opacity-80' : ''}`}
               >
                 {/* a faint fish of its own kind in the corner, and a soft wave along the bottom */}
                 <FishShape shape={c.shape} className="pointer-events-none absolute -right-3 -top-1 h-11 w-[5.5rem] -rotate-6 text-teal opacity-[0.08]" />
@@ -42,25 +42,25 @@ export default function BuoyStrip({ catches }: { catches: Catch[] }) {
                 </svg>
 
                 {/* a tiny tide gauge: the lower the buoy sits, the less time is left */}
-                <span aria-hidden="true" className="relative h-16 w-9 shrink-0 overflow-hidden rounded-full border border-line bg-linear-to-b from-seafoam/40 to-seafoam">
-                  <span className="absolute left-1/2 w-9 -translate-x-1/2 transition-all" style={{ top: done ? 26 : `${Math.round(sunkFor(c) * 26)}px`, color: done ? 'var(--color-ink-soft)' : r.fill }}>
-                    <BuoyIcon size={36} />
+                <span aria-hidden="true" className="relative h-14 w-8 shrink-0 overflow-hidden rounded-full border border-line bg-linear-to-b from-seafoam/40 to-seafoam">
+                  <span className="absolute left-1/2 w-8 -translate-x-1/2 transition-all" style={{ top: done ? 22 : `${Math.round(sunkFor(c) * 22)}px`, color: done ? 'var(--color-ink-soft)' : r.fill }}>
+                    <BuoyIcon size={32} />
                   </span>
                 </span>
 
                 <span className="relative min-w-0">
-                  <span className="line-clamp-2 block text-base font-bold leading-tight">{c.species}</span>
-                  <span className={`mt-1 flex items-baseline gap-1 whitespace-nowrap tabular-nums ${done ? 'text-ink-soft' : r.text}`}>
+                  <span className="line-clamp-2 block text-[15px] font-bold leading-tight">{c.species}</span>
+                  <span className={`mt-0.5 flex items-baseline gap-1 whitespace-nowrap tabular-nums ${done ? 'text-ink-soft' : r.text}`}>
                     {done ? (
                       <span className="text-sm font-semibold">{t(`tally.${c.outcome!}`)}</span>
                     ) : (
                       <>
-                        <span className="text-base font-bold">{rangeText(c.hoursMin, c.hoursMax)}</span>
+                        <span className="text-[15px] font-bold">{rangeText(c.hoursMin, c.hoursMax)}</span>
                         <span className="text-xs font-medium text-ink-soft">{t('unit.hours')}</span>
                       </>
                     )}
                   </span>
-                  <span className="mt-1.5 inline-block rounded-full bg-seafoam/70 px-2 py-0.5 text-xs font-semibold text-ink-soft">{c.kg} kg</span>
+                  <span className="mt-0.5 block text-xs font-medium text-ink-soft">{c.kg} kg</span>
                 </span>
               </Link>
             </li>

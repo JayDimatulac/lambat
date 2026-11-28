@@ -16,10 +16,10 @@ const TRAVEL = 88
 const LANE = 84
 
 // Compact version (phone Home hero): a shorter sea so the catch strip sits higher on the screen.
-const C_SKY = 100
-const C_TRAVEL = 60
-const C_SEABED = 24
-const C_PAD = 12
+const C_SKY = 92
+const C_TRAVEL = 44
+const C_SEABED = 18
+const C_PAD = 8
 
 // Narrow containers (phones) get their own layout: one full catch and a peek of the next, swiping sideways.
 const PHONE_MAX = 560 // container width in px below which the scene swipes
@@ -244,7 +244,7 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
             </div>
 
             {/* LABELS: one per buoy, always readable on a plain surface */}
-            {compact && n > 0 && <p className="border-t border-line px-4 pt-2 text-center text-xs text-ink-soft">{t('home.hours.left')}</p>}
+
             <div className="grid px-0" style={cols}>
               {catches.map((c, i) => {
                 const r = RISK[c.risk]
@@ -261,7 +261,7 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
                       onMouseLeave={() => hide(i)}
                       onFocus={() => show(i)}
                       onBlur={() => hide(i)}
-                      className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-2' : 'py-2.5'}`}
+                      className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-1.5' : 'py-2.5'}`}
                     >
                       {compact ? (
                         <>

@@ -29,7 +29,7 @@ export default function SeaStatus({ forecast }: { forecast: Forecast }) {
     <Link
       to="/weather"
       aria-label={t('home.wx.title')}
-      className={`relative flex min-h-20 items-center gap-3 overflow-hidden rounded-2xl border px-4 py-3 shadow-rest transition active:scale-[0.99] lg:hidden ${LOOK[level]}`}
+      className={`relative flex min-h-16 items-center gap-3 overflow-hidden rounded-2xl border px-3.5 py-2.5 shadow-rest transition active:scale-[0.99] lg:hidden ${LOOK[level]}`}
     >
       {/* two soft waves along the bottom edge */}
       <svg aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-6 w-full text-teal" viewBox="0 0 200 24" preserveAspectRatio="none">
@@ -37,17 +37,17 @@ export default function SeaStatus({ forecast }: { forecast: Forecast }) {
         <path d="M0 17q12.5-7 25 0t25 0t25 0t25 0t25 0t25 0t25 0t25 0V24H0Z" fill="currentColor" opacity="0.1" />
       </svg>
 
-      <span className="relative grid size-12 shrink-0 place-items-center rounded-full bg-card/80 text-teal shadow-rest">
-        <SkyIcon size={28} strokeWidth={1.6} aria-hidden="true" />
+      <span className="relative grid size-10 shrink-0 place-items-center rounded-full bg-card/80 text-teal shadow-rest">
+        <SkyIcon size={24} strokeWidth={1.6} aria-hidden="true" />
       </span>
 
       <span className="relative min-w-0 flex-1">
         <span className="flex items-baseline gap-2">
-          <span className="font-numeral text-3xl font-bold leading-none text-navy">{forecast.status === 'loading' ? '–' : temp}°</span>
+          <span className="font-numeral text-2xl font-bold leading-none text-navy">{forecast.status === 'loading' ? '–' : temp}°</span>
           <span className="truncate text-sm font-medium text-ink-soft">{t(`sky.${today.sky}`)}</span>
         </span>
         {live && (
-          <span className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold leading-snug">
+          <span className="mt-1 flex items-center gap-1.5 text-sm font-semibold leading-snug">
             <StatusIcon size={16} strokeWidth={2} aria-hidden="true" className="shrink-0" />
             <span>{level === 'good' ? t('home.adv.title.good') : t(`home.sea.${level}`)}</span>
           </span>
@@ -55,7 +55,7 @@ export default function SeaStatus({ forecast }: { forecast: Forecast }) {
       </span>
 
       {/* the signal flag: it flutters on its pole */}
-      <svg aria-hidden="true" width="34" height="42" viewBox="0 0 34 42" className="relative shrink-0">
+      <svg aria-hidden="true" width="28" height="35" viewBox="0 0 34 42" className="relative shrink-0">
         <path d="M7 3V40" stroke="var(--color-navy)" strokeWidth="2.4" strokeLinecap="round" fill="none" />
         <g className="anim-flutter" style={{ transformOrigin: '7px 12px', transformBox: 'view-box' }}>
           <path d="M7 5C14 2 20 8 30 5V18C20 21 14 15 7 18Z" fill={FLAG[level]} stroke="var(--color-navy)" strokeWidth="1.8" strokeLinejoin="round" />

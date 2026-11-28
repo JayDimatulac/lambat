@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Waves, X } from 'lucide-react'
+import { ArrowRight, X } from 'lucide-react'
 import TideScene from '../components/tide/TideScene'
 import Disclaimer from '../components/ui/Disclaimer'
 import RiskBadge from '../components/ui/RiskBadge'
 import Button from '../components/ui/Button'
+import FishLoader from '../components/ui/FishLoader'
 import { IceStep, SpeciesStep, WhenStep, iceKgOf, type Draft } from '../components/log/steps'
 import KilosScaleStep from '../components/log/KilosScale'
 import { useCatches } from '../data/store'
@@ -60,10 +61,7 @@ function Reveal({ draft, level, savedId, onAgain }: { draft: Draft; level: IceLe
     <div className="space-y-5">
       <TideScene catches={[saved]} />
       {!shown ? (
-        <p className="flex items-center justify-center gap-2 text-ink-soft" role="status">
-          <Waves size={22} strokeWidth={1.8} className="text-teal" aria-hidden />
-          {t('reveal.measuring')}
-        </p>
+        <FishLoader size={88} label={t('reveal.measuring')} />
       ) : (
         <div className="anim-rise space-y-5">
           <div className="space-y-2 rounded-md border-2 border-line bg-card p-4 shadow-rest">
@@ -75,15 +73,18 @@ function Reveal({ draft, level, savedId, onAgain }: { draft: Draft; level: IceLe
             <p className="font-semibold">{sellByText(saved.hoursMin, lang, t)}</p>
           </div>
 
-          <div className="space-y-2 rounded-md border border-line bg-card p-4">
-            <h3 className="text-lg">{t('reveal.why')}</h3>
-            <ul className="list-disc space-y-1 pl-5">
+          <details className="group rounded-md border border-line bg-card p-4">
+            <summary className="flex min-h-8 cursor-pointer list-none items-center justify-between text-lg font-semibold [&::-webkit-details-marker]:hidden">
+              {t('reveal.why')}
+              <span aria-hidden="true" className="text-teal transition group-open:rotate-180">⌄</span>
+            </summary>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
               <li>{draft.hoursAgo === 0 ? t('why.time.now') : t('why.time', { when: agoText(draft.hoursAgo, t) })}</li>
               <li>{t('why.ice', { level: t(`ice.${level}`).toLowerCase() })}</li>
               <li>{t(hoursAtAmbient(sp.l0Min) <= 10 ? 'why.species.fast' : 'why.species.mid', { species: saved.species })}</li>
               {sp.histamine && <li>{t('why.histamine')}</li>}
             </ul>
-          </div>
+          </details>
 
           <Disclaimer />
 

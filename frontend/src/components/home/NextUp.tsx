@@ -5,9 +5,7 @@ import LifebuoyTimer from './LifebuoyTimer'
 import { WaveArrow } from './HomeIcons'
 import { needsAttention, type Catch } from '../../data/mock'
 import { pickHeroCatches } from '../../lib/heroCatches'
-import { sellByText } from '../../lib/time'
 import { useT } from '../../lib/i18n'
-import { useSettings } from '../../lib/settings'
 
 // Red and cream stripes, like the markers that warn ships off a reef
 const HAZARD = 'repeating-linear-gradient(135deg, var(--color-coral) 0 10px, var(--color-cream) 10px 20px)'
@@ -16,7 +14,6 @@ const HAZARD = 'repeating-linear-gradient(135deg, var(--color-coral) 0 10px, var
    With no active catch it shows nothing, because the sea hero above already has the Log a catch button. */
 export default function NextUp({ catches }: { catches: Catch[] }) {
   const t = useT()
-  const { lang } = useSettings()
   const c = pickHeroCatches(catches, 1)[0]
   if (!c) return null
   const alert = c.risk === 'high' || c.risk === 'critical'
@@ -29,10 +26,10 @@ export default function NextUp({ catches }: { catches: Catch[] }) {
         <div className="flex items-center gap-4">
           <LifebuoyTimer leftMins={c.minsMin} hoursLabel={t('home.hours')} size={84} />
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-bold uppercase tracking-wider text-white/80">{alert ? t('home.actions') : t('home.next')}</p>
+
             <Link to={`/catches/${c.id}`} className="block truncate font-numeral text-xl font-bold leading-tight">{c.species} · {c.kg} kg</Link>
             <div className="mt-1.5"><RiskBadge level={c.risk} /></div>
-            <p className="mt-1.5 text-sm leading-snug text-white/90">{sellByText(c.hoursMin, lang, t)}</p>
+
           </div>
         </div>
         <Link

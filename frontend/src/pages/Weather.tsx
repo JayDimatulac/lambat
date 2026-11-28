@@ -11,6 +11,7 @@ import { localeOf } from '../lib/time'
 import { useT, type Key } from '../lib/i18n'
 import { useSettings } from '../lib/settings'
 import { useUser } from '../lib/auth'
+import FishLoader from '../components/ui/FishLoader'
 
 const SKY_ICON: Record<Sky, LucideIcon> = { sun: Sun, partly: CloudSun, cloud: Cloud, rain: CloudRain }
 const SKY_WORD: Record<Sky, Key> = { sun: 'sky.sun', partly: 'sky.partly', cloud: 'sky.cloud', rain: 'sky.rain' }
@@ -41,7 +42,7 @@ export default function Weather() {
 
   // no verdict until the real forecast is here: the sample must never say "safe to sail"
   if (status === 'loading') {
-    return <p className="px-2 py-16 text-center text-ink-soft">{t('wx.loading')}</p>
+    return <FishLoader className="px-2 py-16" label={t('wx.loading')} />
   }
 
   const day = week[sel]

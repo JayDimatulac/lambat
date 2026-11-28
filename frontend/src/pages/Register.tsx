@@ -178,11 +178,11 @@ export default function Register() {
                 <span>
                   <span className="block font-numeral text-[26px] font-semibold leading-tight">{t('reg.buyer')}</span>
                   <span className="block text-base leading-snug">{t('reg.buyer.sub')}</span>
-                  <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-mint px-2.5 py-1 text-xs font-bold"><Clock size={14} strokeWidth={2} aria-hidden />{t('reg.buyer.tag')}</span>
+                  <span className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-mint px-2.5 py-1 text-xs font-bold"><Clock size={14} strokeWidth={2} aria-hidden />{t('reg.buyer.tag')}</span>
                 </span>
               </button>
             </div>
-            <p className="rounded-md border border-dashed border-teal/50 bg-seafoam/50 p-3 text-sm leading-snug">{t('reg.org')}</p>
+            <p className="hidden rounded-md border border-dashed border-teal/50 bg-seafoam/50 p-3 text-sm leading-snug lg:block">{t('reg.org')}</p>
             <p className="text-center text-base">{t('reg.have')} <Link to="/" className="font-bold text-teal underline underline-offset-4">{t('auth.login')}</Link></p>
           </>
         )}

@@ -36,7 +36,7 @@ export default function SeaStatus({ forecast }: { forecast: Forecast }) {
         {live && (
           <span className="mt-0.5 flex items-start gap-1.5 text-sm font-semibold leading-snug">
             <StatusIcon size={16} strokeWidth={2} aria-hidden="true" className="mt-0.5 shrink-0" />
-            <span>{level === 'good' ? t('home.adv.title.good') : `${t('home.adv.title')}. ${t(`home.adv.${level}`)}`}</span>
+            <span>{level === 'good' ? t('home.adv.title.good') : t(`home.sea.${level}`)}</span>
           </span>
         )}
       </span>

@@ -162,6 +162,15 @@ html[data-simple='true'] .simple-hide { display: none; }
   * { animation: none !important; transition: none !important; }
 }
 
+/* The fish on the line tugs like a bite (loading) */
+@keyframes tug {
+  0%, 100% { transform: translateY(0) rotate(-7deg); }
+  50% { transform: translateY(-4px) rotate(7deg); }
+}
+@layer utilities {
+  .anim-tug { animation: tug 1.3s ease-in-out infinite; transform-box: view-box; transform-origin: 50% 0; }
+}
+
 /* Each wizard step rises into place */
 @keyframes rise {
   from { opacity: 0; transform: translateY(14px); }

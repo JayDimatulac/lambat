@@ -13,9 +13,9 @@ type Props = {
 export default function Logo({ size = 40, className = '', onDark = false, emblemOnly = false }: Props) {
   const wide = { height: size, width: 'auto' as const }
   // the emblem is the left part of the image: crop a square from the left
-  const crop = (pos: string) => ({ height: size, width: size, objectFit: 'cover' as const, objectPosition: pos })
-  const lightStyle = emblemOnly ? crop('2% center') : wide
-  const darkStyle = emblemOnly ? crop('5% center') : wide
+  const crop = (pos: string, trim = 0) => ({ height: size, width: size, objectFit: 'cover' as const, objectPosition: pos, clipPath: trim ? `inset(0 ${trim}% 0 0)` : undefined })
+  const lightStyle = emblemOnly ? crop('0% center') : wide
+  const darkStyle = emblemOnly ? crop('5% center', 12) : wide
 
   if (onDark) {
     return <img src={logoDark} alt="LAMBAT" style={darkStyle} className={className} />

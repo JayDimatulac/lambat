@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ArrowRight, Loader2, Smartphone, UserRound } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
-import { PasswordField, TextField } from '../components/auth/Fields'
+import { PasswordField, StickyCta, TextField } from '../components/auth/Fields'
 import { useAuth } from '../lib/auth'
 import { ROLE_HOME } from '../lib/accounts'
 import { useT, type Key } from '../lib/i18n'
@@ -83,9 +83,9 @@ export default function Landing() {
           autoComplete="current-password"
         />
 
-        <div className="-mt-2 text-right">
-          <Link to="/forgot-password" className="text-sm font-semibold text-teal hover:underline">
-            Forgot password?
+        <div className="-mb-3 -mt-5 text-right">
+          <Link to="/forgot-password" className="inline-flex min-h-10 items-center text-sm font-semibold text-teal hover:underline">
+            {t('auth.forgot')}
           </Link>
         </div>
 
@@ -94,6 +94,7 @@ export default function Landing() {
             {t(error)}
           </p>
         )}
+        <StickyCta>
         <button
           type="submit"
           disabled={busy}
@@ -103,15 +104,16 @@ export default function Landing() {
           {busy ? t('auth.signingin') : t('auth.login')}
           {!busy && <ArrowRight size={22} strokeWidth={1.8} aria-hidden className="transition group-hover:translate-x-1" />}
         </button>
+        </StickyCta>
       </form>
 
       <Link
         to="/register"
-        className="group mt-6 flex min-h-16 items-center justify-between gap-3 rounded-md border-2 border-line bg-seafoam/60 px-5 py-3 transition hover:border-teal"
+        className="group mt-2 flex min-h-16 items-center justify-between gap-3 rounded-md border-2 border-line bg-seafoam/60 px-5 py-3 transition hover:border-teal"
       >
         <span>
           <span className="block text-sm text-ink-soft">{t('auth.noaccount')}</span>
-          <span className="block font-numeral text-xl font-bold text-teal">{t('auth.create')}</span>
+          <span className="block font-numeral text-lg font-bold text-teal">{t('auth.create')}</span>
         </span>
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-teal text-on-accent transition group-hover:translate-x-1">
           <ArrowRight size={20} strokeWidth={2} aria-hidden />

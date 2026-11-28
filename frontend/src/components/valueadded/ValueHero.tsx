@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { Catch } from '../../data/mock'
@@ -12,7 +13,7 @@ const pick = (name: string) => Object.entries(pictures).find(([path]) => path.en
 const dayImg = pick('value-added-day.webp')
 const nightImg = pick('value-added-night.webp')
 
-export function ValueHero({ c }: { c: Catch | null }) {
+export function ValueHero({ c, children }: { c: Catch | null; children?: ReactNode }) {
   const t = useT()
   const { theme } = useSettings()
   const night = theme === 'night'
@@ -46,13 +47,15 @@ export function ValueHero({ c }: { c: Catch | null }) {
           <p className={`mt-2 max-w-xl text-sm sm:text-base ${sub}`}>{t('va.h.sub')}</p>
         </div>
         {c && (
-          <div className={`rounded-lg border p-3 backdrop-blur-sm ${glass}`}>
+          <div className={`w-full space-y-2.5 rounded-xl border p-3.5 backdrop-blur-sm md:w-80 ${glass}`}>
             <p className="text-xs font-semibold opacity-85">{t('va.selected')}</p>
-            <p className="my-1 text-lg font-bold">{c.species} · {c.kg} kg</p>
-            <RiskBadge level={c.risk} />
-            <Link className="mt-1.5 flex min-h-10 items-center gap-2 text-sm font-semibold underline" to={`/catches/${c.id}`}>
-              {t('va.viewcatch')} <ArrowRight size={16} aria-hidden="true" />
-            </Link>
+            {children}
+            <div className="flex items-center justify-between gap-2">
+              <RiskBadge level={c.risk} />
+              <Link className="flex min-h-10 items-center gap-1.5 text-sm font-semibold underline" to={`/catches/${c.id}`}>
+                {t('va.viewcatch')} <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+            </div>
           </div>
         )}
       </div>

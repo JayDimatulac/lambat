@@ -2,7 +2,7 @@ import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react
 import { Check, Eye, EyeOff } from 'lucide-react'
 import { useT } from '../../lib/i18n'
 
-const inputCls = 'min-h-14 w-full rounded-md border-2 bg-card px-4 text-lg text-navy transition placeholder:text-ink-soft/70 focus:border-teal focus:outline-none focus:ring-4 focus:ring-teal/15'
+const inputCls = 'min-h-14 scroll-mb-32 w-full rounded-md border-2 bg-card px-4 text-lg text-navy transition placeholder:text-ink-soft/70 focus:border-teal focus:outline-none focus:ring-4 focus:ring-teal/15'
 
 type FieldProps = { label: string; hint?: string; error?: string | null }
 type TextProps = FieldProps & { leading?: ReactNode }
@@ -78,5 +78,14 @@ export function ChoiceTile({ selected, onClick, icon, title, sub, role = 'radio'
       </span>
       {selected && <span className="grid size-6 shrink-0 place-items-center rounded-full bg-teal text-on-accent"><Check size={16} strokeWidth={3} aria-hidden /></span>}
     </button>
+  )
+}
+
+// Keeps the main button inside the thumb zone while the form scrolls (phones only; desktop keeps it in the flow)
+export function StickyCta({ children }: { children: ReactNode }) {
+  return (
+    <div className="sticky bottom-0 z-10 -mx-5 bg-card px-5 pb-4 pt-3 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-gradient-to-t before:from-card before:to-transparent lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:before:hidden">
+      {children}
+    </div>
   )
 }

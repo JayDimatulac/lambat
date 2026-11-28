@@ -33,6 +33,40 @@ const IMG_W = 'max(100cqw, 600px)'
 // 1 at the surface (24h+ left) ... 0 at the seabed (0h left), inverted to "how far it has sunk"
 const sunk = (hours: number) => 1 - Math.min(Math.max(hours, 0), HORIZON_H) / HORIZON_H
 
+// The seabed: sand dunes, a few pebbles and seaweed swaying, so the strip under the 0h line is ground and not an empty band.
+const SAND = {
+  day: { top: '#dcc08f', mid: '#c2a073', end: '#9c7d57', weed: '#2e9c7c', pebble: '#f1e4c8' },
+  night: { top: '#1b4a63', mid: '#123b52', end: 'var(--color-card)', weed: '#3fc3b0', pebble: '#6f9db0' },
+}
+const WEEDS = [
+  { left: '6%', h: 32 }, { left: '8%', h: 21 }, { left: '33%', h: 27 }, { left: '61%', h: 34 }, { left: '63%', h: 20 }, { left: '89%', h: 28 },
+]
+const PEBBLES = [{ left: '18%', b: 6, s: 6 }, { left: '47%', b: 9, s: 5 }, { left: '75%', b: 5, s: 7 }]
+
+function Seabed({ top, night, compact }: { top: number; night: boolean; compact: boolean }) {
+  const c = night ? SAND.night : SAND.day
+  const k = compact ? 0.7 : 1
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 overflow-hidden" style={{ top, background: `linear-gradient(180deg, ${c.mid}, ${c.end})` }}>
+      <svg className="absolute inset-0 size-full" viewBox="0 0 400 50" preserveAspectRatio="none">
+        <path d="M0 8Q40 2 80 7T160 6T240 8T320 5T400 7V50H0Z" fill={c.top} />
+        <path d="M0 24Q60 17 120 23T240 22T400 24V50H0Z" fill={c.mid} opacity="0.85" />
+      </svg>
+      {PEBBLES.map((p, i) => (
+        <span key={i} className="absolute rounded-full" style={{ left: p.left, bottom: p.b * k, width: p.s * k, height: p.s * k * 0.7, background: c.pebble, opacity: 0.8 }} />
+      ))}
+      {WEEDS.map((w, i) => {
+        const h = Math.round(w.h * k)
+        return (
+          <svg key={i} width="10" height={h} viewBox={`0 0 10 ${h}`} className="anim-rock absolute" style={{ left: w.left, bottom: 3, '--rock': `${5 + (i % 3) * 2}deg`, transformOrigin: '50% 100%' } as CSSProperties}>
+            <path d={`M5 ${h}C1 ${h * 0.7} 9 ${h * 0.4} 5 1`} fill="none" stroke={c.weed} strokeWidth="3.2" strokeLinecap="round" />
+          </svg>
+        )
+      })}
+    </div>
+  )
+}
+
 function BuoyGraphic({ fill }: { fill: string }) {
   return (
     <svg width="44" height="68" viewBox="0 0 44 68" className="mx-auto block" aria-hidden="true">
@@ -136,7 +170,7 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
                 style={{ width: IMG_W, left: '50%', transform: 'translateX(-50%)', top: `calc(${skyH}px - ${(HORIZON / 2).toFixed(5)} * ${IMG_W})` }}
               />
               <WaveLine top={skyH + 26} dur={8} opacity={night ? 0.22 : 0.3} />
-              <div className={`absolute inset-x-0 bottom-0 border-t-2 border-dashed border-white/30 ${compact ? 'h-7' : 'h-10'}`} style={{ background: 'var(--tide-seabed)' }} />
+              <Seabed top={yFor(1) - 2} night={night} compact={compact} />
 
               {/* BUOYS */}
               <div className="absolute inset-0 grid" style={cols}>

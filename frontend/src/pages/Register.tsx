@@ -11,6 +11,8 @@ import { ROLE_HOME, looksLikeEmail, normalizeMobile, type Boat, type Gear, type 
 import { BUYER_KINDS, TIER_NOTE, legacyType, pick } from '../lib/buyerKinds'
 import { useSettings } from '../lib/settings'
 import { useT, type Key } from '../lib/i18n'
+import roleFisher from '../assets/role-fisher.webp'
+import roleBuyer from '../assets/role-buyer.webp'
 
 // Edit this list to match the landing places you want people to pick from
 const LANDINGS = ['Balayan', 'Calaca City', 'Calatagan', 'Lemery', 'Lian', 'Nasugbu', 'Taal', 'Tuy']
@@ -165,14 +167,14 @@ export default function Register() {
             <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('reg.who')}</h1>
             <div role="radiogroup" aria-label={t('reg.who')} className="space-y-3">
               <button type="button" role="radio" aria-checked={role === 'fisherfolk'} onClick={() => setRole('fisherfolk')} className={card(role === 'fisherfolk')}>
-                <span className="grid size-16 shrink-0 place-items-center rounded-full bg-coral text-deep"><BangkaIcon size={44} /></span>
+                <img src={roleFisher} alt="" className="size-16 shrink-0" />
                 <span>
                   <span className="block font-numeral text-[26px] font-semibold leading-tight">{t('reg.fisher')}</span>
                   <span className="block text-base leading-snug">{t('reg.fisher.sub')}</span>
                 </span>
               </button>
               <button type="button" role="radio" aria-checked={role === 'buyer'} onClick={() => setRole('buyer')} className={card(role === 'buyer')}>
-                <span className="grid size-16 shrink-0 place-items-center rounded-full bg-teal text-on-accent"><PierIcon size={40} /></span>
+                <img src={roleBuyer} alt="" className="size-16 shrink-0" />
                 <span>
                   <span className="block font-numeral text-[26px] font-semibold leading-tight">{t('reg.buyer')}</span>
                   <span className="block text-base leading-snug">{t('reg.buyer.sub')}</span>

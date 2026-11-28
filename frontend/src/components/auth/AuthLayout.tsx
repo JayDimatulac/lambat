@@ -1,10 +1,12 @@
 import type { ReactNode } from 'react'
-import { CloudSun, Fish, Moon, Sun, Users } from 'lucide-react'
 import AuthLighthouse from './AuthLighthouse'
 import Logo from '../Logo'
 import Segmented from '../ui/Segmented'
 import { useSettings, type Lang } from '../../lib/settings'
 import { useT } from '../../lib/i18n'
+import featGuard from '../../assets/feature-guard.webp'
+import featWeather from '../../assets/feature-weather.webp'
+import featBuyers from '../../assets/feature-buyers.webp'
 
 const COPY = {
   fil: {
@@ -23,7 +25,7 @@ const COPY = {
   },
 }
 
-const FEAT_ICONS = [Fish, CloudSun, Users]
+const FEAT_IMAGES = [featGuard, featWeather, featBuyers]
 
 function LangSwitch({ className = '' }: { className?: string }) {
   const { lang, setLang } = useSettings()
@@ -55,7 +57,20 @@ function ThemeButton() {
       onClick={() => setTheme(night ? 'day' : 'night')}
       className="grid size-11 shrink-0 place-items-center rounded-full border border-line bg-card/90 text-navy transition hover:bg-seafoam/60"
     >
-      {night ? <Moon size={22} strokeWidth={1.8} aria-hidden /> : <Sun size={22} strokeWidth={1.8} aria-hidden />}
+      {/* the parola: its lamp is lit at night (same lighthouse as the fisherfolk top bar) */}
+      <svg viewBox="0 0 28 28" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M11 25 L12.2 12 H15.8 L17 25 Z" />
+        <path d="M11.7 18.5 H16.3" />
+        <rect x="12" y="8" width="4" height="4" rx="0.8" fill={night ? 'var(--color-coral)' : 'none'} stroke={night ? 'var(--color-coral)' : 'currentColor'} />
+        <path d="M11.5 8 L14 5 L16.5 8 Z" />
+        <path d="M7.5 25 H20.5" />
+        <g stroke="var(--color-coral)" className={night ? 'anim-glow' : ''} opacity={night ? 1 : 0.35}>
+          <path d="M10 10 H4.5" />
+          <path d="M10.5 7.2 L5.5 5" />
+          <path d="M18 10 H23.5" />
+          <path d="M17.5 7.2 L22.5 5" />
+        </g>
+      </svg>
     </button>
   )
 }
@@ -71,7 +86,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   const inkSoft = night ? 'text-white/80' : 'text-deep/80'
   const pill = night ? 'border-white/15 bg-white/5 text-coral' : 'border-deep/15 bg-white/60 text-coral-dark'
   const card = night ? 'border-white/10 bg-white/5 text-white' : 'border-deep/10 bg-white/60 text-deep'
-  const iconBg = night ? 'bg-white/10 text-coral' : 'bg-white text-coral-dark'
 
   return (
     <div className="min-h-dvh bg-mint lg:grid lg:grid-cols-[1.1fr_1fr]">
@@ -106,12 +120,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
             <ul className="mt-8 hidden grid-cols-3 gap-3 lg:grid">
               {c.feats.map((label, i) => {
-                const Icon = FEAT_ICONS[i]
+                const img = FEAT_IMAGES[i]
                 return (
                   <li key={label} className={`flex flex-col items-center gap-3 rounded-lg border p-4 text-center text-sm font-semibold leading-snug backdrop-blur-sm ${card}`}>
-                    <span className={`grid size-12 place-items-center rounded-full ${iconBg}`}>
-                      <Icon size={24} strokeWidth={1.6} aria-hidden />
-                    </span>
+                    <img src={img} alt="" className="size-16" />
                     {label}
                   </li>
                 )

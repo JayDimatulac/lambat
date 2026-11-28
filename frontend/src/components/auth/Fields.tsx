@@ -84,7 +84,7 @@ export function ChoiceTile({ selected, onClick, icon, title, sub, role = 'radio'
 // Keeps the main button inside the thumb zone while the form scrolls (phones only; desktop keeps it in the flow)
 export function StickyCta({ children }: { children: ReactNode }) {
   return (
-    <div className="sticky bottom-0 z-10 -mx-5 bg-card px-5 pb-4 pt-3 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-6 before:bg-gradient-to-t before:from-card before:to-transparent lg:static lg:mx-0 lg:bg-transparent lg:p-0 lg:before:hidden">
+    <div className="sticky bottom-0 z-10 -mx-5 bg-card px-5 pb-4 pt-3 lg:static lg:mx-0 lg:bg-transparent lg:p-0">
       {children}
     </div>
   )

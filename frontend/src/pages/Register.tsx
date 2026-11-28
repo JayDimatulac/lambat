@@ -11,6 +11,8 @@ import { ROLE_HOME, looksLikeEmail, normalizeMobile, type Boat, type Gear, type 
 import { BUYER_KINDS, TIER_NOTE, legacyType, pick } from '../lib/buyerKinds'
 import { useSettings } from '../lib/settings'
 import { useT, type Key } from '../lib/i18n'
+import roleFisher from '../assets/role-fisher.webp'
+import roleBuyer from '../assets/role-buyer.webp'
 
 // Edit this list to match the landing places you want people to pick from
 const LANDINGS = ['Balayan', 'Calaca City', 'Calatagan', 'Lemery', 'Lian', 'Nasugbu', 'Taal', 'Tuy']
@@ -165,22 +167,22 @@ export default function Register() {
             <h1 className="font-numeral text-[26px] font-semibold leading-tight">{t('reg.who')}</h1>
             <div role="radiogroup" aria-label={t('reg.who')} className="space-y-3">
               <button type="button" role="radio" aria-checked={role === 'fisherfolk'} onClick={() => setRole('fisherfolk')} className={card(role === 'fisherfolk')}>
-                <span className="grid size-16 shrink-0 place-items-center rounded-full bg-coral text-deep"><BangkaIcon size={44} /></span>
+                <img src={roleFisher} alt="" className="size-16 shrink-0" />
                 <span>
                   <span className="block font-numeral text-[26px] font-semibold leading-tight">{t('reg.fisher')}</span>
                   <span className="block text-base leading-snug">{t('reg.fisher.sub')}</span>
                 </span>
               </button>
               <button type="button" role="radio" aria-checked={role === 'buyer'} onClick={() => setRole('buyer')} className={card(role === 'buyer')}>
-                <span className="grid size-16 shrink-0 place-items-center rounded-full bg-teal text-on-accent"><PierIcon size={40} /></span>
+                <img src={roleBuyer} alt="" className="size-16 shrink-0" />
                 <span>
                   <span className="block font-numeral text-[26px] font-semibold leading-tight">{t('reg.buyer')}</span>
                   <span className="block text-base leading-snug">{t('reg.buyer.sub')}</span>
-                  <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-mint px-2.5 py-1 text-xs font-bold"><Clock size={14} strokeWidth={2} aria-hidden />{t('reg.buyer.tag')}</span>
+                  <span className="mt-1.5 inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-mint px-2.5 py-1 text-xs font-bold"><Clock size={14} strokeWidth={2} aria-hidden />{t('reg.buyer.tag')}</span>
                 </span>
               </button>
             </div>
-            <p className="rounded-md border border-dashed border-teal/50 bg-seafoam/50 p-3 text-sm leading-snug">{t('reg.org')}</p>
+            <p className="hidden rounded-md border border-dashed border-teal/50 bg-seafoam/50 p-3 text-sm leading-snug lg:block">{t('reg.org')}</p>
             <p className="text-center text-base">{t('reg.have')} <Link to="/" className="font-bold text-teal underline underline-offset-4">{t('auth.login')}</Link></p>
           </>
         )}
@@ -224,13 +226,13 @@ export default function Register() {
               </div>
               <div className="space-y-2">
                 <p className="text-base font-semibold">{t('reg.gear')}</p>
-                <div className="flex flex-wrap gap-2">{GEARS.map((g) => <Chip key={g.id} active={gear.includes(g.id)} onClick={() => toggleGear(g.id)}>{t(g.label)}</Chip>)}</div>
+                <div className="grid grid-cols-2 gap-2">{GEARS.map((g) => <Chip key={g.id} active={gear.includes(g.id)} onClick={() => toggleGear(g.id)} className="w-full">{t(g.label)}</Chip>)}</div>
               </div>
               <div className="space-y-2">
                 <p className="text-base font-semibold">{t('reg.ground')}</p>
-                <div className="flex flex-wrap gap-2">
-                  <Chip active={ground === 'near'} onClick={() => setGround(ground === 'near' ? null : 'near')}>{t('ground.near')}</Chip>
-                  <Chip active={ground === 'open'} onClick={() => setGround(ground === 'open' ? null : 'open')}>{t('ground.open')}</Chip>
+                <div className="grid grid-cols-2 gap-2">
+                  <Chip active={ground === 'near'} onClick={() => setGround(ground === 'near' ? null : 'near')} className="w-full">{t('ground.near')}</Chip>
+                  <Chip active={ground === 'open'} onClick={() => setGround(ground === 'open' ? null : 'open')} className="w-full">{t('ground.open')}</Chip>
                 </div>
               </div>
             </div>

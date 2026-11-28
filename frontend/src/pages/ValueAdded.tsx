@@ -1,10 +1,9 @@
 import { useState, type ReactNode } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { Activity, ArrowRight, ChevronDown, ChevronRight, Lock, Scale, Star } from 'lucide-react'
+import { ArrowRight, ChevronDown, ChevronRight, Lock, Scale, Star } from 'lucide-react'
 import ProcessGuide from '../components/detail/ProcessGuide'
 import { FishIcon } from '../components/icons'
 import { ValueHero } from '../components/valueadded/ValueHero'
-import RiskBadge from '../components/ui/RiskBadge'
 import { byUrgency, isActive } from '../data/mock'
 import { useCatches } from '../data/store'
 import { pathwaysFor, type Pathway } from '../lib/pathways'
@@ -19,7 +18,7 @@ const WHY: Record<string, Key> = {
   'lock.value.none': 'va.locked.none',
 }
 
-const selectCls = 'min-h-12 w-full appearance-none rounded-lg border border-line bg-mint pl-10 pr-9 text-base font-semibold'
+const selectCls = 'min-h-11 w-full appearance-none rounded-lg border border-line bg-mint pl-10 pr-9 text-sm font-semibold text-navy'
 function Field({ label, icon, children }: { label: string; icon: ReactNode; children: ReactNode }) {
   return (
     <label className="block min-w-0 space-y-1 text-sm font-semibold">
@@ -34,7 +33,7 @@ function Field({ label, icon, children }: { label: string; icon: ReactNode; chil
 
 const riskTag = (p: Pathway) => (p.allowed.length === 1 ? 'va.tag.low' : 'va.tag.lowmod') as Key
 
-// One product: a small picture (shown here once), its name, and why it is on the list. Tap to see its process.
+// One product: a photo on top, its name below, and why it is on the list. Tap to see its process.
 function ProductRow({ p, first, selected, onSelect }: { p: Pathway; first: boolean; selected: boolean; onSelect: () => void }) {
   const t = useT()
   const photo = productImage(p.name)
@@ -43,24 +42,24 @@ function ProductRow({ p, first, selected, onSelect }: { p: Pathway; first: boole
       type="button"
       aria-pressed={selected}
       onClick={onSelect}
-      className={`flex w-full min-w-[250px] shrink-0 snap-start items-center gap-3 rounded-xl border bg-card p-2.5 text-left shadow-rest transition lg:min-w-0 ${selected ? 'border-coral ring-2 ring-coral/30' : 'border-line hover:border-teal'}`}
+      className={`group flex w-[78%] max-w-[320px] shrink-0 snap-start flex-col overflow-hidden rounded-xl border bg-card text-left shadow-rest transition md:w-full md:max-w-none ${selected ? 'border-coral ring-2 ring-coral/30' : 'border-line hover:border-teal'}`}
     >
-      <span className="h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-seafoam">
-        {photo && <img src={photo} alt="" loading="lazy" className="size-full object-cover" />}
+      <span className="relative block h-28 w-full overflow-hidden bg-seafoam">
+        {photo && <img src={photo} alt="" loading="lazy" className="size-full object-cover transition duration-300 group-hover:scale-105" />}
+        {first && (
+          <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-teal px-2 py-0.5 text-[11px] font-bold text-on-accent shadow-rest">
+            <Star size={11} strokeWidth={2.4} aria-hidden="true" />{t('va.prod.rec')}
+          </span>
+        )}
       </span>
-      <span className="min-w-0 flex-1">
-        <b className="block truncate text-[15px] leading-tight">{p.name}</b>
-        <span className="block truncate text-xs text-ink-soft">{p.detail}</span>
-        <span className="mt-1.5 flex flex-wrap gap-1.5">
-          {first && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-teal px-2 py-0.5 text-[11px] font-bold text-on-accent">
-              <Star size={11} strokeWidth={2.4} aria-hidden="true" />{t('va.prod.rec')}
-            </span>
-          )}
-          <span className="rounded-full bg-seafoam px-2 py-0.5 text-[11px] font-semibold text-teal">{t(riskTag(p))}</span>
+      <span className="flex items-center gap-2 p-3">
+        <span className="min-w-0 flex-1">
+          <b className="block truncate font-display text-lg leading-tight">{p.name}</b>
+          <span className="block truncate text-xs text-ink-soft">{p.detail}</span>
+          <span className="mt-1.5 inline-block rounded-full bg-seafoam px-2 py-0.5 text-[11px] font-semibold text-teal">{t(riskTag(p))}</span>
         </span>
+        <ChevronRight size={18} aria-hidden="true" className="hidden shrink-0 text-ink-soft lg:block" />
       </span>
-      <ChevronRight size={18} aria-hidden="true" className="hidden shrink-0 text-ink-soft lg:block" />
     </button>
   )
 }
@@ -100,12 +99,9 @@ export default function ValueAdded() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-4">
-      <ValueHero c={chosen} />
-
-      {/* Select the catch. Species, quantity and condition all come from the catch you logged. */}
-      <section className="rounded-xl border border-line bg-card p-4 shadow-rest">
-        <h2 className="mb-3 font-sans text-base font-bold">{t('va.sel.title')}</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
+      {/* The catch picker lives inside the hero card. Species, quantity and condition all come from the catch you logged. */}
+      <ValueHero c={chosen}>
+        <div className="grid gap-2">
           <Field label={t('va.sel.species')} icon={<FishIcon size={20} />}>
             <select
               value={chosen.species}
@@ -122,22 +118,15 @@ export default function ValueAdded() {
             </select>
             <ChevronDown size={18} aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" />
           </Field>
-          <div className="block min-w-0 space-y-1 text-sm font-semibold">
-            {t('va.sel.cond')}
-            <div className="relative flex min-h-12 items-center rounded-lg border border-line bg-mint pl-10 pr-3">
-              <Activity size={20} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-teal" />
-              <RiskBadge level={chosen.risk} />
-            </div>
-          </div>
         </div>
-      </section>
+      </ValueHero>
 
       {selected ? (
         <div className="grid gap-4 lg:grid-cols-[340px_minmax(0,1fr)] lg:items-start">
           {/* the recommended products: a row you swipe on a phone, a list on a computer */}
           <section aria-label={t('va.prod.title')} className="min-w-0 space-y-2">
             <h2 className="px-1 font-sans text-base font-bold">{t('va.prod.title')}</h2>
-            <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] lg:flex-col lg:overflow-visible lg:pb-0">
+            <div className="flex snap-x gap-3 overflow-x-auto pb-1 [scrollbar-width:none] md:grid md:grid-cols-2 md:overflow-visible md:pb-0 lg:flex lg:flex-col">
               {result.available.map((p, i) => (
                 <ProductRow key={`${chosen.id}-${p.id}`} p={p} first={i === 0} selected={p.id === selected.id} onSelect={() => setOpenId(p.id)} />
               ))}

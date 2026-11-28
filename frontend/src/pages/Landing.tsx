@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ArrowRight, Loader2, Smartphone, UserRound } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
-import { PasswordField, TextField } from '../components/auth/Fields'
+import { PasswordField, StickyCta, TextField } from '../components/auth/Fields'
 import { useAuth } from '../lib/auth'
 import { ROLE_HOME } from '../lib/accounts'
 import { useT, type Key } from '../lib/i18n'
@@ -84,8 +84,8 @@ export default function Landing() {
         />
 
         <div className="-mt-2 text-right">
-          <Link to="/forgot-password" className="text-sm font-semibold text-teal hover:underline">
-            Forgot password?
+          <Link to="/forgot-password" className="inline-flex min-h-12 items-center text-base font-semibold text-teal hover:underline">
+            {t('auth.forgot')}
           </Link>
         </div>
 
@@ -94,6 +94,7 @@ export default function Landing() {
             {t(error)}
           </p>
         )}
+        <StickyCta>
         <button
           type="submit"
           disabled={busy}
@@ -103,6 +104,7 @@ export default function Landing() {
           {busy ? t('auth.signingin') : t('auth.login')}
           {!busy && <ArrowRight size={22} strokeWidth={1.8} aria-hidden className="transition group-hover:translate-x-1" />}
         </button>
+        </StickyCta>
       </form>
 
       <Link

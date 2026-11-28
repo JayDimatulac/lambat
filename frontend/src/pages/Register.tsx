@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Building2, Clock, Factory, Flame, Footprints, Scale, Store, Users, UtensilsCrossed } from 'lucide-react'
 import AuthLayout from '../components/auth/AuthLayout'
-import { ChoiceTile, PasswordField, TextField } from '../components/auth/Fields'
+import { ChoiceTile, PasswordField, StickyCta, TextField } from '../components/auth/Fields'
 import Chip from '../components/ui/Chip'
 import { BangkaIcon } from '../components/home/HomeIcons'
 import { PierIcon } from '../components/icons'
@@ -265,10 +265,13 @@ export default function Register() {
         {formError && step === 2 && (
           <p role="alert" className="rounded-md bg-risk-critical-bg p-3 text-base font-semibold text-risk-critical">{t(formError)}</p>
         )}
+                <StickyCta>
 
         <button type="button" onClick={next} disabled={(step === 0 && !role) || busy} className="flex min-h-14 w-full items-center justify-center rounded-full bg-coral text-lg font-semibold text-deep shadow-raised transition active:scale-[0.98] disabled:opacity-40">
           {step === 2 ? (busy ? t('reg.sending') : t('reg.finish')) : t('log.next')}
         </button>
+        </StickyCta>
+
       </div>
     </AuthLayout>
   )

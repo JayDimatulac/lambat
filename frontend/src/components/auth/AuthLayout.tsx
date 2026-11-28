@@ -76,9 +76,9 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-mint lg:grid lg:grid-cols-[1.1fr_1fr]">
       {/* left: the parola scene, with the headline */}
-      <header className="relative h-[330px] overflow-hidden bg-deep lg:sticky lg:top-0 lg:h-dvh">
+      <header className="relative min-h-[clamp(200px,41dvh,330px)] overflow-hidden bg-deep [@media(max-height:520px)]:min-h-0 lg:sticky lg:top-0 lg:h-dvh">
         <AuthLighthouse />
-        <div className="absolute inset-0 flex flex-col p-6 lg:p-12">
+        <div className="relative flex flex-col p-5 min-[360px]:p-6 lg:absolute lg:inset-0 lg:p-12">
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col items-start gap-2">
               {/* phones: emblem only, so the theme and language buttons fit */}
@@ -93,7 +93,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <div className="mt-4 max-w-[16rem] lg:mt-14 lg:max-w-xl">
+          <div className="mt-4 max-w-[16rem] [@media(max-height:520px)]:hidden lg:mt-14 lg:max-w-xl lg:[@media(max-height:520px)]:block">
             <p className={`mb-5 hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] lg:inline-flex ${pill}`}>
               <span className="size-1.5 rounded-full bg-coral" aria-hidden />
               {c.eyebrow}
@@ -122,7 +122,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       </header>
 
       {/* right: the form (follows the day/night theme) */}
-      <main className="relative -mt-8 overflow-hidden rounded-t-[28px] bg-card px-5 pb-12 pt-7 shadow-raised lg:mt-0 lg:grid lg:place-items-center lg:rounded-none lg:bg-mint lg:px-12 lg:py-10 lg:shadow-none">
+      <main className="relative -mt-8 overflow-clip rounded-t-[28px] bg-card px-5 pb-8 pt-7 shadow-raised lg:mt-0 lg:grid lg:place-items-center lg:rounded-none lg:bg-mint lg:px-12 lg:py-10 lg:shadow-none">
         <div aria-hidden className="net-mesh pointer-events-none absolute inset-0" style={{ maskImage: 'radial-gradient(circle at 100% 0%, #000, transparent 55%)', WebkitMaskImage: 'radial-gradient(circle at 100% 0%, #000, transparent 55%)' }} />
         <div className="relative mx-auto w-full max-w-md">
           <div className="mb-6 hidden items-center justify-end gap-2 lg:flex">

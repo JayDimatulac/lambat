@@ -76,7 +76,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh bg-mint lg:grid lg:grid-cols-[1.1fr_1fr]">
       {/* left: the parola scene, with the headline */}
-      <header className="relative min-h-[clamp(200px,41dvh,330px)] overflow-hidden bg-deep [@media(max-height:520px)]:min-h-0 lg:sticky lg:top-0 lg:h-dvh">
+      <header className="relative min-h-[330px] overflow-hidden bg-deep [@media(min-height:521px)_and_(max-height:640px)]:min-h-[260px] [@media(max-height:520px)]:min-h-0 lg:sticky lg:top-0 lg:h-dvh">
         <AuthLighthouse />
         <div className="relative flex flex-col p-5 min-[360px]:p-6 lg:absolute lg:inset-0 lg:p-12">
           <div className="flex items-start justify-between gap-3">
@@ -93,7 +93,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
             </div>
           </div>
 
-          <div className="mt-4 max-w-[16rem] [@media(max-height:520px)]:hidden lg:mt-14 lg:max-w-xl lg:[@media(max-height:520px)]:block">
+          <div className="mt-4 max-w-[16rem] [@media(max-height:640px)]:hidden lg:mt-14 lg:max-w-xl lg:[@media(max-height:640px)]:block">
             <p className={`mb-5 hidden items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-bold uppercase tracking-[0.16em] lg:inline-flex ${pill}`}>
               <span className="size-1.5 rounded-full bg-coral" aria-hidden />
               {c.eyebrow}

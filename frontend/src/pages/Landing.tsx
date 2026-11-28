@@ -83,7 +83,7 @@ export default function Landing() {
           autoComplete="current-password"
         />
 
-        <div className="-mt-2 text-right">
+        <div className="-mb-1 -mt-2 text-right">
           <Link to="/forgot-password" className="inline-flex min-h-12 items-center text-base font-semibold text-teal hover:underline">
             {t('auth.forgot')}
           </Link>
@@ -109,11 +109,11 @@ export default function Landing() {
 
       <Link
         to="/register"
-        className="group mt-6 flex min-h-16 items-center justify-between gap-3 rounded-md border-2 border-line bg-seafoam/60 px-5 py-3 transition hover:border-teal"
+        className="group mt-2 flex min-h-16 items-center justify-between gap-3 rounded-md border-2 border-line bg-seafoam/60 px-5 py-3 transition hover:border-teal"
       >
         <span>
           <span className="block text-sm text-ink-soft">{t('auth.noaccount')}</span>
-          <span className="block font-numeral text-xl font-bold text-teal">{t('auth.create')}</span>
+          <span className="block font-numeral text-lg font-bold text-teal">{t('auth.create')}</span>
         </span>
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-teal text-on-accent transition group-hover:translate-x-1">
           <ArrowRight size={20} strokeWidth={2} aria-hidden />

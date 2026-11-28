@@ -156,7 +156,7 @@ export default function Register() {
           </Link>
         )}
         <Knots step={step} />
-        <span className="w-24 shrink-0 text-right text-sm text-ink-soft">{t('log.step', { n: step + 1, total: 3 })}</span>
+        <span className="shrink-0 whitespace-nowrap text-right text-sm text-ink-soft">{t('log.step', { n: step + 1, total: 3 })}</span>
       </div>
 
       <div key={step} className="anim-rise space-y-5">

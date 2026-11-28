@@ -224,13 +224,13 @@ export default function Register() {
               </div>
               <div className="space-y-2">
                 <p className="text-base font-semibold">{t('reg.gear')}</p>
-                <div className="flex flex-wrap gap-2">{GEARS.map((g) => <Chip key={g.id} active={gear.includes(g.id)} onClick={() => toggleGear(g.id)}>{t(g.label)}</Chip>)}</div>
+                <div className="grid grid-cols-2 gap-2">{GEARS.map((g) => <Chip key={g.id} active={gear.includes(g.id)} onClick={() => toggleGear(g.id)} className="w-full">{t(g.label)}</Chip>)}</div>
               </div>
               <div className="space-y-2">
                 <p className="text-base font-semibold">{t('reg.ground')}</p>
-                <div className="flex flex-wrap gap-2">
-                  <Chip active={ground === 'near'} onClick={() => setGround(ground === 'near' ? null : 'near')}>{t('ground.near')}</Chip>
-                  <Chip active={ground === 'open'} onClick={() => setGround(ground === 'open' ? null : 'open')}>{t('ground.open')}</Chip>
+                <div className="grid grid-cols-2 gap-2">
+                  <Chip active={ground === 'near'} onClick={() => setGround(ground === 'near' ? null : 'near')} className="w-full">{t('ground.near')}</Chip>
+                  <Chip active={ground === 'open'} onClick={() => setGround(ground === 'open' ? null : 'open')} className="w-full">{t('ground.open')}</Chip>
                 </div>
               </div>
             </div>

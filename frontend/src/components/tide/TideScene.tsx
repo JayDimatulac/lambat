@@ -261,7 +261,7 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
                       onMouseLeave={() => hide(i)}
                       onFocus={() => show(i)}
                       onBlur={() => hide(i)}
-                      className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-2' : 'py-3'}`}
+                      className={`flex min-h-12 flex-col items-center gap-1 rounded-sm px-1 text-center hover:bg-seafoam/50 ${compact ? 'py-2' : 'py-2.5'}`}
                     >
                       {compact ? (
                         <>
@@ -277,11 +277,14 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
                         </>
                       ) : (
                         <>
-                          <span className="max-w-full truncate text-base font-bold leading-tight">{c.species}</span>
-                          <span className="text-sm text-ink-soft">{c.kg} kg</span>
-                          <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border-[1.5px] px-3 py-1 text-sm font-bold ${r.text} ${r.bg} ${r.line}`}>
-                            <Icon size={14} strokeWidth={2.4} aria-hidden />
-                            {range}h
+                          <span aria-hidden="true" className="h-1 w-8 rounded-full" style={{ background: r.fill }} />
+                          <span className="max-w-full truncate text-[15px] font-bold leading-tight">{c.species}</span>
+                          <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 text-sm leading-tight">
+                            <span className={`inline-flex items-center gap-1 whitespace-nowrap font-bold tabular-nums ${r.text}`}>
+                              <Icon size={14} strokeWidth={2.6} aria-hidden />
+                              {range}<span className="text-xs font-medium text-ink-soft">h</span>
+                            </span>
+                            <span className="whitespace-nowrap text-ink-soft">{c.kg} kg</span>
                           </span>
                         </>
                       )}

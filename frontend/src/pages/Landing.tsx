@@ -83,8 +83,8 @@ export default function Landing() {
           autoComplete="current-password"
         />
 
-        <div className="-mb-1 -mt-2 text-right">
-          <Link to="/forgot-password" className="inline-flex min-h-12 items-center text-base font-semibold text-teal hover:underline">
+        <div className="-mb-3 -mt-5 text-right">
+          <Link to="/forgot-password" className="inline-flex min-h-10 items-center text-sm font-semibold text-teal hover:underline">
             {t('auth.forgot')}
           </Link>
         </div>

@@ -266,12 +266,13 @@ export default function TideScene({ catches, header, emptyText, emptyAction, com
                       {compact ? (
                         <>
                           {flagFirst && needsAttention(c) && (
-                            <span className="text-xs font-semibold leading-none text-risk-moderate">{t('home.first')}</span>
+                            <span className="rounded-full bg-cream px-2 py-1 text-xs font-bold leading-none text-deep">{t('home.first')}</span>
                           )}
-                          <span className="max-w-full truncate text-[15px] font-semibold leading-tight">{c.species}</span>
-                          <span className={`inline-flex items-center gap-1 whitespace-nowrap text-sm font-semibold leading-tight ${r.text}`}>
-                            <Icon size={13} strokeWidth={2.4} aria-hidden />
-                            {range} {t('unit.hours')}
+                          <span className="max-w-full truncate text-base font-bold leading-tight">{c.species}</span>
+                          <span className={`inline-flex items-baseline gap-1 whitespace-nowrap leading-tight tabular-nums ${r.text}`}>
+                            <Icon size={13} strokeWidth={2.6} aria-hidden className="self-center" />
+                            <span className="text-base font-bold">{range}</span>
+                            <span className="text-xs font-medium text-ink-soft">{t('unit.hours')}</span>
                           </span>
                         </>
                       ) : (

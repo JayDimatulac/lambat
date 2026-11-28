@@ -6,7 +6,7 @@ import { useT } from '../../lib/i18n'
 const SKY_ICON: Record<Sky, LucideIcon> = { sun: Sun, partly: CloudSun, cloud: Cloud, rain: CloudRain }
 // Whole class strings on purpose, so Tailwind can see them
 const LOOK: Record<Level, string> = {
-  good: 'border-line bg-linear-to-br from-seafoam/70 to-card text-risk-low',
+  good: 'border-line bg-linear-to-br from-seafoam/70 to-card text-teal',
   caution: 'border-risk-moderate-line bg-risk-moderate-bg text-risk-moderate',
   danger: 'border-risk-critical-line bg-risk-critical-bg text-risk-critical',
 }

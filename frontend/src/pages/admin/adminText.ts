@@ -165,6 +165,20 @@ const EN = {
   'rv.missing': '{n} missing',
   'rv.missingval': 'Not provided',
   'rv.legacy': 'This account was created before requirements were collected.',  
+  'ago.now': 'Just now',
+  'ago.min1': '1 min ago',
+  'ago.mins': '{n} mins ago',
+  'ago.hr1': '1 hour ago',
+  'ago.hrs': '{n} hours ago',
+  'ago.yest': 'Yesterday',
+  'ago.days': '{n} days ago',
+  'ov.verify.day': 'New applications per day',
+  'ov.verify.week': 'New applications per week',
+  'ov.act.catch': 'Catch logged',
+  'ov.act.user': 'New user registered',
+  'ov.act.advisory': 'Advisory published',
+  'ov.act.buyer': 'New buyer for approval',
+  'adv.t.weather': 'Weather / sea condition',
 }
 
 export type AKey = keyof typeof EN
@@ -334,6 +348,20 @@ const FIL: Record<AKey, string> = {
   'rv.missing': '{n} ang kulang',
   'rv.missingval': 'Hindi ibinigay',
   'rv.legacy': 'Ginawa ang account na ito bago kinolekta ang mga rekisito.',  
+  'ago.now': 'Ngayon lang',
+  'ago.min1': '1 minuto ang nakalipas',
+  'ago.mins': '{n} minuto ang nakalipas',
+  'ago.hr1': '1 oras ang nakalipas',
+  'ago.hrs': '{n} oras ang nakalipas',
+  'ago.yest': 'Kahapon',
+  'ago.days': '{n} araw ang nakalipas',
+  'ov.verify.day': 'Mga bagong aplikasyon kada araw',
+  'ov.verify.week': 'Mga bagong aplikasyon kada linggo',
+  'ov.act.catch': 'Naitalang huli',
+  'ov.act.user': 'Bagong user na nagparehistro',
+  'ov.act.advisory': 'Nailathalang abiso',
+  'ov.act.buyer': 'Bagong mamimili para sa pag-apruba',
+  'adv.t.weather': 'Panahon / kondisyon ng dagat',
 }
 
 // labels for roles, whether they come from the app (fisherfolk) or the API (FISHERFOLK)

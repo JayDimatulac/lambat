@@ -15,6 +15,19 @@ type Adv = { id: string; title: string; audience: string | null; active: boolean
 
 const KIND: Record<string, LIcon> = { buyer: UserPlus, advisory: Megaphone, catch: Fish, user: UserCheck }
 
+// translated titles for the recent activity list, keyed by the activity kind from the backend
+const ACT: Record<string, AKey> = {
+  catch: 'ov.act.catch',
+  user: 'ov.act.user',
+  advisory: 'ov.act.advisory',
+  buyer: 'ov.act.buyer',
+}
+
+// known advisory categories (the part before " · "); anything unknown keeps its original text
+const ADV_TITLES: Record<string, AKey> = {
+  'Weather / sea condition': 'adv.t.weather',
+}
+
 export default function SuperOverview() {
   const A = useA()
   const { lang } = useSettings()
@@ -34,6 +47,14 @@ export default function SuperOverview() {
   if (error || !data) return <p className="p-6 text-risk-high">{A('c.error')}</p>
 
   const loc = localeOf(lang)
+
+  // "Weather / sea condition · Balayan Bay" -> translate the category, keep the place
+  const advTitle = (t: string) => {
+    const [head, ...rest] = t.split(' · ')
+    const k = ADV_TITLES[head.trim()]
+    return k ? [A(k), ...rest].join(' · ') : t
+  }
+
   const now = Date.now()
   const everyone = accounts.filter((a) => a.role === 'fisherfolk' || a.role === 'buyer' || a.role === 'organization')
   const people = everyone.filter((a) => !area || areaOf(a) === area)
@@ -57,6 +78,26 @@ export default function SuperOverview() {
     { name: A('rp.lost'), n: o.DISCARDED, color: 'var(--color-coral)' },
   ]
   const total = parts.reduce((s, p) => s + p.n, 0)
+  const pct = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
+  // the chart groups by day up to 31 days, and by week beyond that (same rule as bucketSeries)
+  const weekly = Math.max(DAY, now - from) > 31 * DAY
+
+  // "5 mins ago", "2 hours ago", "Yesterday", then a date once it is a week old
+  const ago = (iso: string) => {
+    const d = new Date(iso)
+    const min = Math.floor((Date.now() - d.getTime()) / 60000)
+    if (min < 1) return A('ago.now')
+    if (min < 60) return min === 1 ? A('ago.min1') : A('ago.mins', { n: min })
+    const midnight = new Date().setHours(0, 0, 0, 0)
+    if (d.getTime() >= midnight) {
+      const h = Math.floor(min / 60)
+      return h === 1 ? A('ago.hr1') : A('ago.hrs', { n: h })
+    }
+    const days = Math.round((midnight - new Date(d).setHours(0, 0, 0, 0)) / DAY)
+    if (days === 1) return A('ago.yest')
+    if (days < 7) return A('ago.days', { n: days })
+    return d.toLocaleDateString(loc, { month: 'short', day: 'numeric' })
+  }
 
   return (
     <div className="space-y-5">
@@ -81,7 +122,7 @@ export default function SuperOverview() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.4fr_1fr]">
-        <Panel icon={ClipboardList} title={A('ov.verify')}>
+        <Panel icon={ClipboardList} title={A('ov.verify')} sub={A(weekly ? 'ov.verify.week' : 'ov.verify.day')}>
           <WaveLines
             data={points.map((p) => ({ label: p.label, values: [p.fisher, p.buyer] }))}
             colors={['var(--color-teal)', 'var(--color-coral)']}
@@ -95,7 +136,7 @@ export default function SuperOverview() {
           flush
           icon={Megaphone}
           title={A('ov.advisory')}
-          action={<Link to="/admin/advisory-review" className="type-link inline-flex items-center gap-1 hover:underline">{A('ov.all')} <ArrowRight size={15} aria-hidden /></Link>}
+          action={<Link to="/admin/advisory-review" className="type-link-strong group -mr-2.5 inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 underline-offset-4 transition hover:bg-seafoam/50 hover:underline">{A('ov.all')} <ArrowRight size={18} strokeWidth={2.2} aria-hidden className="transition group-hover:translate-x-0.5" /></Link>}
         >
           {live.length === 0 ? (
             <Empty icon={Megaphone} text={A('ar.empty.published')} />
@@ -106,7 +147,7 @@ export default function SuperOverview() {
                   <Link to="/admin/advisory-review" className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-seafoam/30">
                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-seafoam text-teal"><Megaphone size={20} strokeWidth={1.8} /></span>
                     <span className="min-w-0 flex-1">
-                      <b className="type-body-medium block truncate">{r.title}</b>
+                      <b className="type-body-medium block truncate">{advTitle(r.title)}</b>
                       <span className="type-caption mt-0.5 flex items-center gap-2 text-ink-soft">
                         <Badge tone="slate">{A(audKey(r.audience))}</Badge>
                         {new Date(r.createdAt).toLocaleDateString(loc, { month: 'short', day: 'numeric' })}
@@ -132,7 +173,7 @@ export default function SuperOverview() {
                 <i className="size-2.5 shrink-0 rounded-full" style={{ background: p.color }} />
                 <span className="type-body-medium flex-1">{p.name}</span>
                 <b className="type-body-medium tabular-nums">{kg(p.n)}</b>
-                <span className="type-caption w-12 text-right tabular-nums text-ink-soft"></span>
+                <span className="type-label w-14 shrink-0 rounded-full py-0.5 text-center tabular-nums" style={{ background: `color-mix(in srgb, ${p.color} 22%, transparent)` }}>{pct(p.n)}%</span>
               </li>
             ))}
           </ul>
@@ -142,7 +183,7 @@ export default function SuperOverview() {
           flush
           icon={ClipboardList}
           title={A('ov.recent')}
-          action={<Link to="/admin/activity" className="inline-flex items-center gap-1 text-sm font-semibold text-teal hover:underline">{A('ov.log')} <ArrowRight size={15} aria-hidden /></Link>}
+          action={<Link to="/admin/activity" className="type-link-strong group -mr-2.5 inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 underline-offset-4 transition hover:bg-seafoam/50 hover:underline">{A('ov.log')} <ArrowRight size={18} strokeWidth={2.2} aria-hidden className="transition group-hover:translate-x-0.5" /></Link>}
         >
           <ul className="divide-y divide-line border-t border-line">
             {data.activity.length === 0 && <li className="type-body px-5 py-8 text-center text-ink-soft">{A('ov.nothing')}</li>}
@@ -151,8 +192,11 @@ export default function SuperOverview() {
               return (
                 <li key={i} className="type-body flex items-center gap-3 px-5 py-3">
                   <span className="grid size-8 shrink-0 place-items-center rounded-full bg-seafoam text-teal"><I size={16} strokeWidth={1.8} /></span>
-                  <span className="min-w-0 flex-1 truncate"><span className="type-body-medium">{a.title}</span> <span className="text-ink-soft">– {a.sub}</span></span>
-                  <span className="type-caption shrink-0 text-ink-soft"></span>
+                  <span className="min-w-0 flex-1 truncate">
+                    <span className="type-body-medium">{ACT[a.kind] ? A(ACT[a.kind]) : a.title}</span>{' '}
+                    <span className="text-ink-soft">– {a.kind === 'advisory' ? advTitle(a.sub) : a.sub}</span>
+                  </span>
+                  <time dateTime={a.at} title={new Date(a.at).toLocaleString(loc, { dateStyle: 'medium', timeStyle: 'short' })} className="type-caption shrink-0 text-ink-soft">{ago(a.at)}</time>
                 </li>
               )
             })}
